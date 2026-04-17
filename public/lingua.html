@@ -445,8 +445,8 @@ a{color:inherit;text-decoration:none}
       <p>Apprends l'anglais, l'italien et l'espagnol</p>
     </div>
     <div class="auth-tabs">
-      <div class="auth-tab active" data-tab="login">Connexion</div>
-      <div class="auth-tab" data-tab="signup">Inscription</div>
+      <button type="button" class="auth-tab active" data-tab="login">Connexion</button>
+      <button type="button" class="auth-tab" data-tab="signup">Inscription</button>
     </div>
     <div class="auth-error" id="authError"></div>
     <div class="auth-success" id="authSuccess"></div>
@@ -642,7 +642,7 @@ a{color:inherit;text-decoration:none}
 <div class="lesson-modal" id="lessonModal"></div>
 
 <!-- FLOATING NAV -->
-<nav class="fnav" id="fnav">
+<nav class="fnav hide" id="fnav">
   <button class="fnav-item active" data-route="home"><i data-lucide="home"></i><span>Accueil</span></button>
   <button class="fnav-item" data-route="lessons"><i data-lucide="book-open"></i><span>Leçons</span></button>
   <button class="fnav-item" data-route="vocal"><i data-lucide="mic"></i><span>Vocal</span></button>
@@ -987,7 +987,7 @@ function onAuthSuccess(user,nameOverride){
   currentUser=user;
   const name=nameOverride||user.user_metadata?.name||user.user_metadata?.full_name||user.email?.split('@')[0]||'Apprenant';
   document.getElementById('authScreen').classList.add('hide');
-  document.getElementById('fnav').style.display='';
+  document.getElementById('fnav').classList.remove('hide');
   S.name=name;
   saveState();
   checkDaily();
@@ -1002,7 +1002,7 @@ async function logout(){
   await supabase.auth.signOut();
   currentUser=null;
   document.getElementById('authScreen').classList.remove('hide');
-  document.getElementById('fnav').style.display='none';
+  document.getElementById('fnav').classList.add('hide');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('onboard').classList.add('hide');
   hideAuthMessages();
@@ -1812,8 +1812,7 @@ function renderProfile(){
 
 /* ============ INIT ============ */
 async function init(){
-  // Hide app until auth resolved
-  document.getElementById('fnav').style.display='none';
+  // fnav already hidden via .hide class in HTML
   // Check existing session
   const{data:{session}}=await supabase.auth.getSession();
   if(session&&session.user){

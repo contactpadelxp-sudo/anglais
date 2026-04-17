@@ -2137,7 +2137,46 @@ function grantBadge(id,name){if(!S.badges.includes(id)){S.badges.push(id);toast(
 function levenshtein(a,b){a=a.toLowerCase().trim();b=b.toLowerCase().trim();const m=[];for(let i=0;i<=b.length;i++)m[i]=[i];for(let j=0;j<=a.length;j++)m[0][j]=j;for(let i=1;i<=b.length;i++)for(let j=1;j<=a.length;j++)m[i][j]=b[i-1]===a[j-1]?m[i-1][j-1]:Math.min(m[i-1][j-1]+1,m[i][j-1]+1,m[i-1][j]+1);return m[b.length][a.length]}
 function similarity(a,b){const d=levenshtein(a,b);const ml=Math.max(a.length,b.length);return ml===0?1:1-d/ml}
 function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function speak(text,lang){if(!('speechSynthesis' in window))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=lang==='es'?'es-ES':lang==='it'?'it-IT':'en-US';u.rate=.85;u.pitch=1;speechSynthesis.speak(u)}catch(e){}}
+let _voiceCache={};
+function _pickVoice(langCode){
+  if(_voiceCache[langCode])return _voiceCache[langCode];
+  const voices=speechSynthesis.getVoices();
+  if(!voices.length)return null;
+  const matching=voices.filter(v=>v.lang.startsWith(langCode.slice(0,2)));
+  // Prefer: female premium voices (no "compact"/"network"), then any female, then best available
+  const keywords=['female','femenin','femmin','mujer','donna','woman'];
+  const premium=matching.filter(v=>!v.name.toLowerCase().includes('compact')&&!v.voiceURI.includes('compact'));
+  // On macOS/iOS: prefer voices like "Paulina","Mónica","Monica","Samantha","Alice","Federica"
+  const preferredNames={es:['paulina','mónica','monica','jimena','marisol'],en:['samantha','karen','kate','moira','fiona','victoria'],it:['alice','federica','elsa','paola']};
+  const pref=preferredNames[langCode.slice(0,2)]||[];
+  // Try preferred names first
+  for(const name of pref){const v=premium.find(v=>v.name.toLowerCase().includes(name));if(v){_voiceCache[langCode]=v;return v}}
+  // Try any female-sounding premium voice
+  const female=premium.find(v=>keywords.some(k=>v.name.toLowerCase().includes(k)));
+  if(female){_voiceCache[langCode]=female;return female}
+  // Try any premium voice for this language
+  if(premium.length){_voiceCache[langCode]=premium[0];return premium[0]}
+  // Fallback to any matching voice
+  if(matching.length){_voiceCache[langCode]=matching[0];return matching[0]}
+  return null;
+}
+// Preload voices (Chrome loads them async)
+if('speechSynthesis' in window){speechSynthesis.onvoiceschanged=function(){_voiceCache={}}}
+function speak(text,lang){
+  if(!('speechSynthesis' in window))return;
+  try{
+    speechSynthesis.cancel();
+    const langCode=lang==='es'?'es-ES':lang==='it'?'it-IT':'en-US';
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang=langCode;
+    u.rate=0.88;
+    u.pitch=1.05;
+    u.volume=1;
+    const voice=_pickVoice(langCode);
+    if(voice)u.voice=voice;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
 
 /* ============ DAILY CHECK ============ */
 function checkDaily(){

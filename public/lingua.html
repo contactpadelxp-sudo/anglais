@@ -919,68 +919,79 @@ const MOTIV_MSG={
   vocal:'🎤 Excellent accent !'
 };
 
-/* ============ SUPABASE AUTH ============ */
-const SUPABASE_URL='https://mxerjbbxizuoghvbsaqy.supabase.co';
-const SUPABASE_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14ZXJqYmJ4aXp1b2dodmJzYXF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNjgwNzEsImV4cCI6MjA5MTk0NDA3MX0.RiMC_33ixQeF_Z3XDkhgTa-wW9nFETPsBWFM6ZsSQ48';
-const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
+/* ============ AUTH UI (no Supabase dependency) ============ */
 let currentUser=null;
+let sb=null; // Supabase client, initialized safely below
 
 function showPrivacy(){
   alert('Politique de confidentialité Lingua\n\n• Données collectées : email, prénom, progression d\'apprentissage.\n• Finalité : fonctionnement du service et personnalisation.\n• Hébergement : Supabase (serveurs EU).\n• Durée : conservées tant que le compte est actif.\n• Droits : accès, rectification, suppression, portabilité.\n• Contact : contact@lingua-app.fr\n• Aucune donnée n\'est vendue ou partagée à des tiers.\n\nConformément au RGPD (UE 2016/679), vous pouvez exercer vos droits à tout moment.');
 }
-
 function showAuthError(msg){const el=document.getElementById('authError');el.textContent=msg;el.style.display='block';document.getElementById('authSuccess').style.display='none'}
 function showAuthSuccess(msg){const el=document.getElementById('authSuccess');el.textContent=msg;el.style.display='block';document.getElementById('authError').style.display='none'}
 function hideAuthMessages(){document.getElementById('authError').style.display='none';document.getElementById('authSuccess').style.display='none'}
 
-// Auth tabs
-document.querySelectorAll('.auth-tab').forEach(tab=>tab.addEventListener('click',()=>{
-  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
-  tab.classList.add('active');
-  const isLogin=tab.dataset.tab==='login';
-  document.getElementById('loginForm').classList.toggle('hide',!isLogin);
-  document.getElementById('signupForm').classList.toggle('hide',isLogin);
-  hideAuthMessages();
-}));
+// Auth tabs — always work, no Supabase needed
+document.querySelectorAll('.auth-tab').forEach(function(tab){
+  tab.addEventListener('click',function(){
+    document.querySelectorAll('.auth-tab').forEach(function(t){t.classList.remove('active')});
+    tab.classList.add('active');
+    var isLogin=tab.getAttribute('data-tab')==='login';
+    document.getElementById('loginForm').classList.toggle('hide',!isLogin);
+    document.getElementById('signupForm').classList.toggle('hide',isLogin);
+    hideAuthMessages();
+  });
+});
+
+// Init Supabase safely
+try{
+  var _sb=window.supabase;
+  if(_sb&&_sb.createClient){
+    sb=_sb.createClient('https://mxerjbbxizuoghvbsaqy.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14ZXJqYmJ4aXp1b2dodmJzYXF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNjgwNzEsImV4cCI6MjA5MTk0NDA3MX0.RiMC_33ixQeF_Z3XDkhgTa-wW9nFETPsBWFM6ZsSQ48');
+  }else{console.warn('Supabase CDN not loaded')}
+}catch(e){console.error('Supabase init error:',e)}
 
 // Email signup
-document.getElementById('signupForm').addEventListener('submit',async(e)=>{
+document.getElementById('signupForm').addEventListener('submit',async function(e){
   e.preventDefault();
-  const name=document.getElementById('signupName').value.trim();
-  const email=document.getElementById('signupEmail').value.trim();
-  const pass=document.getElementById('signupPass').value;
+  if(!sb){showAuthError('Service indisponible. Recharge la page.');return}
+  var name=document.getElementById('signupName').value.trim();
+  var email=document.getElementById('signupEmail').value.trim();
+  var pass=document.getElementById('signupPass').value;
   if(!document.getElementById('gdprConsent').checked){showAuthError('Tu dois accepter la politique de confidentialité.');return}
   if(pass.length<6){showAuthError('Le mot de passe doit faire au moins 6 caractères.');return}
   hideAuthMessages();
-  const btn=e.target.querySelector('.btn');btn.disabled=true;btn.textContent='Création…';
-  const{data,error}=await supabase.auth.signUp({email,password:pass,options:{data:{name}}});
+  var btn=e.target.querySelector('.btn');btn.disabled=true;btn.textContent='Création…';
+  var res=await sb.auth.signUp({email:email,password:pass,options:{data:{name:name}}});
   btn.disabled=false;btn.textContent='Créer mon compte';
-  if(error){showAuthError(error.message);return}
-  if(data.user&&!data.session){showAuthSuccess('Vérifie ta boîte mail pour confirmer ton inscription !');return}
-  onAuthSuccess(data.user,name);
+  if(res.error){showAuthError(res.error.message);return}
+  if(res.data.user&&!res.data.session){showAuthSuccess('Vérifie ta boîte mail pour confirmer ton inscription !');return}
+  onAuthSuccess(res.data.user,name);
 });
 
 // Email login
-document.getElementById('loginForm').addEventListener('submit',async(e)=>{
+document.getElementById('loginForm').addEventListener('submit',async function(e){
   e.preventDefault();
-  const email=document.getElementById('loginEmail').value.trim();
-  const pass=document.getElementById('loginPass').value;
+  if(!sb){showAuthError('Service indisponible. Recharge la page.');return}
+  var email=document.getElementById('loginEmail').value.trim();
+  var pass=document.getElementById('loginPass').value;
   hideAuthMessages();
-  const btn=e.target.querySelector('.btn');btn.disabled=true;btn.textContent='Connexion…';
-  const{data,error}=await supabase.auth.signInWithPassword({email,password:pass});
+  var btn=e.target.querySelector('.btn');btn.disabled=true;btn.textContent='Connexion…';
+  var res=await sb.auth.signInWithPassword({email:email,password:pass});
   btn.disabled=false;btn.textContent='Se connecter';
-  if(error){showAuthError(error.message==='Invalid login credentials'?'Email ou mot de passe incorrect.':error.message);return}
-  onAuthSuccess(data.user);
+  if(res.error){showAuthError(res.error.message==='Invalid login credentials'?'Email ou mot de passe incorrect.':res.error.message);return}
+  onAuthSuccess(res.data.user);
 });
 
 // Google OAuth
+function googleAuth(){
+  if(!sb){showAuthError('Service indisponible. Recharge la page.');return}
+  hideAuthMessages();
+  sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin+window.location.pathname}}).then(function(res){
+    if(res.error)showAuthError(res.error.message);
+  });
+}
 document.getElementById('googleLoginBtn').addEventListener('click',googleAuth);
 document.getElementById('googleSignupBtn').addEventListener('click',googleAuth);
-async function googleAuth(){
-  hideAuthMessages();
-  const{error}=await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin+window.location.pathname}});
-  if(error)showAuthError(error.message);
-}
 
 // Auth success handler
 function onAuthSuccess(user,nameOverride){
@@ -999,7 +1010,7 @@ function onAuthSuccess(user,nameOverride){
 
 // Logout
 async function logout(){
-  await supabase.auth.signOut();
+  if(sb)await sb.auth.signOut();
   currentUser=null;
   document.getElementById('authScreen').classList.remove('hide');
   document.getElementById('fnav').classList.add('hide');
@@ -1814,12 +1825,13 @@ function renderProfile(){
 async function init(){
   // fnav already hidden via .hide class in HTML
   // Check existing session
-  const{data:{session}}=await supabase.auth.getSession();
+  if(!sb){console.warn('Supabase not available');return}
+  const{data:{session}}=await sb.auth.getSession();
   if(session&&session.user){
     onAuthSuccess(session.user);
   }
   // Listen for auth changes (Google OAuth redirect)
-  supabase.auth.onAuthStateChange((event,session)=>{
+  sb.auth.onAuthStateChange((event,session)=>{
     if(event==='SIGNED_IN'&&session&&!currentUser){
       onAuthSuccess(session.user);
     }
@@ -1827,7 +1839,7 @@ async function init(){
 }
 init();
 function resetAll(){if(confirm('Es-tu sûr de vouloir tout effacer ? Ta progression sera remise à zéro.')){localStorage.removeItem('lingua');S=loadState();location.reload()}}
-async function deleteAccount(){if(confirm('⚠️ Supprimer définitivement ton compte et toutes tes données ?\n\nCette action est IRRÉVERSIBLE.')&&confirm('Dernière chance : es-tu vraiment sûr ?')){localStorage.removeItem('lingua');await supabase.auth.signOut();alert('Compte déconnecté. Pour la suppression définitive des données serveur, contacte contact@lingua-app.fr.\n\n(Conformément au RGPD, ta demande sera traitée sous 30 jours.)');location.reload()}}
+async function deleteAccount(){if(confirm('⚠️ Supprimer définitivement ton compte et toutes tes données ?\n\nCette action est IRRÉVERSIBLE.')&&confirm('Dernière chance : es-tu vraiment sûr ?')){localStorage.removeItem('lingua');if(sb)await sb.auth.signOut();alert('Compte déconnecté. Pour la suppression définitive des données serveur, contacte contact@lingua-app.fr.\n\n(Conformément au RGPD, ta demande sera traitée sous 30 jours.)');location.reload()}}
 window.startLesson=startLesson;window.quitLesson=quitLesson;window.endLessonNext=endLessonNext;window.restartLesson=restartLesson;window.startReview=startReview;window.vocalPrev=vocalPrev;window.vocalNext=vocalNext;window.speak=speak;window.resetAll=resetAll;window.logout=logout;window.deleteAccount=deleteAccount;window.showPrivacy=showPrivacy;
 </script>
 </body>

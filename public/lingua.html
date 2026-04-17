@@ -389,6 +389,61 @@ a{color:inherit;text-decoration:none}
 .wcloud{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px}
 .wcloud span{padding:4px 10px;background:var(--surface-2);border-radius:100px;font-size:12px;color:var(--text-muted)}
 
+/* LEVEL UP CEREMONY */
+.ceremony{position:fixed;inset:0;background:rgba(12,12,18,.92);backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:center;z-index:500;opacity:0;animation:cerIn .8s forwards}
+@keyframes cerIn{to{opacity:1}}
+.ceremony-card{max-width:480px;width:90%;text-align:center;padding:40px 30px}
+.cer-badge{font-size:80px;margin:16px 0;display:inline-block}
+.cer-badge.out{animation:cerBadgeOut .8s forwards}
+.cer-badge.in{animation:cerBadgeIn .8s forwards}
+@keyframes cerBadgeOut{0%{transform:scale(1);opacity:1}100%{transform:scale(.3) rotate(-20deg);opacity:0}}
+@keyframes cerBadgeIn{0%{transform:scale(3) rotate(15deg);opacity:0}60%{transform:scale(.9) rotate(-5deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+.cer-title{font-family:var(--font-display);font-size:32px;font-weight:800;margin:12px 0 4px}
+.cer-sub{color:var(--text-muted);font-size:14px;margin-bottom:24px}
+.cer-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.cer-stat{padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px}
+.cer-stat .v{font-family:var(--font-display);font-weight:800;font-size:20px;color:var(--accent-2)}
+.cer-stat .l{font-size:10px;color:var(--text-muted);text-transform:uppercase;margin-top:2px}
+.cer-unlocked{background:var(--surface);border:1px solid color-mix(in srgb,var(--accent) 30%,var(--border));border-radius:14px;padding:16px;margin-bottom:20px;text-align:left}
+.cer-unlocked h4{font-size:14px;margin-bottom:8px;color:var(--accent-2)}
+.cer-unlocked ul{list-style:none;padding:0}
+.cer-unlocked li{padding:4px 0;font-size:13px;color:var(--text-muted)}
+.cer-unlocked li::before{content:'🔓 ';margin-right:4px}
+.cer-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+/* RUST VISUAL */
+.progress-fill.rust-1{background:linear-gradient(90deg,var(--accent),var(--warning))}
+.progress-fill.rust-2{background:linear-gradient(90deg,var(--warning),var(--error))}
+.progress-fill.rust-3{background:linear-gradient(90deg,var(--error),#cc3333)}
+
+/* PROGRESS TOOLTIP */
+.prog-tooltip{position:relative;cursor:help}
+.prog-tooltip .tip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border-strong);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text-muted);white-space:nowrap;z-index:10;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.prog-tooltip:hover .tip{display:block}
+
+/* MA PROGRESSION VIEW */
+.prog-section-card{padding:16px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;margin-bottom:10px}
+.prog-section-card .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.prog-section-card .header h4{font-size:15px}
+.prog-section-card .status{font-size:12px;font-weight:600}
+.prog-section-card .status.validated{color:var(--success)}
+.prog-section-card .status.in-progress{color:var(--accent-2)}
+.prog-section-card .status.locked{color:var(--text-faint)}
+.prog-improve{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.prog-improve-item{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:13px}
+.prog-improve-item .gain{color:var(--success);font-weight:600;font-size:12px}
+.prog-estimate{text-align:center;padding:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 15%,var(--surface)),var(--surface));border:1px solid color-mix(in srgb,var(--accent) 25%,var(--border));border-radius:14px;margin-top:16px}
+.prog-estimate .days{font-family:var(--font-display);font-weight:800;font-size:36px;color:var(--accent-2)}
+
+/* POST CURRICULUM */
+.post-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(max-width:600px){.post-grid{grid-template-columns:1fr}}
+.post-card{padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:14px;cursor:pointer;transition:all .2s;text-align:center}
+.post-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.post-card .i{font-size:32px;display:block;margin-bottom:8px}
+.post-card h4{font-size:14px;margin-bottom:4px}
+.post-card p{font-size:11px;color:var(--text-muted)}
+
 /* AUTH SCREEN */
 .auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;z-index:1}
 .auth-card{max-width:440px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:40px;animation:viewIn .4s cubic-bezier(.16,1,.3,1)}
@@ -617,6 +672,10 @@ a{color:inherit;text-decoration:none}
   <div class="card card-lg section">
     <h3>Progression par langue</h3>
     <div class="lang-progress" id="langProgress"></div>
+  </div>
+  <div class="card card-lg section">
+    <h3>📊 Ma Progression</h3>
+    <div id="myProgressView"></div>
   </div>
   <div class="card card-lg section">
     <h3>Mur de badges</h3>
@@ -1823,17 +1882,197 @@ function checkLevelUp(lang){
 }
 function applyRustDecay(lang){
   const days=getDaysSince(S.langs[lang]?.lastPracticed);
-  if(days>=14)toast('⚠️ Ta maîtrise '+lang.toUpperCase()+' baisse ! Reviens pratiquer.');
+  const rust=days>=14?3:days>=7?2:days>=3?1:0;
+  S.langs[lang].rustLevel=rust;
   updateAllMastery(lang);
+  if(rust>=2)toast('⚠️ Ta maîtrise '+lang.toUpperCase()+' baisse ! Reviens pratiquer.');
+}
+function getRustClass(lang,section){
+  const days=getDaysSince(S.langs[lang]?.lastPracticed);
+  if(days>=14)return 'rust-3';if(days>=7)return 'rust-2';if(days>=3)return 'rust-1';return '';
 }
 function triggerLevelUpCeremony(from,to,lang){
   const colors={es:['#c60b1e','#ffd700'],en:['#012169','#cf142b'],it:['#009246','#ce2b37']}[lang]||['#7c6fcd','#ffd700'];
+  const flag={es:'🇪🇸',en:'🇬🇧',it:'🇮🇹'}[lang];
+  const names={A1:'Débutant',A2:'Élémentaire',B1:'Intermédiaire',B2:'Avancé',C1:'Maîtrise'};
+  const m=S.langs[lang].sectionMastery||{};
+  // Get unlocked content
+  const newLessons=getAllLessons(lang).filter(l=>l.sec===to).slice(0,5);
+  // Build ceremony overlay
+  const cer=document.createElement('div');cer.className='ceremony';cer.id='ceremonyOverlay';
+  cer.innerHTML=`<div class="ceremony-card">
+    <div class="cer-badge out" id="cerBadgeOld">${from}</div>
+    <div class="cer-badge in" id="cerBadgeNew" style="display:none">${to}</div>
+    <div class="cer-title" id="cerTitle" style="display:none">Niveau ${to} ${flag}</div>
+    <div class="cer-sub" id="cerSub" style="display:none">${names[to]} — Félicitations !</div>
+    <div class="cer-stats" id="cerStats" style="display:none">
+      <div class="cer-stat"><div class="v">+500</div><div class="l">XP Bonus</div></div>
+      <div class="cer-stat"><div class="v">${(S.langs[lang].lessonsCompleted||[]).length}</div><div class="l">Leçons</div></div>
+      <div class="cer-stat"><div class="v">${m[from]||0}%</div><div class="l">${from} maîtrise</div></div>
+    </div>
+    <div class="cer-unlocked" id="cerUnlocked" style="display:none">
+      <h4>🔓 Contenu débloqué — Section ${to}</h4>
+      <ul>${newLessons.map(l=>'<li>'+l.t+'</li>').join('')}</ul>
+    </div>
+    <div class="cer-actions" id="cerActions" style="display:none">
+      <button class="btn" onclick="closeCeremony();location.hash='#lessons'">Explorer la section →</button>
+      <button class="btn btn-secondary" onclick="closeCeremony();location.hash='#profile'">Voir mon profil</button>
+    </div>
+  </div>`;
+  document.body.appendChild(cer);
+  // Step 1 (0-800ms): overlay + sound
   playSound('levelup');
-  setTimeout(()=>{try{confetti({particleCount:200,spread:120,origin:{y:.4},colors:colors})}catch(e){}},300);
-  setTimeout(()=>{try{confetti({particleCount:100,spread:80,origin:{y:.5},colors:colors})}catch(e){}},1200);
-  toast('🎉 Félicitations ! Tu passes de '+from+' à '+to+' !');
+  // Step 2 (800ms): old badge fades out
+  // Step 3 (2s): confetti
+  setTimeout(()=>{try{confetti({particleCount:200,spread:120,origin:{y:.4},colors:colors})}catch(e){}},2000);
+  // Step 4 (3.5s): new badge appears
+  setTimeout(()=>{
+    document.getElementById('cerBadgeOld').style.display='none';
+    const nb=document.getElementById('cerBadgeNew');nb.style.display='';
+    playSound('levelup');
+  },3500);
+  setTimeout(()=>{try{confetti({particleCount:100,spread:80,origin:{y:.5},colors:colors})}catch(e){}},4000);
+  // Step 5 (5s): title + stats
+  setTimeout(()=>{
+    document.getElementById('cerTitle').style.display='';
+    document.getElementById('cerSub').style.display='';
+    document.getElementById('cerStats').style.display='';
+  },5000);
+  // Step 6 (6.5s): unlocked content + buttons
+  setTimeout(()=>{
+    document.getElementById('cerUnlocked').style.display='';
+    document.getElementById('cerActions').style.display='';
+  },6500);
   addXp(500);
 }
+function closeCeremony(){const el=document.getElementById('ceremonyOverlay');if(el)el.remove()}
+window.closeCeremony=closeCeremony;
+
+/* ============ CONTEXTUAL TOASTS ============ */
+function triggerProgressToasts(lang){
+  const m=S.langs[lang].sectionMastery||{};
+  const level=S.langs[lang].level;
+  const thresholds={A1:80,A2:75,B1:70,B2:70,C1:65};
+  const secOrder=['A1','A2','B1','B2','C1'];
+  const nextLvl=secOrder[secOrder.indexOf(level)+1];
+  // Close to next level
+  if(nextLvl){
+    const needed=thresholds[level]||80;
+    const current=m[level]||0;
+    const gap=needed-current;
+    if(gap>0&&gap<=5)toast('🎯 Plus que '+gap+'% pour atteindre '+nextLvl+' !');
+  }
+  // Section just validated
+  secOrder.forEach(s=>{
+    if((m[s]||0)>=thresholds[s]&&!S._validatedToasts?.includes(s)){
+      toast('✅ Section '+s+' validée !');
+      if(!S._validatedToasts)S._validatedToasts=[];
+      S._validatedToasts.push(s);
+    }
+  });
+  // Milestones
+  const progress=getCecrProgress(lang);
+  [25,50,75].forEach(ml=>{
+    if(Math.abs(progress-ml)<3&&!S._milestoneToasts?.includes(lang+ml)){
+      toast('🔥 '+ml+'% vers '+(nextLvl||'C1')+' !');
+      if(!S._milestoneToasts)S._milestoneToasts=[];
+      S._milestoneToasts.push(lang+ml);
+    }
+  });
+}
+function getCecrProgress(lang){
+  const m=S.langs[lang].sectionMastery||{};
+  const level=S.langs[lang].level;
+  const thresholds={A1:80,A2:75,B1:70,B2:70,C1:65};
+  const needed=thresholds[level]||80;
+  return Math.min(100,Math.round((m[level]||0)/needed*100));
+}
+
+/* ============ MA PROGRESSION VIEW ============ */
+function renderMyProgress(){
+  const lang=S.activeLang;
+  const m=S.langs[lang].sectionMastery||{};
+  const results=S.langs[lang].lessonResults||{};
+  const thresholds={A1:80,A2:75,B1:70,B2:70,C1:65};
+  const secOrder=['A1','A2','B1','B2','C1'];
+  const rustCls=getRustClass(lang);
+  let html='';
+  // Global progress bar with tooltip
+  const progress=getCecrProgress(lang);
+  const nextLvl=secOrder[secOrder.indexOf(S.langs[lang].level)+1]||'C1';
+  html+=`<div class="prog-tooltip" style="margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>${S.langs[lang].level}</span><span>${nextLvl}</span></div>
+    <div class="progress"><div class="progress-fill ${rustCls}" style="width:${progress}%"></div></div>
+    <div class="tip">Maîtrise ${S.langs[lang].level} : ${m[S.langs[lang].level]||0}% — Seuil requis : ${thresholds[S.langs[lang].level]}%<br>Progresse en complétant des leçons avec 2-3 étoiles et en révisant régulièrement.</div>
+  </div>`;
+  // Per section
+  secOrder.forEach(s=>{
+    const mastery=m[s]||0;
+    const threshold=thresholds[s];
+    const validated=mastery>=threshold;
+    const allL=getAllLessons(lang).filter(l=>l.sec===s);
+    const doneCount=allL.filter(l=>(S.langs[lang].lessonsCompleted||[]).includes(l.id)).length;
+    const statusCls=validated?'validated':(doneCount>0?'in-progress':'locked');
+    const statusTxt=validated?'✅ Validée':(doneCount>0?'🎯 En cours':'🔒 Verrouillée');
+    html+=`<div class="prog-section-card">
+      <div class="header"><h4><span class="pill pill-${s.toLowerCase()}">${s}</span> ${mastery}% maîtrise</h4><div class="status ${statusCls}">${statusTxt}</div></div>
+      <div class="progress"><div class="progress-fill ${rustCls}" style="width:${Math.min(100,mastery/threshold*100)}%"></div></div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${doneCount}/${allL.length} leçons · Seuil : ${threshold}%</div>
+    </div>`;
+  });
+  // Lessons to improve
+  const allResults=Object.entries(results);
+  const improvable=allResults.filter(([id,r])=>r.stars<3).sort((a,b)=>(3-a[1].stars)-(3-b[1].stars)).slice(0,5);
+  if(improvable.length>0){
+    html+='<h4 style="margin:16px 0 8px;font-size:14px">📈 Leçons à améliorer</h4><div class="prog-improve">';
+    improvable.forEach(([id,r])=>{
+      const l=getLessonById(id,lang);
+      if(!l)return;
+      const gain=(3-r.stars)*3;
+      html+=`<div class="prog-improve-item"><span>${'⭐'.repeat(r.stars)}${'☆'.repeat(3-r.stars)} ${l.t}</span><span class="gain" onclick="startLesson('${id}')">+${gain}% · Refaire →</span></div>`;
+    });
+    html+='</div>';
+  }
+  // Estimation days
+  const completedToday=(S.langs[lang].lessonsCompleted||[]).length;
+  const avgLessonsPerDay=Math.max(1,completedToday/Math.max(1,S.streak));
+  const remaining=getAllLessons(lang).filter(l=>!(S.langs[lang].lessonsCompleted||[]).includes(l.id)).length;
+  const estDays=Math.ceil(remaining/Math.max(avgLessonsPerDay,1));
+  html+=`<div class="prog-estimate"><div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Estimation prochain niveau</div><div class="days">~${estDays>100?'100+':estDays} jours</div><div style="font-size:12px;color:var(--text-muted);margin-top:4px">${remaining} leçons restantes · ${avgLessonsPerDay.toFixed(1)} leçons/jour</div></div>`;
+  document.getElementById('myProgressView').innerHTML=html;
+}
+
+/* ============ POST-CURRICULUM ACTIONS ============ */
+function getPostCurriculumActions(lang){
+  const due=(S.wordCards||[]).filter(c=>c.nextReview<=Date.now()&&c.lang===lang).length;
+  const improvable=Object.entries(S.langs[lang].lessonResults||{}).filter(([id,r])=>r.stars<3).length;
+  return [
+    {i:'🔁',t:'Révision SRS',d:due+' mots à réviser',action:'startReview'},
+    {i:'⚡',t:'Défi du jour',d:'10 questions aléatoires',action:'startChallenge'},
+    {i:'🎯',t:'Perfectionnement',d:improvable+' leçons à améliorer',action:'showImprovable'},
+    {i:'📖',t:'Histoire du jour',d:'Compréhension orale',action:'startStory'},
+    {i:'🌟',t:'Mot du jour',d:'1 mot avancé · étymologie',action:'showWordOfDay'},
+    {i:'🗣️',t:'Mode Fluence',d:'Conversation simulée',action:'startFluence'}
+  ];
+}
+function renderPostCurriculum(lang){
+  const actions=getPostCurriculumActions(lang);
+  return `<div style="text-align:center;padding:20px"><h3>🎉 Tu as exploré toutes les leçons !</h3><p style="color:var(--text-muted);margin:8px 0 20px">Continue de progresser avec ces modes :</p><div class="post-grid">${actions.map(a=>
+    `<div class="post-card" onclick="${a.action}()"><span class="i">${a.i}</span><h4>${a.t}</h4><p>${a.d}</p></div>`
+  ).join('')}</div></div>`;
+}
+function startChallenge(){toast('Défi du jour — bientôt disponible !')}
+function showImprovable(){location.hash='#profile'}
+function startStory(){toast('Histoire du jour — bientôt disponible !')}
+function showWordOfDay(){
+  const lang=S.activeLang;const wp=[];
+  (CURRICULUM[lang]||[]).forEach(u=>u.lessons.forEach(l=>{if(l.wp)l.wp.forEach(w=>wp.push(w))}));
+  if(wp.length===0)return toast('Aucun mot disponible');
+  const w=wp[Math.floor(Math.random()*wp.length)];
+  toast('🌟 Mot du jour : '+w[0]+' = '+w[1]);
+}
+function startFluence(){location.hash='#vocal'}
+window.startChallenge=startChallenge;window.showImprovable=showImprovable;window.startStory=startStory;window.showWordOfDay=showWordOfDay;window.startFluence=startFluence;
 function getLessonStatus(lessonId,lang){
   const all=getAllLessons(lang);
   const idx=all.findIndex(l=>l.id===lessonId);
@@ -1924,6 +2163,8 @@ function checkDaily(){
     if(S.streak>=30)grantBadge('streak_30','Marathonien');
     if(S.streak>=60)grantBadge('streak_60','Diamant');
     if(S.streak>=100)grantBadge('streak_100','Légende');
+    // Apply rust decay for all languages
+    ['es','en','it'].forEach(l=>applyRustDecay(l));
     saveState();
     if(S.streak>=3)toast(MOTIV_MSG.welcome);
   }
@@ -2174,6 +2415,9 @@ function renderLessons(){
     html+='</div>';
   });
   html+='</div></div>';
+  // Post-curriculum: if all lessons completed
+  const allDone=allLessons.every(l=>(S.langs[S.activeLang].lessonsCompleted||[]).includes(l.id));
+  if(allDone&&allLessons.length>0)html+=renderPostCurriculum(S.activeLang);
   document.getElementById('lpathContainer').innerHTML=html;
 }
 document.querySelectorAll('#langTabs .lang-tab').forEach(t=>t.addEventListener('click',()=>{S.activeLang=t.dataset.lang;saveState();renderLessons();}));
@@ -2423,6 +2667,7 @@ function renderLessonEnd(success){
     if(langsA1>=3)grantBadge('trilingue','Trilingue');
     // Mastery-based level check
     checkLevelUp(S.activeLang);
+    triggerProgressToasts(S.activeLang);
     saveState();
     try{confetti({particleCount:150,spread:100,origin:{y:.5},colors:['#7c6fcd','#9d8ff0','#ffd700','#4ecb71']})}catch(e){}
     playSound('levelup');
@@ -2559,16 +2804,20 @@ function renderStreak(){
   const xp=S.langs[S.activeLang].xp;
   const thresholds={A1:0,A2:400,B1:1000,B2:2000,C1:3000};
   const cBar=document.getElementById('cecrBar');
+  const mastery=S.langs[S.activeLang].sectionMastery||{};
+  const masteryThresholds={A1:80,A2:75,B1:70,B2:70,C1:65};
+  const rustCls=getRustClass(S.activeLang);
   cBar.innerHTML=['A1','A2','B1','B2','C1'].map(l=>{
-    const reached=Object.keys(thresholds).indexOf(lv)>=Object.keys(thresholds).indexOf(l);
+    const m=mastery[l]||0;
+    const threshold=masteryThresholds[l];
+    const reached=m>=threshold;
     const current=lv===l;
-    let pct=100;
-    if(current){const next=Object.keys(thresholds)[Object.keys(thresholds).indexOf(l)+1]||'C1';const range=(thresholds[next]||3000)-thresholds[l];pct=Math.min(100,Math.round((xp-thresholds[l])/range*100))}
-    else if(!reached)pct=0;
-    return `<div class="cecr-row">
+    const pct=Math.min(100,Math.round(m/threshold*100));
+    return `<div class="cecr-row prog-tooltip">
       <div class="lvl">${reached?'✅':(current?'🎯':'🔒')} ${l}</div>
-      <div class="progress"><div class="progress-fill" style="width:${pct}%"></div></div>
-      <div class="status">${current?pct+'%':reached?'Maîtrisé':'Verrouillé'}</div>
+      <div class="progress"><div class="progress-fill ${current&&rustCls?rustCls:''}" style="width:${reached?100:pct}%"></div></div>
+      <div class="status">${current?m+'%/'+threshold+'%':reached?'Maîtrisé':'Verrouillé'}</div>
+      <div class="tip">${l} : ${m}% maîtrise · Seuil : ${threshold}%${reached?' · ✅ Validé':''}</div>
     </div>`;
   }).join('');
   // streak badges
@@ -2634,13 +2883,16 @@ function renderProfile(){
   // lang progress
   const langs=[['en','🇬🇧','English'],['it','🇮🇹','Italiano'],['es','🇪🇸','Español']];
   document.getElementById('langProgress').innerHTML=langs.map(([k,f,n])=>{
-    const l=S.langs[k];const lvl=l.level;const xp=l.xp;
-    const thresholds={A1:0,A2:400,B1:1000,B2:2000,C1:3000};
-    const next=Object.keys(thresholds)[Object.keys(thresholds).indexOf(lvl)+1]||'C1';
-    const range=(thresholds[next]||3000)-thresholds[lvl];
-    const pct=Math.min(100,Math.round((xp-thresholds[lvl])/Math.max(range,1)*100));
-    return `<div class="langp"><div class="flag">${f}</div><div class="info"><div class="t">${n}</div><div class="m">${l.lessonsCompleted.length} leçons · ${xp} XP</div></div><div class="bar"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px"><span>${lvl}</span><span>${next}</span></div><div class="progress"><div class="progress-fill" style="width:${pct}%"></div></div></div></div>`;
+    const l=S.langs[k];const lvl=l.level;
+    const progress=getCecrProgress(k);
+    const rustCls=getRustClass(k);
+    const secOrder=['A1','A2','B1','B2','C1'];
+    const next=secOrder[secOrder.indexOf(lvl)+1]||'C1';
+    const rustLabel=(l.rustLevel||0)>=2?' ⚠️ Rouille':'';
+    return `<div class="langp"><div class="flag">${f}</div><div class="info"><div class="t">${n}${rustLabel}</div><div class="m">${(l.lessonsCompleted||[]).length} leçons · ${l.xp||0} XP</div></div><div class="bar prog-tooltip"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px"><span>${lvl}</span><span>${next}</span></div><div class="progress"><div class="progress-fill ${rustCls}" style="width:${progress}%"></div></div><div class="tip">Maîtrise ${lvl}: ${(l.sectionMastery||{})[lvl]||0}%</div></div></div>`;
   }).join('');
+  // Ma progression
+  renderMyProgress();
   // badges
   document.getElementById('allBadges').innerHTML=BADGES.map(b=>{
     const ok=S.badges.includes(b.id);

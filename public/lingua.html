@@ -2286,9 +2286,12 @@ function renderOnboard(){
     playSound('levelup');
     setTimeout(()=>{try{confetti({particleCount:120,spread:90,origin:{y:.5},colors:['#7c6fcd','#9d8ff0','#ffd700']})}catch(e){}},300);
     document.getElementById('onbFinish').addEventListener('click',()=>{
-      S.onboarded=true;S.activeLang=onb.lang;S.langs[onb.lang].level=finalLevel;S.name='Mathis';S.lastSeen=today();S.streak=1;
+      S.onboarded=true;S.activeLang=onb.lang;S.name='Mathis';S.lastSeen=today();S.streak=1;
+      // Process placement test → sectionMastery
+      processPlacementTest(onb.lang,onb.score,onb.questions);
       // grant level badges for current and below
-      const levels=['A1','A2','B1','B2','C1'];const idx=levels.indexOf(finalLevel);
+      const detectedLevel=S.langs[onb.lang].level;
+      const levels=['A1','A2','B1','B2','C1'];const idx=levels.indexOf(detectedLevel);
       for(let k=0;k<=idx;k++)grantBadge(levels[k].toLowerCase(),levels[k]+' atteint');
       saveState();
       document.getElementById('onboard').classList.add('hide');
@@ -2321,6 +2324,95 @@ function estimateLevel(score){
   return lvl;
 }
 
+/* ============ PLACEMENT TEST → MASTERY ============ */
+function processPlacementTest(lang,score,questions){
+  // Count total questions per level from the actual test
+  const totalByLvl={A1:0,A2:0,B1:0,B2:0,C1:0};
+  questions.forEach(q=>totalByLvl[q.level]=(totalByLvl[q.level]||0)+1);
+  // Convert score to initial mastery (capped at 60% — real lessons needed for full mastery)
+  const initialMastery={A1:0,A2:0,B1:0,B2:0,C1:0};
+  Object.keys(score).forEach(lvl=>{
+    if(totalByLvl[lvl]>0){
+      const pct=Math.round((score[lvl]/totalByLvl[lvl])*100);
+      initialMastery[lvl]=Math.round(pct*0.6);
+    }
+  });
+  S.langs[lang].sectionMastery=initialMastery;
+  // Calculate CECR from mastery
+  const cecr=calculateCECR(lang);
+  S.langs[lang].level=cecr;
+  // Unlock lessons matching detected level
+  unlockLessonsForLevel(lang,cecr);
+  saveState();
+}
+
+function unlockLessonsForLevel(lang,cecr){
+  const order=['A1','A2','B1','B2','C1'];
+  const currentIdx=order.indexOf(cecr);
+  const all=getAllLessons(lang);
+  const completed=[];
+  // Mark all lessons below current level as "completed-skip" (unlocked for review)
+  all.forEach(l=>{
+    const lessonIdx=order.indexOf(l.sec);
+    if(lessonIdx<currentIdx){
+      if(!completed.includes(l.id))completed.push(l.id);
+      // Give them 1 star so they show as done but improvable
+      if(!S.langs[lang].lessonResults)S.langs[lang].lessonResults={};
+      if(!S.langs[lang].lessonResults[l.id]){
+        S.langs[lang].lessonResults[l.id]={stars:1,accuracy:50,attempts:1,lastPlayed:today()};
+      }
+      if(!S.langs[lang].bestStars)S.langs[lang].bestStars={};
+      if(!S.langs[lang].bestStars[l.id])S.langs[lang].bestStars[l.id]=1;
+    }
+  });
+  S.langs[lang].lessonsCompleted=completed;
+}
+
+/* ============ SMART RECOMMENDATIONS ============ */
+function getSmartRecommendations(lang){
+  const cecr=S.langs[lang].level;
+  const mastery=S.langs[lang].sectionMastery||{};
+  const results=S.langs[lang].lessonResults||{};
+  const completed=S.langs[lang].lessonsCompleted||[];
+  const recommendations=[];
+  const order=['A1','A2','B1','B2','C1'];
+  const currentIdx=order.indexOf(cecr);
+
+  // 1. PRIORITY HIGH — lessons to redo (0-1 stars in current level)
+  const currentLessons=getAllLessons(lang).filter(l=>l.sec===cecr);
+  const toRedo=currentLessons.filter(l=>results[l.id]&&results[l.id].stars<=1).slice(0,2);
+  toRedo.forEach(l=>recommendations.push({...l,tag:'🔁 À améliorer',tagColor:'var(--warning)',priority:1}));
+
+  // 2. PRIORITY HIGH — next unstarted lesson in current level
+  const nextInLevel=currentLessons.find(l=>!results[l.id]&&getLessonStatus(l.id,lang)!=='locked');
+  if(nextInLevel)recommendations.push({...nextInLevel,tag:'▶️ Continuer',tagColor:'var(--accent-2)',priority:1});
+
+  // 3. PRIORITY MEDIUM — SRS revision
+  const srsCount=(S.wordCards||[]).filter(c=>c.nextReview<=Date.now()&&c.lang===lang).length;
+  if(srsCount>0)recommendations.push({id:'srs-review',t:'Révision — '+srsCount+' mots',sec:cecr,tp:'srs',xp:50,tag:'⏰ À réviser',tagColor:'var(--error)',priority:2,emoji:'🔁'});
+
+  // 4. PRIORITY LOW — consolidate previous level if <80% mastery
+  if(currentIdx>0){
+    const prevLevel=order[currentIdx-1];
+    if((mastery[prevLevel]||0)<80){
+      const prevLessons=getAllLessons(lang).filter(l=>l.sec===prevLevel);
+      const weak=prevLessons.filter(l=>results[l.id]&&results[l.id].stars<3).sort((a,b)=>(results[a.id]?.stars||0)-(results[b.id]?.stars||0));
+      if(weak.length>0)recommendations.push({...weak[0],tag:'💪 Consolider',tagColor:'var(--success)',priority:3});
+    }
+  }
+
+  // 5. If no current-level lessons left, suggest next level
+  if(!nextInLevel&&toRedo.length===0){
+    const nextSec=order[currentIdx+1];
+    if(nextSec){
+      const nextSecLesson=getAllLessons(lang).filter(l=>l.sec===nextSec).find(l=>getLessonStatus(l.id,lang)!=='locked');
+      if(nextSecLesson)recommendations.push({...nextSecLesson,tag:'🚀 Niveau suivant',tagColor:'var(--accent)',priority:2});
+    }
+  }
+
+  return recommendations.sort((a,b)=>a.priority-b.priority).slice(0,4);
+}
+
 /* ============ HOME ============ */
 function renderHome(){
   const m=MOTIV[Math.floor(Math.random()*MOTIV.length)];
@@ -2351,20 +2443,30 @@ function renderHome(){
     const id=el.dataset.task;const route={vocab:'lessons',lesson:'lessons',voice:'vocal'}[id];if(route)location.hash='#'+route;
   }));
 
-  // reco
-  const nextLesson=findNextLesson();
-  if(nextLesson){
-    const tpLabel={vocab:'Vocabulaire',grammar:'Grammaire',conv:'Conversation',culture:'Culture'}[nextLesson.tp]||'Leçon';
+  // smart recommendations
+  const recos=getSmartRecommendations(S.activeLang);
+  if(recos.length>0){
+    const tpLabels={vocab:'Vocabulaire',grammar:'Grammaire',conv:'Conversation',culture:'Culture',srs:'Révision'};
     document.getElementById('recoCard').innerHTML=`
-      <div class="reco-tag">📌 Recommandé pour toi</div>
-      <div class="reco-title">${nextLesson.emoji||'📖'} ${nextLesson.t}</div>
-      <div class="reco-meta">
-        <span class="pill pill-${nextLesson.sec.toLowerCase()}">${nextLesson.sec}</span>
-        <span>⏱ 5-8 min</span>
-        <span>📖 ${tpLabel}</span>
-        <span>⚡ +${nextLesson.xp} XP</span>
-      </div>
-      <button class="btn" onclick="startLesson('${nextLesson.id}')">Commencer maintenant →</button>`;
+      <div class="reco-tag">📚 Recommandé pour toi</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+      ${recos.map(r=>{
+        const isSrs=r.id==='srs-review';
+        const action=isSrs?'startReview()':'startLesson(\''+r.id+'\')';
+        return `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .18s" onclick="${action}" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px">${r.emoji||'📖'}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.t}</div>
+            <div style="font-size:12px;color:var(--text-muted);display:flex;gap:6px;align-items:center;margin-top:2px">
+              <span class="pill pill-${(r.sec||'A1').toLowerCase()}" style="font-size:10px;padding:2px 8px">${r.sec||''}</span>
+              <span>${tpLabels[r.tp]||'Leçon'}</span>
+              <span>+${r.xp} XP</span>
+            </div>
+          </div>
+          <span style="font-size:11px;font-weight:700;color:${r.tagColor||'var(--text-muted)'};white-space:nowrap">${r.tag}</span>
+        </div>`;
+      }).join('')}
+      </div>`;
   } else {
     document.getElementById('recoCard').innerHTML=`<div class="reco-title">🎉 Tu as fait toutes les leçons !</div><p style="color:var(--text-muted);margin-top:8px">Explore une autre langue ou révise tes mots.</p>`;
   }

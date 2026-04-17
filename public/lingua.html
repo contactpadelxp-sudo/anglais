@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.0/dist/confetti.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root{
   --bg:#0c0c12;--surface:#13131f;--surface-2:#1a1a2e;--surface-3:#21213a;
@@ -388,6 +389,44 @@ a{color:inherit;text-decoration:none}
 .wcloud{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px}
 .wcloud span{padding:4px 10px;background:var(--surface-2);border-radius:100px;font-size:12px;color:var(--text-muted)}
 
+/* AUTH SCREEN */
+.auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;z-index:1}
+.auth-card{max-width:440px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:40px;animation:viewIn .4s cubic-bezier(.16,1,.3,1)}
+.auth-logo{text-align:center;margin-bottom:28px}
+.auth-logo .logo-icon{font-size:48px;margin-bottom:8px;display:block}
+.auth-logo h1{font-family:var(--font-display);font-size:32px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.auth-logo p{color:var(--text-muted);font-size:14px;margin-top:4px}
+.auth-tabs{display:flex;background:var(--surface-2);border-radius:12px;padding:4px;margin-bottom:24px}
+.auth-tab{flex:1;padding:10px;border-radius:8px;font-weight:600;font-size:14px;color:var(--text-muted);text-align:center;transition:all .18s;cursor:pointer}
+.auth-tab.active{background:var(--accent);color:#fff}
+.auth-form{display:flex;flex-direction:column;gap:16px}
+.auth-field{display:flex;flex-direction:column;gap:6px}
+.auth-field label{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em}
+.auth-field input{padding:14px 16px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:15px;transition:border-color .18s;outline:none}
+.auth-field input:focus{border-color:var(--accent)}
+.auth-field input::placeholder{color:var(--text-faint)}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:4px 0;color:var(--text-faint);font-size:12px;text-transform:uppercase;letter-spacing:.1em}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.btn-google{display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;font-weight:600;font-size:15px;color:var(--text);transition:all .18s;cursor:pointer;width:100%}
+.btn-google:hover{background:var(--surface-3);border-color:var(--border-strong)}
+.btn-google svg{width:20px;height:20px}
+.auth-gdpr{display:flex;align-items:flex-start;gap:10px;margin-top:4px}
+.auth-gdpr input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);margin-top:2px;flex-shrink:0;cursor:pointer}
+.auth-gdpr label{font-size:12px;color:var(--text-muted);line-height:1.5;cursor:pointer}
+.auth-gdpr a{color:var(--accent-2);text-decoration:underline}
+.auth-error{padding:10px 14px;background:color-mix(in srgb,var(--error) 15%,var(--surface));border:1px solid var(--error);border-radius:10px;font-size:13px;color:var(--error);display:none}
+.auth-success{padding:10px 14px;background:color-mix(in srgb,var(--success) 15%,var(--surface));border:1px solid var(--success);border-radius:10px;font-size:13px;color:var(--success);display:none}
+.auth-footer{text-align:center;margin-top:20px;font-size:12px;color:var(--text-faint);line-height:1.6}
+.auth-footer a{color:var(--text-muted);text-decoration:underline}
+.auth-loading{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;color:var(--text-muted);font-size:14px}
+.auth-loading .spin{width:18px;height:18px;border:2px solid var(--surface-3);border-top-color:var(--accent);border-radius:50%;animation:authSpin .6s linear infinite}
+@keyframes authSpin{to{transform:rotate(360deg)}}
+.user-menu{position:relative;display:flex;align-items:center;gap:8px;cursor:pointer}
+.user-menu-dd{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border-strong);border-radius:12px;padding:8px;min-width:200px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:50;display:none}
+.user-menu-dd.open{display:block}
+.user-menu-dd button{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;border-radius:8px;font-size:13px;color:var(--text-muted);transition:all .15s}
+.user-menu-dd button:hover{background:var(--surface-2);color:var(--text)}
+
 .hide{display:none!important}
 </style>
 </head>
@@ -396,6 +435,54 @@ a{color:inherit;text-decoration:none}
 <div class="orb o2"></div>
 <div class="orb o3"></div>
 <div class="orb o4"></div>
+
+<!-- AUTH SCREEN -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="logo-icon">🌍</span>
+      <h1>Lingua</h1>
+      <p>Apprends l'anglais, l'italien et l'espagnol</p>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" data-tab="login">Connexion</div>
+      <div class="auth-tab" data-tab="signup">Inscription</div>
+    </div>
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-success" id="authSuccess"></div>
+    <!-- LOGIN -->
+    <form class="auth-form" id="loginForm">
+      <div class="auth-field"><label>Email</label><input type="email" id="loginEmail" placeholder="ton@email.com" required autocomplete="email"></div>
+      <div class="auth-field"><label>Mot de passe</label><input type="password" id="loginPass" placeholder="••••••••" required autocomplete="current-password" minlength="6"></div>
+      <button type="submit" class="btn" style="width:100%">Se connecter</button>
+      <div class="auth-divider">ou</div>
+      <button type="button" class="btn-google" id="googleLoginBtn">
+        <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continuer avec Google
+      </button>
+    </form>
+    <!-- SIGNUP -->
+    <form class="auth-form hide" id="signupForm">
+      <div class="auth-field"><label>Prénom</label><input type="text" id="signupName" placeholder="Ton prénom" required autocomplete="given-name"></div>
+      <div class="auth-field"><label>Email</label><input type="email" id="signupEmail" placeholder="ton@email.com" required autocomplete="email"></div>
+      <div class="auth-field"><label>Mot de passe</label><input type="password" id="signupPass" placeholder="6 caractères minimum" required autocomplete="new-password" minlength="6"></div>
+      <div class="auth-gdpr">
+        <input type="checkbox" id="gdprConsent" required>
+        <label for="gdprConsent">J'accepte que Lingua collecte mon email et mes données de progression pour le fonctionnement du service. Mes données sont stockées de manière sécurisée et ne sont jamais vendues à des tiers. Je peux <a href="#" onclick="event.preventDefault();alert('Pour supprimer ton compte et toutes tes données, envoie un email à contact@lingua-app.fr ou utilise le bouton dans Profil > Zone de danger.')">demander leur suppression</a> à tout moment. <a href="#" onclick="event.preventDefault();showPrivacy()">Politique de confidentialité</a></label>
+      </div>
+      <button type="submit" class="btn" style="width:100%">Créer mon compte</button>
+      <div class="auth-divider">ou</div>
+      <button type="button" class="btn-google" id="googleSignupBtn">
+        <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        S'inscrire avec Google
+      </button>
+    </form>
+    <div class="auth-footer">
+      En utilisant Lingua, tu acceptes nos <a href="#" onclick="event.preventDefault();showPrivacy()">conditions d'utilisation</a>.<br>
+      Tes données sont hébergées en Europe via <a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a>.
+    </div>
+  </div>
+</div>
 
 <!-- ONBOARDING -->
 <div id="onboard" class="onboard hide">
@@ -541,8 +628,12 @@ a{color:inherit;text-decoration:none}
   </div>
   <div class="card card-lg section" style="text-align:center">
     <h3 style="justify-content:center">⚠️ Zone de danger</h3>
-    <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">Remet à zéro toute ta progression (XP, badges, leçons, streak...).</p>
-    <button class="btn btn-secondary" onclick="resetAll()" style="background:color-mix(in srgb,var(--error) 25%,var(--surface-3));color:var(--error)">🔄 Réinitialiser mon compte</button>
+    <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">Remet à zéro ta progression ou déconnecte-toi.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-secondary" onclick="logout()" style="color:var(--text-muted)">🚪 Se déconnecter</button>
+      <button class="btn btn-secondary" onclick="resetAll()" style="background:color-mix(in srgb,var(--error) 25%,var(--surface-3));color:var(--error)">🔄 Réinitialiser</button>
+      <button class="btn btn-secondary" onclick="deleteAccount()" style="background:color-mix(in srgb,var(--error) 40%,var(--surface-3));color:var(--error)">🗑️ Supprimer mon compte</button>
+    </div>
   </div>
 </div>
 </div>
@@ -828,9 +919,100 @@ const MOTIV_MSG={
   vocal:'🎤 Excellent accent !'
 };
 
+/* ============ SUPABASE AUTH ============ */
+const SUPABASE_URL='https://mxerjbbxizuoghvbsaqy.supabase.co';
+const SUPABASE_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14ZXJqYmJ4aXp1b2dodmJzYXF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNjgwNzEsImV4cCI6MjA5MTk0NDA3MX0.RiMC_33ixQeF_Z3XDkhgTa-wW9nFETPsBWFM6ZsSQ48';
+const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
+let currentUser=null;
+
+function showPrivacy(){
+  alert('Politique de confidentialité Lingua\n\n• Données collectées : email, prénom, progression d\'apprentissage.\n• Finalité : fonctionnement du service et personnalisation.\n• Hébergement : Supabase (serveurs EU).\n• Durée : conservées tant que le compte est actif.\n• Droits : accès, rectification, suppression, portabilité.\n• Contact : contact@lingua-app.fr\n• Aucune donnée n\'est vendue ou partagée à des tiers.\n\nConformément au RGPD (UE 2016/679), vous pouvez exercer vos droits à tout moment.');
+}
+
+function showAuthError(msg){const el=document.getElementById('authError');el.textContent=msg;el.style.display='block';document.getElementById('authSuccess').style.display='none'}
+function showAuthSuccess(msg){const el=document.getElementById('authSuccess');el.textContent=msg;el.style.display='block';document.getElementById('authError').style.display='none'}
+function hideAuthMessages(){document.getElementById('authError').style.display='none';document.getElementById('authSuccess').style.display='none'}
+
+// Auth tabs
+document.querySelectorAll('.auth-tab').forEach(tab=>tab.addEventListener('click',()=>{
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+  tab.classList.add('active');
+  const isLogin=tab.dataset.tab==='login';
+  document.getElementById('loginForm').classList.toggle('hide',!isLogin);
+  document.getElementById('signupForm').classList.toggle('hide',isLogin);
+  hideAuthMessages();
+}));
+
+// Email signup
+document.getElementById('signupForm').addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  const name=document.getElementById('signupName').value.trim();
+  const email=document.getElementById('signupEmail').value.trim();
+  const pass=document.getElementById('signupPass').value;
+  if(!document.getElementById('gdprConsent').checked){showAuthError('Tu dois accepter la politique de confidentialité.');return}
+  if(pass.length<6){showAuthError('Le mot de passe doit faire au moins 6 caractères.');return}
+  hideAuthMessages();
+  const btn=e.target.querySelector('.btn');btn.disabled=true;btn.textContent='Création…';
+  const{data,error}=await supabase.auth.signUp({email,password:pass,options:{data:{name}}});
+  btn.disabled=false;btn.textContent='Créer mon compte';
+  if(error){showAuthError(error.message);return}
+  if(data.user&&!data.session){showAuthSuccess('Vérifie ta boîte mail pour confirmer ton inscription !');return}
+  onAuthSuccess(data.user,name);
+});
+
+// Email login
+document.getElementById('loginForm').addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  hideAuthMessages();
+  const btn=e.target.querySelector('.btn');btn.disabled=true;btn.textContent='Connexion…';
+  const{data,error}=await supabase.auth.signInWithPassword({email,password:pass});
+  btn.disabled=false;btn.textContent='Se connecter';
+  if(error){showAuthError(error.message==='Invalid login credentials'?'Email ou mot de passe incorrect.':error.message);return}
+  onAuthSuccess(data.user);
+});
+
+// Google OAuth
+document.getElementById('googleLoginBtn').addEventListener('click',googleAuth);
+document.getElementById('googleSignupBtn').addEventListener('click',googleAuth);
+async function googleAuth(){
+  hideAuthMessages();
+  const{error}=await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin+window.location.pathname}});
+  if(error)showAuthError(error.message);
+}
+
+// Auth success handler
+function onAuthSuccess(user,nameOverride){
+  currentUser=user;
+  const name=nameOverride||user.user_metadata?.name||user.user_metadata?.full_name||user.email?.split('@')[0]||'Apprenant';
+  document.getElementById('authScreen').classList.add('hide');
+  document.getElementById('fnav').style.display='';
+  S.name=name;
+  saveState();
+  checkDaily();
+  if(!S.onboarded){startOnboarding();return}
+  if(window.lucide)lucide.createIcons();
+  showView(location.hash||'#home');
+  setInterval(updateChallengeTimer,60000);
+}
+
+// Logout
+async function logout(){
+  await supabase.auth.signOut();
+  currentUser=null;
+  document.getElementById('authScreen').classList.remove('hide');
+  document.getElementById('fnav').style.display='none';
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('onboard').classList.add('hide');
+  hideAuthMessages();
+  // clear form fields
+  document.querySelectorAll('.auth-field input').forEach(i=>i.value='');
+}
+
 /* ============ STATE ============ */
 const DEFAULT_STATE=()=>({
-  name:'Mathis',onboarded:false,activeLang:'es',
+  name:'Apprenant',onboarded:false,activeLang:'es',
   xpTotal:0,xpToday:0,dailyGoal:500,
   lastSeen:null,streak:0,longestStreak:0,
   sessionsVoice:0,
@@ -1593,7 +1775,7 @@ function renderProfile(){
   document.getElementById('profName').textContent=S.name||'Apprenant';
   document.getElementById('profAvatar').textContent=(S.name||'U')[0].toUpperCase();
   const title=S.xpTotal>=3000?'Polyglotte Avancé ✦':S.xpTotal>=1000?'Polyglotte Intermédiaire ✦':'Polyglotte Débutant ✦';
-  document.getElementById('profTitle').textContent=title;
+  document.getElementById('profTitle').textContent=title+(currentUser?' • '+currentUser.email:'');
   const nextLvl=Math.ceil((S.xpTotal+1)/1000)*1000;
   document.getElementById('profXpLabel').textContent=`${S.xpTotal} XP — Prochain niveau : ${nextLvl} XP`;
   document.getElementById('profXpFill').style.width=((S.xpTotal%1000)/1000*100)+'%';
@@ -1629,16 +1811,25 @@ function renderProfile(){
 }
 
 /* ============ INIT ============ */
-function init(){
-  checkDaily();
-  if(!S.onboarded){startOnboarding();return}
-  if(window.lucide)lucide.createIcons();
-  showView(location.hash||'#home');
-  setInterval(updateChallengeTimer,60000);
+async function init(){
+  // Hide app until auth resolved
+  document.getElementById('fnav').style.display='none';
+  // Check existing session
+  const{data:{session}}=await supabase.auth.getSession();
+  if(session&&session.user){
+    onAuthSuccess(session.user);
+  }
+  // Listen for auth changes (Google OAuth redirect)
+  supabase.auth.onAuthStateChange((event,session)=>{
+    if(event==='SIGNED_IN'&&session&&!currentUser){
+      onAuthSuccess(session.user);
+    }
+  });
 }
 init();
-function resetAll(){if(confirm('Es-tu sûr de vouloir tout effacer ? Cette action est irréversible.')){localStorage.removeItem('lingua');location.reload()}}
-window.startLesson=startLesson;window.quitLesson=quitLesson;window.endLessonNext=endLessonNext;window.restartLesson=restartLesson;window.startReview=startReview;window.vocalPrev=vocalPrev;window.vocalNext=vocalNext;window.speak=speak;window.resetAll=resetAll;
+function resetAll(){if(confirm('Es-tu sûr de vouloir tout effacer ? Ta progression sera remise à zéro.')){localStorage.removeItem('lingua');S=loadState();location.reload()}}
+async function deleteAccount(){if(confirm('⚠️ Supprimer définitivement ton compte et toutes tes données ?\n\nCette action est IRRÉVERSIBLE.')&&confirm('Dernière chance : es-tu vraiment sûr ?')){localStorage.removeItem('lingua');await supabase.auth.signOut();alert('Compte déconnecté. Pour la suppression définitive des données serveur, contacte contact@lingua-app.fr.\n\n(Conformément au RGPD, ta demande sera traitée sous 30 jours.)');location.reload()}}
+window.startLesson=startLesson;window.quitLesson=quitLesson;window.endLessonNext=endLessonNext;window.restartLesson=restartLesson;window.startReview=startReview;window.vocalPrev=vocalPrev;window.vocalNext=vocalNext;window.speak=speak;window.resetAll=resetAll;window.logout=logout;window.deleteAccount=deleteAccount;window.showPrivacy=showPrivacy;
 </script>
 </body>
 </html>

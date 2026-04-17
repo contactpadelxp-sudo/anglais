@@ -713,108 +713,617 @@ const TEST_QUESTIONS={
   ]
 };
 
-const LESSONS={
-  es:[
-    {id:1,sec:'A1',type:'vocab',emoji:'🤝',title:'Salutations & présentations',desc:'Les bases pour dire bonjour',xp:50,level:'A1',q:[
-      {t:'tr',q:'"Buenos días" signifie ?',opts:['Bonjour','Bonsoir','Au revoir','Merci'],a:0},
-      {t:'tr',q:'"Me llamo Carlos" signifie ?',opts:['Je suis appelé Carlos','Je m\'appelle Carlos','Il s\'appelle Carlos','Tu t\'appelles Carlos'],a:1},
-      {t:'fill',q:'Complétez : "¿Cómo te ___?"',opts:['llamas','llamo','llama','llamáis'],a:0,sentence:'¿Cómo te ___?'},
-      {t:'speech',q:'Dites à voix haute',target:'Hola, me llamo Mathis',translit:'"O-la me ya-mo Mathis"'},
-      {t:'listen',q:'Écoutez et choisissez',audio:'Encantado',opts:['Enchanté','Désolé','Au revoir','Bienvenue'],a:0},
-      {t:'order',q:'Remettez dans l\'ordre : "Comment vas-tu ?"',words:['¿Cómo','estás','tú','?'],correct:'¿Cómo estás tú ?'},
-    ]},
-    {id:2,sec:'A1',type:'vocab',emoji:'🔢',title:'Les chiffres 1-100',desc:'Compter en espagnol',xp:60,level:'A1',q:[
-      {t:'tr',q:'"cinco" signifie ?',opts:['3','4','5','6'],a:2},
-      {t:'tr',q:'"veinte" signifie ?',opts:['10','20','30','40'],a:1},
-      {t:'tr',q:'"cien" signifie ?',opts:['10','100','1000','50'],a:1},
-      {t:'listen',q:'Écoutez le nombre',audio:'setenta y tres',opts:['73','63','83','93'],a:0},
-      {t:'speech',q:'Dites',target:'cuarenta y dos'},
-      {t:'match',q:'Associez',pairs:[['uno','1'],['diez','10'],['cincuenta','50'],['mil','1000']]},
-    ]},
-    {id:3,sec:'A1',type:'vocab',emoji:'🎨',title:'Les couleurs',desc:'Rouge, bleu, vert...',xp:50,level:'A1',q:[
-      {t:'tr',q:'"rojo" signifie ?',opts:['Rouge','Bleu','Vert','Jaune'],a:0},
-      {t:'tr',q:'"azul" signifie ?',opts:['Noir','Bleu','Blanc','Brun'],a:1},
-      {t:'match',q:'Associez',pairs:[['verde','Vert'],['amarillo','Jaune'],['negro','Noir'],['blanco','Blanc']]},
-      {t:'speech',q:'Dites',target:'El cielo es azul'},
-    ]},
-    {id:4,sec:'A1',type:'vocab',emoji:'👨‍👩‍👧',title:'La famille',desc:'Parents, frères et sœurs',xp:70,level:'A1',q:[
-      {t:'tr',q:'"madre" signifie ?',opts:['Père','Mère','Frère','Sœur'],a:1},
-      {t:'tr',q:'"hermano" signifie ?',opts:['Oncle','Père','Frère','Cousin'],a:2},
-      {t:'fill',q:'"Mi ___ se llama Ana." (ma sœur)',opts:['hermana','hermano','madre','abuela'],a:0,sentence:'Mi ___ se llama Ana.'},
-      {t:'speech',q:'Dites',target:'Mi familia es grande'},
-    ]},
-    {id:5,sec:'A2',type:'vocab',emoji:'🍽️',title:'Au restaurant',desc:'Commander à manger',xp:80,level:'A2',q:[
-      {t:'tr',q:'"la cuenta" signifie ?',opts:['Le menu','L\'addition','Le pourboire','La carte'],a:1},
-      {t:'tr',q:'"tengo sed" signifie ?',opts:['J\'ai faim','J\'ai soif','J\'ai froid','J\'ai chaud'],a:1},
-      {t:'speech',q:'Dites poliment',target:'Quisiera un café por favor'},
-      {t:'order',q:'Remettez : "Je voudrais de l\'eau"',words:['Quisiera','agua','por','favor'],correct:'Quisiera agua por favor'},
-      {t:'listen',q:'Écoutez',audio:'¿Qué desea comer?',opts:['Que voulez-vous manger ?','Où voulez-vous manger ?','Quand mangez-vous ?','Comment mangez-vous ?'],a:0},
-    ]},
-    {id:6,sec:'A2',type:'grammar',emoji:'🏠',title:'Décrire son domicile',desc:'Parler de où on vit',xp:90,level:'A2',q:[
-      {t:'fill',q:'"Mi casa ___ grande."',opts:['es','está','soy','estoy'],a:0,sentence:'Mi casa ___ grande.'},
-      {t:'fill',q:'"El libro ___ sobre la mesa."',opts:['es','está','son','están'],a:1,sentence:'El libro ___ sobre la mesa.'},
-      {t:'tr',q:'"dormitorio" signifie ?',opts:['Salle de bain','Chambre','Cuisine','Salon'],a:1},
-      {t:'speech',q:'Dites',target:'Vivo en un apartamento pequeño'},
-    ]},
-    {id:7,sec:'A2',type:'grammar',emoji:'🕐',title:'L\'heure et le temps',desc:'Dire l\'heure en espagnol',xp:80,level:'A2',q:[
-      {t:'tr',q:'"Son las tres" signifie ?',opts:['Il est une heure','Il est deux heures','Il est trois heures','Il est quatre heures'],a:2},
-      {t:'fill',q:'"___ la una."',opts:['Es','Son','Está','Están'],a:0,sentence:'___ la una.'},
-      {t:'listen',q:'Quelle heure ?',audio:'Son las cinco y media',opts:['5h30','5h00','6h30','6h00'],a:0},
-      {t:'speech',q:'Dites',target:'Son las ocho menos cuarto'},
-    ]},
-    {id:8,sec:'B1',type:'grammar',emoji:'🎭',title:'Le subjonctif présent',desc:'Un mode essentiel',xp:150,level:'B1',q:[
-      {t:'fill',q:'"Espero que tú ___ venir."',opts:['puedas','puedes','podrás','podías'],a:0,sentence:'Espero que tú ___ venir.'},
-      {t:'fill',q:'"Es importante que nosotros ___."',opts:['estudiemos','estudiamos','estudiábamos','estudiaremos'],a:0,sentence:'Es importante que nosotros ___.'},
-      {t:'tr',q:'"Ojalá llueva" signifie ?',opts:['Il pleut peut-être','Pourvu qu\'il pleuve','Il va pleuvoir','Il a plu'],a:1},
-      {t:'order',q:'Remettez : "Je veux qu\'elle vienne"',words:['Quiero','que','ella','venga'],correct:'Quiero que ella venga'},
-      {t:'speech',q:'Dites',target:'Ojalá que tengas suerte'},
-      {t:'match',q:'Associez la conjugaison',pairs:[['yo hable','que je parle'],['tú comas','que tu manges'],['él viva','qu\'il vive'],['ellos sean','qu\'ils soient']]},
-    ]},
-    {id:9,sec:'B1',type:'conv',emoji:'📰',title:'Lire la presse simplifiée',desc:'Vocabulaire journalistique',xp:120,level:'B1',q:[
-      {t:'tr',q:'"El titular" signifie ?',opts:['L\'article','Le titre','Le journaliste','Le lecteur'],a:1},
-      {t:'tr',q:'"La noticia" signifie ?',opts:['La rubrique','L\'annonce','La nouvelle','L\'avis'],a:2},
-      {t:'tr',q:'"Según el periódico" signifie ?',opts:['D\'après le journal','Dans le journal','Sur le journal','Pour le journal'],a:0},
-    ]},
-    {id:10,sec:'B1',type:'vocab',emoji:'💼',title:'Vocabulaire professionnel',desc:'Au travail en espagnol',xp:100,level:'B1',locked:true,q:[]},
-    {id:11,sec:'B2',type:'culture',emoji:'✈️',title:'Voyager en autonomie',desc:'À l\'aéroport',xp:120,level:'B2',locked:true,q:[]},
-  ],
-  en:[
-    {id:1,sec:'A1',type:'vocab',emoji:'👋',title:'Greetings',desc:'Say hello',xp:50,level:'A1',q:[
-      {t:'tr',q:'"Good morning" signifie ?',opts:['Bonjour','Bonsoir','Bonne nuit','Merci'],a:0},
-      {t:'tr',q:'"How are you?" signifie ?',opts:['Qui es-tu ?','Comment vas-tu ?','Où vas-tu ?','Pourquoi ?'],a:1},
-      {t:'speech',q:'Say it',target:'Hello, nice to meet you'},
-      {t:'listen',q:'Listen',audio:'Have a nice day',opts:['Bonne journée','Bonjour','Au revoir','À bientôt'],a:0},
-    ]},
-    {id:2,sec:'A1',type:'vocab',emoji:'🔢',title:'Numbers',desc:'1 to 100',xp:60,level:'A1',q:[
-      {t:'tr',q:'"seven" signifie ?',opts:['5','6','7','8'],a:2},
-      {t:'listen',q:'Listen',audio:'forty-three',opts:['43','34','53','33'],a:0},
-      {t:'speech',q:'Say',target:'twenty five'},
-    ]},
-    {id:3,sec:'A2',type:'grammar',emoji:'⏰',title:'Past simple',desc:'Parler du passé',xp:90,level:'A2',q:[
-      {t:'fill',q:'"She ___ to Paris last year."',opts:['go','goes','went','gone'],a:2,sentence:'She ___ to Paris last year.'},
-      {t:'fill',q:'"I ___ a great movie."',opts:['watch','watched','watching','watches'],a:1,sentence:'I ___ a great movie.'},
-      {t:'speech',q:'Say',target:'I visited London yesterday'},
-    ]},
-    {id:4,sec:'B1',type:'grammar',emoji:'✨',title:'Present perfect',desc:'Lien passé-présent',xp:120,level:'B1',q:[
-      {t:'fill',q:'"I ___ lived here for 5 years."',opts:['have','has','had','having'],a:0,sentence:'I ___ lived here for 5 years.'},
-      {t:'tr',q:'"I have just finished" signifie ?',opts:['Je finis','Je viens de finir','J\'avais fini','Je finirai'],a:1},
-      {t:'speech',q:'Say',target:'I have been to Italy'},
-    ]},
-  ],
-  it:[
-    {id:1,sec:'A1',type:'vocab',emoji:'👋',title:'Saluti',desc:'Dire bonjour',xp:50,level:'A1',q:[
-      {t:'tr',q:'"Buongiorno" signifie ?',opts:['Bonsoir','Bonjour','Au revoir','Merci'],a:1},
-      {t:'tr',q:'"Come stai?" signifie ?',opts:['Comment tu t\'appelles','Comment vas-tu','Où vas-tu','Quel âge as-tu'],a:1},
-      {t:'speech',q:'Dites',target:'Piacere di conoscerti'},
-    ]},
-    {id:2,sec:'A1',type:'vocab',emoji:'🍝',title:'Il cibo',desc:'Vocabulaire culinaire',xp:70,level:'A1',q:[
-      {t:'tr',q:'"pane" signifie ?',opts:['Lait','Pain','Eau','Vin'],a:1},
-      {t:'tr',q:'"formaggio" signifie ?',opts:['Fromage','Jambon','Riz','Sucre'],a:0},
-      {t:'match',q:'Associez',pairs:[['latte','Lait'],['acqua','Eau'],['vino','Vin'],['caffè','Café']]},
-      {t:'speech',q:'Dites',target:'Vorrei una pizza margherita'},
-    ]},
-  ]
-};
+/* ============ CURRICULUM 441 LESSONS ============ */
+/* Format: units with lessons. Each lesson has hand-crafted exercises (ex) and/or
+   word pools (wp) + sentence pools (sp) from which the generator creates exercises. */
+
+const CURRICULUM={es:[
+// ══════ A1 ══════
+{sec:'A1',emoji:'👋',unit:'Premières bases',lessons:[
+{id:'es-A1-1',t:'Salutations',tp:'vocab',xp:50,ex:[
+{t:'tr',q:'Que signifie "Hola" ?',opts:['Bonjour','Au revoir','Merci','S\'il vous plaît'],a:0},
+{t:'tr',q:'Comment dire "Au revoir" ?',opts:['Hola','Adiós','Gracias','Por favor'],a:1},
+{t:'tr',q:'"Buenos días" signifie :',opts:['Bonne nuit','Bonsoir','Bonjour (matin)','Bonne après-midi'],a:2},
+{t:'fill',q:'Complète : "___ noches, hasta mañana."',opts:['Buenos','Buenas','Buen','Bueno'],a:1,sentence:'___ noches, hasta mañana.'},
+{t:'tr',q:'"¿Cómo estás?" signifie :',opts:['Comment tu t\'appelles','Comment vas-tu','D\'où viens-tu','Quel âge as-tu'],a:1},
+{t:'fill',q:'"Bien, gracias. ¿Y ___?"',opts:['tú','él','yo','usted'],a:0,sentence:'Bien, gracias. ¿Y ___?'},
+{t:'tr',q:'Que signifie "Mucho gusto" ?',opts:['Bonne chance','Enchanté','Bonne journée','À bientôt'],a:1},
+{t:'order',q:'Remets dans l\'ordre :',words:['me','llamo','Pablo','Yo'],correct:'Yo me llamo Pablo'},
+{t:'listen',q:'Écoute et choisis :',audio:'Buenos días',opts:['Buenos días','Buenas noches','Buenas tardes','Buen día'],a:0},
+{t:'speech',q:'Prononce :',target:'Hola, ¿cómo estás?'}
+]},
+{id:'es-A1-2',t:'Chiffres 1-20',tp:'vocab',xp:50,ex:[
+{t:'tr',q:'"Cinco" signifie :',opts:['3','4','5','6'],a:2},
+{t:'tr',q:'Comment dit-on "10" ?',opts:['ocho','nueve','diez','once'],a:2},
+{t:'tr',q:'"Quince" correspond à :',opts:['13','14','15','16'],a:2},
+{t:'fill',q:'"Tengo ___ años." (20)',opts:['diez','quince','veinte','doce'],a:2,sentence:'Tengo ___ años.'},
+{t:'tr',q:'Quel nombre est "dieciséis" ?',opts:['15','16','17','18'],a:1},
+{t:'order',q:'Remets :',words:['años','tengo','dieciocho','Yo'],correct:'Yo tengo dieciocho años'},
+{t:'tr',q:'"Tres + cinco = ___"',opts:['siete','ocho','nueve','diez'],a:1},
+{t:'match',q:'Associez',pairs:[['uno','1'],['diez','10'],['quince','15'],['veinte','20']]},
+{t:'listen',q:'Écoute :',audio:'doce',opts:['diez','once','doce','trece'],a:2},
+{t:'speech',q:'Dis ce nombre :',target:'diecisiete'}
+]},
+{id:'es-A1-3',t:'Se présenter',tp:'conv',xp:60,ex:[
+{t:'tr',q:'"¿Cómo te llamas?" signifie :',opts:['Où habites-tu','Comment tu t\'appelles','Quel âge as-tu','D\'où viens-tu'],a:1},
+{t:'fill',q:'"Me llamo Ana y ___ de Madrid."',opts:['soy','estoy','tengo','vivo'],a:0,sentence:'Me llamo Ana y ___ de Madrid.'},
+{t:'tr',q:'Pour dire "J\'ai 25 ans" :',opts:['Soy 25 años','Tengo 25 años','Estoy 25 años','Hay 25 años'],a:1},
+{t:'tr',q:'"¿De dónde eres?" signifie :',opts:['Comment tu t\'appelles','Où habites-tu','D\'où es-tu','Quel est ton travail'],a:2},
+{t:'fill',q:'"___ francés, de París."',opts:['Estoy','Tengo','Soy','Hay'],a:2,sentence:'___ francés, de París.'},
+{t:'order',q:'Remets :',words:['dónde','¿De','eres','tú','?'],correct:'¿De dónde eres tú ?'},
+{t:'tr',q:'Pour demander la nationalité :',opts:['¿Cuántos años tienes?','¿Cuál es tu nacionalidad?','¿Dónde vives?','¿Cómo te llamas?'],a:1},
+{t:'match',q:'Associez',pairs:[['francés','français'],['español','espagnol'],['alemán','allemand'],['inglés','anglais']]},
+{t:'listen',q:'Écoute :',audio:'Me llamo Carlos',opts:['Me llamo Carlos','Me llamo María','Te llamas Carlos','Se llama Carlos'],a:0},
+{t:'speech',q:'Présente-toi :',target:'Me llamo Mathis, soy francés'}
+]},
+{id:'es-A1-4',t:'La politesse',tp:'culture',xp:50,ex:[
+{t:'tr',q:'"Gracias" signifie :',opts:['S\'il vous plaît','De rien','Merci','Excusez-moi'],a:2},
+{t:'tr',q:'Répondre à "Gracias" :',opts:['Por favor','De nada','Lo siento','Perdón'],a:1},
+{t:'tr',q:'"Perdón" s\'utilise pour :',opts:['Remercier','S\'excuser','Saluer','Se présenter'],a:1},
+{t:'fill',q:'"___ favor, ¿dónde está la estación?"',opts:['Por','Para','Con','Sin'],a:0,sentence:'___ favor, ¿dónde está la estación?'},
+{t:'tr',q:'"Lo siento" exprime :',opts:['La joie','La surprise','Les excuses','La politesse'],a:2},
+{t:'order',q:'Remets :',words:['favor','Por','¿dónde','está','la','cuenta','?'],correct:'Por favor ¿dónde está la cuenta ?'},
+{t:'tr',q:'Dans un restaurant, appeler le serveur :',opts:['Perdón','Lo siento','Disculpe','Gracias'],a:2},
+{t:'match',q:'Associez',pairs:[['gracias','merci'],['por favor','s\'il vous plaît'],['de nada','de rien'],['lo siento','désolé']]},
+{t:'listen',q:'Écoute :',audio:'De nada',opts:['Gracias','De nada','Por favor','Perdón'],a:1},
+{t:'speech',q:'Prononce :',target:'Muchas gracias, de nada'}
+]}
+]},
+{sec:'A1',emoji:'🏠',unit:'La vie quotidienne',lessons:[
+{id:'es-A1-5',t:'Les couleurs',tp:'vocab',xp:50,ex:[
+{t:'tr',q:'"Rojo" signifie :',opts:['Bleu','Vert','Rouge','Jaune'],a:2},
+{t:'tr',q:'Comment dire "bleu" ?',opts:['azul','verde','amarillo','naranja'],a:0},
+{t:'fill',q:'"El cielo es ___."',opts:['rojo','azul','verde','negro'],a:1,sentence:'El cielo es ___.'},
+{t:'tr',q:'"Amarillo" signifie :',opts:['Orange','Jaune','Vert','Marron'],a:1},
+{t:'tr',q:'La couleur de la forêt :',opts:['azul','rojo','verde','blanco'],a:2},
+{t:'order',q:'Remets :',words:['es','La','roja','manzana'],correct:'La manzana es roja'},
+{t:'match',q:'Associez',pairs:[['rojo','rouge'],['azul','bleu'],['verde','vert'],['negro','noir']]},
+{t:'fill',q:'"El sol es ___ y naranja."',opts:['amarillo','azul','rojo','blanco'],a:0,sentence:'El sol es ___ y naranja.'},
+{t:'listen',q:'Écoute :',audio:'blanco',opts:['negro','blanco','gris','marrón'],a:1},
+{t:'speech',q:'Dis cette couleur :',target:'amarillo'}
+]},
+{id:'es-A1-6',t:'La maison',tp:'vocab',xp:55,ex:[
+{t:'tr',q:'"Cocina" signifie :',opts:['Salon','Chambre','Cuisine','Salle de bain'],a:2},
+{t:'tr',q:'Comment dire "chambre" ?',opts:['sala','dormitorio','cocina','jardín'],a:1},
+{t:'fill',q:'"Vivo en una ___ grande."',opts:['mesa','casa','libro','coche'],a:1,sentence:'Vivo en una ___ grande.'},
+{t:'tr',q:'"Baño" signifie :',opts:['Jardin','Garage','Salle de bain','Escalier'],a:2},
+{t:'tr',q:'Objet dans la cuisine :',opts:['cama','silla','nevera','sofá'],a:2},
+{t:'order',q:'Remets :',words:['en','Vivo','piso','un'],correct:'Vivo en un piso'},
+{t:'match',q:'Associez',pairs:[['cocina','cuisine'],['dormitorio','chambre'],['baño','salle de bain'],['salón','salon']]},
+{t:'fill',q:'"El ___ está al lado del dormitorio."',opts:['baño','jardín','garaje','sótano'],a:0,sentence:'El ___ está al lado del dormitorio.'},
+{t:'listen',q:'Écoute :',audio:'dormitorio',opts:['cocina','baño','dormitorio','salón'],a:2},
+{t:'speech',q:'Prononce :',target:'Mi casa tiene tres dormitorios'}
+]},
+{id:'es-A1-7',t:'La routine',tp:'grammar',xp:65,ex:[
+{t:'tr',q:'"Despertarse" signifie :',opts:['Se coucher','Se réveiller','Se doucher','S\'habiller'],a:1},
+{t:'fill',q:'"Por la mañana, ___ a las 7h."',opts:['me despierto','me acuesto','me ducho','me visto'],a:0,sentence:'Por la mañana, ___ a las 7h.'},
+{t:'tr',q:'Quel verbe pour "prendre le petit-déjeuner" ?',opts:['cenar','comer','desayunar','almorzar'],a:2},
+{t:'tr',q:'"Me acuesto" signifie :',opts:['Je me lève','Je me couche','Je me lave','Je m\'attarde'],a:1},
+{t:'order',q:'Remets :',words:['ducho','me','mañana','Por','la'],correct:'Por la mañana me ducho'},
+{t:'fill',q:'"___ el autobús a las 8h."',opts:['Tomo','Hago','Voy','Tengo'],a:0,sentence:'___ el autobús a las 8h.'},
+{t:'tr',q:'"Trabajar" signifie :',opts:['Étudier','Dormir','Travailler','Manger'],a:2},
+{t:'match',q:'Associez',pairs:[['despertarse','se réveiller'],['ducharse','se doucher'],['vestirse','s\'habiller'],['acostarse','se coucher']]},
+{t:'listen',q:'Écoute :',audio:'Me despierto',opts:['Me ducho','Me visto','Me despierto','Me acuesto'],a:2},
+{t:'speech',q:'Dis cette routine :',target:'Me despierto a las siete'}
+]},
+{id:'es-A1-8',t:'Jours et mois',tp:'vocab',xp:50,ex:[
+{t:'tr',q:'"Lunes" signifie :',opts:['Mardi','Mercredi','Lundi','Jeudi'],a:2},
+{t:'tr',q:'Le 3e jour de la semaine :',opts:['lunes','martes','miércoles','jueves'],a:2},
+{t:'fill',q:'"Hoy es ___, mañana es viernes."',opts:['miércoles','lunes','jueves','martes'],a:2,sentence:'Hoy es ___, mañana es viernes.'},
+{t:'tr',q:'"Agosto" signifie :',opts:['Juin','Juillet','Août','Septembre'],a:2},
+{t:'tr',q:'Le mois de Noël :',opts:['noviembre','diciembre','enero','febrero'],a:1},
+{t:'order',q:'Remets :',words:['es','Hoy','lunes','de','abril'],correct:'Hoy es lunes de abril'},
+{t:'match',q:'Associez',pairs:[['lunes','lundi'],['viernes','vendredi'],['enero','janvier'],['diciembre','décembre']]},
+{t:'fill',q:'"Mi cumpleaños es en ___."',opts:['marzo','azul','casa','libro'],a:0,sentence:'Mi cumpleaños es en ___.'},
+{t:'listen',q:'Écoute :',audio:'miércoles',opts:['lunes','martes','miércoles','jueves'],a:2},
+{t:'speech',q:'Dis ce jour :',target:'El miércoles por la tarde'}
+]}
+]},
+{sec:'A1',emoji:'👨‍👩‍👧',unit:'Famille & entourage',lessons:[
+{id:'es-A1-9',t:'La famille',tp:'vocab',xp:50,wp:[['madre','mère'],['padre','père'],['hermano','frère'],['hermana','sœur'],['abuelo','grand-père'],['abuela','grand-mère'],['tío','oncle'],['tía','tante'],['hijo','fils'],['hija','fille'],['primo','cousin'],['padres','parents']],sp:['Mi madre se llama Ana','Tengo dos hermanos','Mi familia es grande','Mis padres viven en Lyon']},
+{id:'es-A1-10',t:'Description physique',tp:'vocab',xp:55,wp:[['alto','grand'],['bajo','petit'],['rubio','blond'],['moreno','brun'],['delgado','mince'],['gordo','gros'],['joven','jeune'],['viejo','vieux'],['guapo','beau'],['ojos','yeux'],['pelo','cheveux'],['largo','long']],sp:['Mi hermana es alta y rubia','Tiene los ojos azules','Es delgado y joven','Tiene el pelo largo']},
+{id:'es-A1-11',t:'Personnalité',tp:'vocab',xp:55,wp:[['simpático','sympathique'],['tímido','timide'],['alegre','joyeux'],['serio','sérieux'],['inteligente','intelligent'],['amable','aimable'],['divertido','amusant'],['tranquilo','tranquille'],['generoso','généreux'],['trabajador','travailleur']],sp:['Mi hermano es simpático','Es una persona muy amable','Soy alegre y divertido']},
+{id:'es-A1-12',t:'Parler de sa famille',tp:'conv',xp:60,wp:[['casado','marié'],['soltero','célibataire'],['vivir','vivre'],['mayor','aîné'],['menor','cadet'],['sobrino','neveu'],['cuñado','beau-frère'],['nieto','petit-fils']],sp:['Somos cuatro en mi familia','Mi hermano mayor tiene 25 años','Mis abuelos viven en el campo']}
+]},
+{sec:'A1',emoji:'🍽️',unit:'Nourriture & boissons',lessons:[
+{id:'es-A1-13',t:'Aliments de base',tp:'vocab',xp:50,ex:[
+{t:'tr',q:'"Pan" signifie :',opts:['Beurre','Pain','Fromage','Lait'],a:1},
+{t:'tr',q:'Comment dire "eau" ?',opts:['leche','zumo','agua','vino'],a:2},
+{t:'fill',q:'"Me gusta la ___ con tomate."',opts:['pan','carne','fruta','arroz'],a:0,sentence:'Me gusta la ___ con tomate.'},
+{t:'tr',q:'"Pollo" signifie :',opts:['Bœuf','Porc','Poulet','Agneau'],a:2},
+{t:'match',q:'Associez',pairs:[['pan','pain'],['leche','lait'],['huevo','œuf'],['queso','fromage']]},
+{t:'fill',q:'"¿Quieres más ___?" (riz)',opts:['pasta','arroz','pan','sopa'],a:1,sentence:'¿Quieres más ___?'},
+{t:'tr',q:'"Fruta" signifie :',opts:['Légume','Fruit','Dessert','Boisson'],a:1},
+{t:'order',q:'Remets :',words:['gusta','la','Me','pizza'],correct:'Me gusta la pizza'},
+{t:'listen',q:'Écoute :',audio:'pollo',opts:['cerdo','pollo','ternera','pescado'],a:1},
+{t:'speech',q:'Dis cette phrase :',target:'Me gusta mucho la pasta'}
+]},
+{id:'es-A1-14',t:'Au restaurant',tp:'conv',xp:60,wp:[['la cuenta','l\'addition'],['el menú','le menu'],['camarero','serveur'],['propina','pourboire'],['plato','plat'],['postre','dessert'],['reserva','réservation'],['mesa','table']],sp:['Quisiera un café por favor','La cuenta por favor','¿Qué desea comer?','Mesa para dos personas']},
+{id:'es-A1-15',t:'Goûts alimentaires',tp:'conv',xp:55,wp:[['me gusta','j\'aime'],['no me gusta','je n\'aime pas'],['prefiero','je préfère'],['dulce','sucré'],['salado','salé'],['picante','épicé'],['rico','bon (goût)'],['asqueroso','dégoûtant']],sp:['Me gusta mucho el chocolate','No me gusta el pescado','Prefiero la carne al pescado']},
+{id:'es-A1-16',t:'Les repas',tp:'vocab',xp:50,wp:[['desayuno','petit-déjeuner'],['almuerzo','déjeuner'],['cena','dîner'],['merienda','goûter'],['cocinar','cuisiner'],['receta','recette'],['ingredientes','ingrédients'],['preparar','préparer']],sp:['El desayuno es a las ocho','Hoy cocino yo','La cena está lista']}
+]},
+{sec:'A1',emoji:'☀️',unit:'Temps & météo',lessons:[
+{id:'es-A1-17',t:'La météo',tp:'vocab',xp:50,wp:[['sol','soleil'],['lluvia','pluie'],['nieve','neige'],['viento','vent'],['nublado','nuageux'],['calor','chaleur'],['frío','froid'],['tormenta','orage'],['temperatura','température'],['cielo','ciel']],sp:['Hoy hace sol','Mañana va a llover','Hace mucho calor','El cielo está nublado']},
+{id:'es-A1-18',t:'Les saisons',tp:'vocab',xp:50,wp:[['primavera','printemps'],['verano','été'],['otoño','automne'],['invierno','hiver'],['flor','fleur'],['playa','plage'],['hoja','feuille'],['nieve','neige']],sp:['En verano voy a la playa','El invierno es frío','La primavera es mi estación favorita']},
+{id:'es-A1-19',t:'L\'heure',tp:'grammar',xp:60,wp:[['hora','heure'],['minutos','minutes'],['en punto','pile'],['y media','et demie'],['menos cuarto','moins le quart'],['y cuarto','et quart'],['temprano','tôt'],['tarde','tard']],sp:['Son las tres en punto','Es la una y media','Son las ocho menos cuarto']},
+{id:'es-A1-20',t:'Dates et fêtes',tp:'culture',xp:55,wp:[['cumpleaños','anniversaire'],['Navidad','Noël'],['fiesta','fête'],['vacaciones','vacances'],['regalo','cadeau'],['celebrar','célébrer'],['año nuevo','nouvel an'],['Semana Santa','Semaine Sainte']],sp:['Mi cumpleaños es en marzo','Feliz Navidad','Las vacaciones son en agosto']}
+]},
+// ══════ A2 ══════
+{sec:'A2',emoji:'🚗',unit:'Transports & directions',lessons:[
+{id:'es-A2-21',t:'Moyens de transport',tp:'vocab',xp:65,ex:[
+{t:'tr',q:'"Autobús" signifie :',opts:['Métro','Bus','Train','Avion'],a:1},
+{t:'fill',q:'"Voy a Madrid en ___."',opts:['tren','avión','metro','bici'],a:1,sentence:'Voy a Madrid en ___.'},
+{t:'tr',q:'Comment dire "tourner à gauche" ?',opts:['Gire a la derecha','Siga recto','Gire a la izquierda','Dé la vuelta'],a:2},
+{t:'order',q:'Remets :',words:['cojo','el','Yo','metro','para','ir','al','trabajo'],correct:'Yo cojo el metro para ir al trabajo'},
+{t:'match',q:'Associez',pairs:[['avión','avion'],['tren','train'],['barco','bateau'],['bicicleta','vélo']]},
+{t:'tr',q:'"Siga recto" signifie :',opts:['Tournez à droite','Continuez tout droit','Faites demi-tour','Prenez le bus'],a:1},
+{t:'fill',q:'"El tren sale del ___ número 3."',opts:['andén','calle','puerta','mostrador'],a:0,sentence:'El tren sale del ___ número 3.'},
+{t:'listen',q:'Écoute :',audio:'gire a la derecha',opts:['siga recto','gire a la izquierda','gire a la derecha','dé la vuelta'],a:2},
+{t:'speech',q:'Prononce :',target:'¿Cómo llego a la estación de tren?'},
+{t:'tr',q:'"Parada" signifie :',opts:['Parking','Arrêt','Gare','Aéroport'],a:1}
+]},
+{id:'es-A2-22',t:'Demander son chemin',tp:'conv',xp:65,wp:[['calle','rue'],['esquina','coin'],['cruce','carrefour'],['semáforo','feu rouge'],['acera','trottoir'],['al lado de','à côté de'],['enfrente de','en face de'],['cerca','près'],['lejos','loin']],sp:['¿Dónde está la estación?','Siga recto y gire a la izquierda','Está al lado del banco','No está lejos de aquí']},
+{id:'es-A2-23',t:'Aéroport et gare',tp:'vocab',xp:70,wp:[['vuelo','vol'],['embarque','embarquement'],['equipaje','bagage'],['pasaporte','passeport'],['billete','billet'],['ventanilla','guichet'],['asiento','siège'],['retraso','retard'],['llegada','arrivée'],['salida','départ']],sp:['Mi vuelo sale a las tres','¿Dónde puedo facturar el equipaje?','El tren tiene retraso']},
+{id:'es-A2-24',t:'Prépositions de lieu',tp:'grammar',xp:65,wp:[['encima de','au-dessus de'],['debajo de','en dessous de'],['dentro de','à l\'intérieur de'],['fuera de','à l\'extérieur de'],['entre','entre'],['detrás de','derrière'],['delante de','devant']],sp:['El gato está debajo de la mesa','El libro está encima del escritorio','La farmacia está entre el banco y el bar']},
+{id:'es-A2-25',t:'Acheter un billet',tp:'conv',xp:70,wp:[['ida','aller'],['vuelta','retour'],['ida y vuelta','aller-retour'],['primera clase','première classe'],['segunda clase','seconde classe'],['tarifa','tarif'],['descuento','réduction'],['horario','horaire']],sp:['Un billete de ida y vuelta a Barcelona','¿Cuánto cuesta el billete?','¿A qué hora sale el próximo tren?']}
+]},
+{sec:'A2',emoji:'🛒',unit:'Shopping & argent',lessons:[
+{id:'es-A2-26',t:'Les magasins',tp:'vocab',xp:65,wp:[['tienda','magasin'],['supermercado','supermarché'],['panadería','boulangerie'],['farmacia','pharmacie'],['librería','librairie'],['zapatería','magasin de chaussures'],['carnicería','boucherie'],['frutería','primeur']],sp:['Voy al supermercado','La farmacia está cerrada','Compro pan en la panadería']},
+{id:'es-A2-27',t:'Vêtements',tp:'vocab',xp:65,wp:[['camisa','chemise'],['pantalón','pantalon'],['vestido','robe'],['zapatos','chaussures'],['falda','jupe'],['chaqueta','veste'],['camiseta','t-shirt'],['abrigo','manteau'],['talla','taille'],['probarse','essayer']],sp:['Me gusta esta camisa','¿Tiene una talla más grande?','¿Puedo probarme este vestido?']},
+{id:'es-A2-28',t:'Faire les courses',tp:'conv',xp:70,wp:[['precio','prix'],['barato','bon marché'],['caro','cher'],['oferta','offre'],['pagar','payer'],['tarjeta','carte'],['efectivo','espèces'],['recibo','reçu'],['cambio','monnaie']],sp:['¿Cuánto cuesta esto?','Es demasiado caro','¿Puedo pagar con tarjeta?','Quédese con el cambio']},
+{id:'es-A2-29',t:'Négocier et réclamer',tp:'conv',xp:70,wp:[['devolver','rendre'],['cambiar','échanger'],['queja','plainte'],['garantía','garantie'],['roto','cassé'],['defectuoso','défectueux'],['reembolso','remboursement']],sp:['Quiero devolver este producto','Está roto','¿Tienen garantía?','Quiero hablar con el gerente']},
+{id:'es-A2-30',t:'L\'argent',tp:'vocab',xp:65,wp:[['dinero','argent'],['moneda','monnaie/pièce'],['billete','billet'],['banco','banque'],['cajero','distributeur'],['cuenta','compte'],['ahorrar','économiser'],['gastar','dépenser']],sp:['Necesito sacar dinero del cajero','¿Aceptan euros?','Quiero abrir una cuenta']}
+]},
+{sec:'A2',emoji:'🏥',unit:'Santé & corps',lessons:[
+{id:'es-A2-31',t:'Le corps humain',tp:'vocab',xp:60,wp:[['cabeza','tête'],['brazo','bras'],['pierna','jambe'],['mano','main'],['pie','pied'],['espalda','dos'],['estómago','estomac'],['corazón','cœur'],['diente','dent'],['rodilla','genou']],sp:['Me duele la cabeza','Tengo dolor de espalda','Me he roto el brazo']},
+{id:'es-A2-32',t:'Chez le médecin',tp:'conv',xp:70,wp:[['médico','médecin'],['enfermo','malade'],['fiebre','fièvre'],['tos','toux'],['receta','ordonnance'],['pastilla','comprimé'],['urgencias','urgences'],['cita','rendez-vous']],sp:['Tengo fiebre y tos','Necesito una receta','¿Tiene cita con el médico?']},
+{id:'es-A2-33',t:'Pharmacie',tp:'vocab',xp:65,wp:[['medicamento','médicament'],['jarabe','sirop'],['crema','crème'],['vendaje','bandage'],['aspirina','aspirine'],['alergia','allergie'],['dolor','douleur'],['síntoma','symptôme']],sp:['Necesito aspirina','Soy alérgico al polen','¿Tiene algo para el dolor de cabeza?']},
+{id:'es-A2-34',t:'Sport et exercice',tp:'vocab',xp:65,wp:[['correr','courir'],['nadar','nager'],['caminar','marcher'],['gimnasio','salle de sport'],['partido','match'],['equipo','équipe'],['entrenamiento','entraînement'],['ganar','gagner'],['perder','perdre']],sp:['Juego al fútbol los sábados','Voy al gimnasio tres veces por semana','Mi equipo ganó el partido']},
+{id:'es-A2-35',t:'Émotions',tp:'vocab',xp:65,wp:[['feliz','heureux'],['triste','triste'],['enfadado','en colère'],['nervioso','nerveux'],['cansado','fatigué'],['preocupado','inquiet'],['sorprendido','surpris'],['aburrido','ennuyé'],['emocionado','excité'],['asustado','effrayé']],sp:['Estoy muy feliz hoy','Estoy cansado después del trabajo','No estés preocupado']}
+]},
+{sec:'A2',emoji:'💼',unit:'Travail & études',lessons:[
+{id:'es-A2-36',t:'Les métiers',tp:'vocab',xp:65,wp:[['profesor','professeur'],['médico','médecin'],['abogado','avocat'],['ingeniero','ingénieur'],['enfermero','infirmier'],['bombero','pompier'],['policía','policier'],['cocinero','cuisinier'],['periodista','journaliste'],['arquitecto','architecte']],sp:['Soy profesor de español','Mi padre es médico','Quiero ser ingeniero']},
+{id:'es-A2-37',t:'Au bureau',tp:'vocab',xp:65,wp:[['oficina','bureau'],['ordenador','ordinateur'],['reunión','réunion'],['jefe','patron'],['compañero','collègue'],['correo','courrier'],['informe','rapport'],['proyecto','projet']],sp:['Trabajo en una oficina grande','Tengo una reunión a las diez','Mi jefe es muy amable']},
+{id:'es-A2-38',t:'Les études',tp:'vocab',xp:65,wp:[['universidad','université'],['examen','examen'],['deberes','devoirs'],['asignatura','matière'],['nota','note'],['aprobar','réussir'],['suspender','échouer'],['carrera','cursus']],sp:['Estudio en la universidad','Tengo examen mañana','He aprobado todas las asignaturas']},
+{id:'es-A2-39',t:'Compétences',tp:'conv',xp:70,wp:[['saber','savoir'],['poder','pouvoir'],['experiencia','expérience'],['habilidad','compétence'],['idioma','langue'],['informática','informatique'],['equipo','équipe'],['liderar','diriger']],sp:['Sé hablar tres idiomas','Tengo experiencia en marketing','Puedo trabajar en equipo']},
+{id:'es-A2-40',t:'Grammaire A2 — Passé',tp:'grammar',xp:75,wp:[['ayer','hier'],['la semana pasada','la semaine dernière'],['el año pasado','l\'année dernière'],['anoche','hier soir'],['antes','avant'],['después','après'],['todavía','encore'],['ya','déjà']],sp:['Ayer fui al cine','La semana pasada estudié mucho','Ya he terminado los deberes']}
+]},
+{sec:'A2',emoji:'🎭',unit:'Loisirs & temps libre',lessons:[
+{id:'es-A2-41',t:'Hobbies',tp:'vocab',xp:65,wp:[['leer','lire'],['bailar','danser'],['cantar','chanter'],['dibujar','dessiner'],['viajar','voyager'],['fotografía','photographie'],['pintura','peinture'],['música','musique'],['deporte','sport'],['película','film']],sp:['Me gusta mucho leer','Mi hobby es la fotografía','Los fines de semana bailo salsa']},
+{id:'es-A2-42',t:'Musique et cinéma',tp:'culture',xp:65,wp:[['canción','chanson'],['cantante','chanteur'],['concierto','concert'],['película','film'],['actor','acteur'],['director','réalisateur'],['escenario','scène'],['estreno','première']],sp:['Mi cantante favorito es Rosalía','Vamos al cine esta noche','La película fue muy buena']},
+{id:'es-A2-43',t:'Sortir en ville',tp:'conv',xp:70,wp:[['restaurante','restaurant'],['bar','bar'],['discoteca','discothèque'],['museo','musée'],['parque','parc'],['teatro','théâtre'],['exposición','exposition'],['entrada','entrée']],sp:['¿Quieres ir al cine?','Quedamos a las ocho','El museo abre a las diez']},
+{id:'es-A2-44',t:'Internet et réseaux',tp:'vocab',xp:65,wp:[['red social','réseau social'],['publicar','publier'],['compartir','partager'],['seguir','suivre'],['mensaje','message'],['comentario','commentaire'],['contraseña','mot de passe'],['perfil','profil']],sp:['Publico fotos en Instagram','¿Me sigues en Twitter?','He cambiado mi contraseña']},
+{id:'es-A2-45',t:'Grammaire A2 — Futur',tp:'grammar',xp:75,wp:[['mañana','demain'],['la próxima semana','la semaine prochaine'],['pronto','bientôt'],['en el futuro','dans le futur'],['algún día','un jour'],['voy a','je vais'],['pienso','je pense'],['espero','j\'espère']],sp:['Mañana voy a estudiar','El año que viene viajaré a Japón','Espero aprobar el examen']}
+]},
+{sec:'A2',emoji:'📝',unit:'Grammaire A2',lessons:[
+{id:'es-A2-46',t:'Ser vs Estar',tp:'grammar',xp:75,wp:[['ser','être (permanent)'],['estar','être (état)'],['profesión','profession'],['nacionalidad','nationalité'],['ubicación','emplacement'],['emoción','émotion'],['descripción','description'],['condición','condition']],sp:['Soy español','Estoy cansado','La casa es grande','Estoy en Madrid']},
+{id:'es-A2-47',t:'Passé composé',tp:'grammar',xp:75,wp:[['he comido','j\'ai mangé'],['he bebido','j\'ai bu'],['he hablado','j\'ai parlé'],['he viajado','j\'ai voyagé'],['he escrito','j\'ai écrit'],['he visto','j\'ai vu'],['he hecho','j\'ai fait'],['he dicho','j\'ai dit']],sp:['Hoy he comido paella','¿Has visto la película?','He escrito un email']},
+{id:'es-A2-48',t:'Imparfait',tp:'grammar',xp:75,wp:[['era','j\'étais'],['tenía','j\'avais'],['hacía','je faisais'],['iba','j\'allais'],['vivía','je vivais'],['jugaba','je jouais'],['estudiaba','j\'étudiais'],['comía','je mangeais']],sp:['Cuando era niño jugaba al fútbol','Vivía en Barcelona','Antes estudiaba mucho']},
+{id:'es-A2-49',t:'Comparatifs',tp:'grammar',xp:70,wp:[['más que','plus que'],['menos que','moins que'],['tan como','aussi que'],['mejor','meilleur'],['peor','pire'],['mayor','plus grand'],['menor','plus petit'],['igual','pareil']],sp:['Madrid es más grande que Barcelona','Este libro es mejor que ese','Soy tan alto como mi hermano']},
+{id:'es-A2-50',t:'Pronoms compléments',tp:'grammar',xp:75,wp:[['me','me'],['te','te'],['lo','le'],['la','la'],['le','lui'],['nos','nous'],['les','leur'],['se','se']],sp:['Te quiero mucho','Lo he comprado ayer','¿Me puedes ayudar?','Se lo dije ayer']}
+]},
+// ══════ B1 ══════
+{sec:'B1',emoji:'✈️',unit:'Voyages & aventure',lessons:[
+{id:'es-B1-51',t:'Planifier un voyage',tp:'conv',xp:85,wp:[['destino','destination'],['presupuesto','budget'],['alojamiento','hébergement'],['itinerario','itinéraire'],['reservar','réserver'],['temporada','saison'],['guía turística','guide touristique'],['seguro de viaje','assurance voyage']],sp:['Quiero reservar un vuelo a Colombia','¿Cuál es tu presupuesto?','Prefiero viajar en temporada baja']},
+{id:'es-B1-52',t:'À l\'hôtel',tp:'conv',xp:80,wp:[['habitación','chambre'],['recepción','réception'],['llave','clé'],['toalla','serviette'],['desayuno incluido','petit-déjeuner inclus'],['vista al mar','vue mer'],['piscina','piscine'],['aire acondicionado','climatisation']],sp:['Tengo una reserva a nombre de García','¿La habitación tiene vista al mar?','El desayuno está incluido']},
+{id:'es-B1-53',t:'Visiter une ville',tp:'conv',xp:85,wp:[['monumento','monument'],['catedral','cathédrale'],['plaza','place'],['barrio','quartier'],['oficina de turismo','office de tourisme'],['mapa','carte'],['recorrido','parcours'],['entrada','entrée']],sp:['¿Dónde está la oficina de turismo?','Me encanta este barrio','La catedral es impresionante']},
+{id:'es-B1-54',t:'Urgences à l\'étranger',tp:'conv',xp:90,wp:[['emergencia','urgence'],['embajada','ambassade'],['robo','vol'],['policía','police'],['denuncia','plainte'],['seguro','assurance'],['hospital','hôpital'],['perdido','perdu']],sp:['Me han robado la cartera','Necesito ir a la embajada','He perdido mi pasaporte']},
+{id:'es-B1-55',t:'Raconter un voyage',tp:'conv',xp:85,wp:[['experiencia','expérience'],['paisaje','paysage'],['inolvidable','inoubliable'],['aventura','aventure'],['recuerdo','souvenir'],['descubrir','découvrir'],['impresionante','impressionnant'],['recomendable','recommandable']],sp:['Fue una experiencia inolvidable','El paisaje era impresionante','Te recomiendo visitar Perú']}
+]},
+{sec:'B1',emoji:'📰',unit:'Médias & société',lessons:[
+{id:'es-B1-56',t:'La presse',tp:'vocab',xp:80,wp:[['periódico','journal'],['noticia','nouvelle'],['titular','titre'],['artículo','article'],['periodista','journaliste'],['reportaje','reportage'],['opinión','opinion'],['fuente','source']],sp:['Según el periódico','El titular dice que','Esta noticia es importante']},
+{id:'es-B1-57',t:'Donner son opinion',tp:'conv',xp:85,wp:[['creo que','je crois que'],['me parece que','il me semble que'],['en mi opinión','à mon avis'],['estoy de acuerdo','je suis d\'accord'],['no estoy de acuerdo','je ne suis pas d\'accord'],['sin embargo','cependant'],['por un lado','d\'un côté'],['por otro lado','de l\'autre côté']],sp:['Creo que tienes razón','En mi opinión es injusto','Estoy de acuerdo contigo']},
+{id:'es-B1-58',t:'Réseaux sociaux',tp:'culture',xp:80,wp:[['influencer','influenceur'],['viral','viral'],['algoritmo','algorithme'],['privacidad','vie privée'],['fake news','fausses nouvelles'],['trending','tendance'],['suscriptor','abonné'],['contenido','contenu']],sp:['Las fake news son un problema','Este vídeo se ha hecho viral','Hay que proteger la privacidad']},
+{id:'es-B1-59',t:'Environnement',tp:'vocab',xp:85,wp:[['medio ambiente','environnement'],['reciclaje','recyclage'],['contaminación','pollution'],['cambio climático','changement climatique'],['energía renovable','énergie renouvelable'],['sostenible','durable'],['deforestación','déforestation'],['huella ecológica','empreinte écologique']],sp:['El cambio climático es real','Debemos reciclar más','La energía solar es renovable']},
+{id:'es-B1-60',t:'Politique basique',tp:'culture',xp:85,wp:[['gobierno','gouvernement'],['presidente','président'],['elecciones','élections'],['partido','parti'],['ley','loi'],['democracia','démocratie'],['derecho','droit'],['ciudadano','citoyen']],sp:['Las elecciones son en noviembre','Es una ley importante','Todos los ciudadanos tienen derechos']}
+]},
+{sec:'B1',emoji:'🔧',unit:'Grammaire B1',lessons:[
+{id:'es-B1-61',t:'Subjonctif présent — formation',tp:'grammar',xp:100,wp:[['hable','que je parle'],['coma','que je mange'],['viva','que je vive'],['tenga','que j\'aie'],['sea','que je sois'],['vaya','que j\'aille'],['pueda','que je puisse'],['quiera','que je veuille'],['sepa','que je sache'],['haga','que je fasse']],sp:['Quiero que hables español','Es importante que sepas esto','Espero que tengas suerte']},
+{id:'es-B1-62',t:'Subjonctif présent — usages',tp:'grammar',xp:100,wp:[['esperar que','espérer que'],['querer que','vouloir que'],['es necesario que','il est nécessaire que'],['ojalá','pourvu que'],['para que','pour que'],['aunque','bien que'],['cuando','quand (futur)'],['antes de que','avant que']],sp:['Espero que vengas a la fiesta','Es necesario que estudies más','Ojalá llueva mañana']},
+{id:'es-B1-63',t:'Conditionnel simple',tp:'grammar',xp:95,wp:[['haría','je ferais'],['iría','j\'irais'],['tendría','j\'aurais'],['sería','je serais'],['podría','je pourrais'],['querría','je voudrais'],['sabría','je saurais'],['diría','je dirais']],sp:['Me gustaría viajar a Japón','¿Podrías ayudarme?','Yo en tu lugar no lo haría']},
+{id:'es-B1-64',t:'Phrases conditionnelles',tp:'grammar',xp:100,wp:[['si tuviera','si j\'avais'],['si pudiera','si je pouvais'],['si fuera','si j\'étais'],['si supiera','si je savais']],sp:['Si tuviera dinero viajaría','Si pudiera elegiría España','Si fuera tú estudiaría más']},
+{id:'es-B1-65',t:'Futur simple',tp:'grammar',xp:90,wp:[['hablaré','je parlerai'],['comeré','je mangerai'],['viviré','je vivrai'],['tendré','j\'aurai'],['seré','je serai'],['haré','je ferai'],['podré','je pourrai'],['querré','je voudrai']],sp:['Mañana estudiaré todo el día','El año que viene seré mejor','¿Cuándo podrás venir?']}
+]},
+{sec:'B1',emoji:'💬',unit:'Sentiments & relations',lessons:[
+{id:'es-B1-66',t:'Exprimer ses sentiments',tp:'conv',xp:85,wp:[['emoción','émotion'],['alegría','joie'],['tristeza','tristesse'],['miedo','peur'],['vergüenza','honte'],['orgullo','fierté'],['frustración','frustration'],['esperanza','espoir']],sp:['Me siento muy feliz','Tengo miedo de fallar','Estoy orgulloso de ti']},
+{id:'es-B1-67',t:'Relations sociales',tp:'conv',xp:85,wp:[['amistad','amitié'],['confianza','confiance'],['respeto','respect'],['compromiso','engagement'],['lealtad','loyauté'],['apoyo','soutien'],['sinceridad','sincérité']],sp:['La confianza es lo más importante','Te apoyo en todo','Somos amigos de verdad']},
+{id:'es-B1-68',t:'Résoudre des conflits',tp:'conv',xp:90,wp:[['discusión','discussion'],['malentendido','malentendu'],['disculpa','excuse'],['perdonar','pardonner'],['negociar','négocier'],['solución','solution'],['compromiso','compromis']],sp:['Ha sido un malentendido','Te pido disculpas','Busquemos una solución juntos']},
+{id:'es-B1-69',t:'Souhaits et regrets',tp:'grammar',xp:90,wp:[['ojalá','si seulement'],['me arrepiento','je regrette'],['debería','je devrais'],['hubiera','j\'aurais dû'],['lamento','je suis désolé'],['deseo','je souhaite']],sp:['Ojalá hubiera estudiado más','Me arrepiento de haberlo dicho','Debería haber ido']},
+{id:'es-B1-70',t:'Messages formels',tp:'conv',xp:90,wp:[['estimado','cher (formel)'],['atentamente','cordialement'],['solicitar','demander formellement'],['adjuntar','joindre'],['agradecer','remercier'],['informar','informer']],sp:['Estimado señor García','Le escribo para solicitar información','Atentamente, María López']}
+]},
+{sec:'B1',emoji:'🌍',unit:'Culture hispanique',lessons:[
+{id:'es-B1-71',t:'Espagne — histoire',tp:'culture',xp:85,wp:[['reconquista','reconquête'],['guerra civil','guerre civile'],['democracia','démocratie'],['monarquía','monarchie'],['región','région'],['lengua cooficial','langue co-officielle'],['patrimonio','patrimoine'],['siglo','siècle']],sp:['España tiene una rica historia','La guerra civil fue de 1936 a 1939','Hay cuatro lenguas cooficiales']},
+{id:'es-B1-72',t:'Amérique latine',tp:'culture',xp:85,wp:[['colonización','colonisation'],['independencia','indépendance'],['mestizaje','métissage'],['selva','forêt tropicale'],['desierto','désert'],['cordillera','cordillère'],['diversidad','diversité']],sp:['América Latina tiene mucha diversidad','La cordillera de los Andes es impresionante']},
+{id:'es-B1-73',t:'Gastronomie',tp:'culture',xp:80,wp:[['paella','paella'],['tapas','tapas'],['tortilla','omelette'],['churros','churros'],['sangría','sangria'],['jamón','jambon'],['aceite de oliva','huile d\'olive'],['gazpacho','gaspacho']],sp:['La paella es típica de Valencia','Los churros se comen con chocolate','El aceite de oliva es esencial']},
+{id:'es-B1-74',t:'Littérature et cinéma',tp:'culture',xp:90,wp:[['Don Quijote','Don Quichotte'],['Cervantes','Cervantès'],['García Márquez','García Márquez'],['Almodóvar','Almodóvar'],['realismo mágico','réalisme magique'],['novela','roman'],['guion','scénario']],sp:['Don Quijote es la obra más famosa','García Márquez ganó el Nobel','Almodóvar es un director español']},
+{id:'es-B1-75',t:'Fêtes et traditions',tp:'culture',xp:80,wp:[['Semana Santa','Semaine Sainte'],['San Fermín','San Fermín'],['Día de los Muertos','Jour des Morts'],['Las Fallas','Les Fallas'],['toros','taureaux'],['procesión','procession'],['flamenco','flamenco']],sp:['La Semana Santa es muy importante','El Día de los Muertos se celebra en México','El flamenco es patrimonio cultural']}
+]},
+{sec:'B1',emoji:'📖',unit:'Narration B1',lessons:[
+{id:'es-B1-76',t:'Raconter une histoire',tp:'conv',xp:90,wp:[['érase una vez','il était une fois'],['de repente','soudain'],['al final','à la fin'],['mientras tanto','pendant ce temps'],['entonces','alors'],['por eso','c\'est pourquoi'],['sin embargo','cependant']],sp:['Érase una vez un rey','De repente apareció un dragón','Al final todos fueron felices']},
+{id:'es-B1-77',t:'Imparfait vs Prétérit',tp:'grammar',xp:100,wp:[['hacía sol','il faisait beau'],['llovía','il pleuvait'],['comí','j\'ai mangé'],['fui','je suis allé'],['estaba','j\'étais'],['llegó','il est arrivé'],['dormía','je dormais'],['sonó','il a sonné']],sp:['Hacía sol cuando salí de casa','Estaba durmiendo cuando sonó el teléfono','Llovía mucho y decidí quedarme']},
+{id:'es-B1-78',t:'Connecteurs de discours',tp:'grammar',xp:90,wp:[['además','de plus'],['sin embargo','cependant'],['por lo tanto','par conséquent'],['en primer lugar','en premier lieu'],['por otra parte','d\'autre part'],['en conclusión','en conclusion'],['no obstante','néanmoins'],['a pesar de','malgré']],sp:['En primer lugar quiero decir que','Sin embargo no estoy de acuerdo','En conclusión es necesario actuar']},
+{id:'es-B1-79',t:'Descriptions au passé',tp:'grammar',xp:90,wp:[['había','il y avait'],['parecía','il semblait'],['tenía aspecto','il avait l\'air'],['estaba lleno','c\'était plein'],['olía a','ça sentait'],['se oía','on entendait']],sp:['La ciudad estaba llena de gente','El restaurante olía a pescado','Se oía música a lo lejos']},
+{id:'es-B1-80',t:'Subjonctif imparfait intro',tp:'grammar',xp:100,wp:[['hablara','que je parlasse'],['comiera','que je mangeasse'],['viviera','que je vécusse'],['tuviera','que j\'eusse'],['fuera','que je fusse'],['pudiera','que je pusse']],sp:['Si pudiera iría a España','Quería que vinieras','Como si fuera verdad']}
+]},
+{sec:'B1',emoji:'🗣️',unit:'Communication avancée',lessons:[
+{id:'es-B1-81',t:'Débattre',tp:'conv',xp:95,wp:[['argumento','argument'],['contraargumento','contre-argument'],['punto de vista','point de vue'],['evidencia','preuve'],['refutar','réfuter'],['conceder','concéder']],sp:['Tu argumento no es válido','Desde mi punto de vista','Tengo evidencia de que']},
+{id:'es-B1-82',t:'Présenter un projet',tp:'conv',xp:95,wp:[['introducción','introduction'],['objetivo','objectif'],['desarrollo','développement'],['resultado','résultat'],['conclusión','conclusion'],['público','public']],sp:['El objetivo de este proyecto es','Como pueden ver en el gráfico','En conclusión podemos decir que']},
+{id:'es-B1-83',t:'Compréhension orale rapide',tp:'conv',xp:90,wp:[['entender','comprendre'],['repetir','répéter'],['más despacio','plus lentement'],['acento','accent'],['dialecto','dialecte'],['jerga','argot']],sp:['¿Puede repetir más despacio?','No entiendo este acento','Es jerga de la calle']},
+{id:'es-B1-84',t:'Humour et ironie',tp:'culture',xp:85,wp:[['broma','blague'],['chiste','plaisanterie'],['irónico','ironique'],['sarcasmo','sarcasme'],['gracioso','drôle'],['sentido del humor','sens de l\'humour']],sp:['Es un chiste muy gracioso','Lo dice con ironía','Tiene muy buen sentido del humor']},
+{id:'es-B1-85',t:'Faux amis FR-ES',tp:'vocab',xp:90,wp:[['embarazada','enceinte (pas embarrassée)'],['constipado','enrhumé (pas constipé)'],['éxito','succès (pas sortie)'],['carpeta','dossier (pas tapis)'],['largo','long (pas large)'],['sensible','sensible (pas sensé)'],['actual','actuel (pas réel)'],['conductor','conducteur (pas conduit)']],sp:['Embarazada no significa embarrassée','Éxito significa succès','Largo no es large sino long']}
+]},
+// ══════ B2 ══════
+{sec:'B2',emoji:'🎯',unit:'Langue & nuances',lessons:[
+{id:'es-B2-86',t:'Expressions idiomatiques',tp:'vocab',xp:100,wp:[['estar en las nubes','être dans la lune'],['meter la pata','mettre les pieds dans le plat'],['costar un ojo de la cara','coûter les yeux de la tête'],['no tener pelos en la lengua','ne pas mâcher ses mots'],['dar en el clavo','mettre dans le mille'],['tomar el pelo','se moquer']],sp:['Siempre está en las nubes','Me costó un ojo de la cara','Has dado en el clavo']},
+{id:'es-B2-87',t:'Registres de langue',tp:'conv',xp:95,wp:[['formal','formel'],['informal','informel'],['coloquial','familier'],['vulgar','vulgaire'],['académico','académique'],['tío','mec'],['mola','c\'est cool'],['flipar','halluciner']],sp:['En un email formal usa usted','Entre amigos se tutea','Mola mucho esta canción']},
+{id:'es-B2-88',t:'Diminutifs et augmentatifs',tp:'grammar',xp:95,wp:[['casita','petite maison'],['perrito','petit chien'],['grandote','très grand'],['manaza','grosse main'],['cerquita','tout près'],['poquito','un tout petit peu']],sp:['Ven aquí un poquito','Tengo un perrito muy bonito','Es un hombre grandote']},
+{id:'es-B2-89',t:'Euphémismes',tp:'conv',xp:90,wp:[['fallecer','décéder (pas mourir)'],['persona mayor','personne âgée'],['conflicto laboral','conflit social'],['ajuste de plantilla','plan social'],['daños colaterales','dommages collatéraux']],sp:['Mi abuelo falleció el año pasado','Es una persona mayor','Hubo un ajuste de plantilla']},
+{id:'es-B2-90',t:'Faux cognates avancés',tp:'vocab',xp:95,wp:[['realizarse','se réaliser/s\'épanouir'],['pretender','tenter/vouloir'],['soportar','supporter/tolérer'],['atender','s\'occuper de'],['advertir','prévenir/avertir'],['recordar','se souvenir']],sp:['Pretendo aprobar el examen','No soporto el ruido','Te advierto que es difícil']},
+{id:'es-B2-91',t:'Variations régionales',tp:'culture',xp:95,wp:[['coche/carro/auto','voiture'],['ordenador/computadora','ordinateur'],['piso/apartamento/departamento','appartement'],['móvil/celular','portable'],['autobús/camión/colectivo','bus'],['vale/dale/órale','d\'accord']],sp:['En España dicen coche, en México carro','En Argentina dicen departamento','Cada país tiene sus expresiones']}
+]},
+{sec:'B2',emoji:'💼',unit:'Monde professionnel',lessons:[
+{id:'es-B2-92',t:'Email professionnel',tp:'conv',xp:100,wp:[['estimado','cher'],['remitente','expéditeur'],['destinatario','destinataire'],['asunto','objet'],['adjunto','pièce jointe'],['cordialmente','cordialement'],['plazo','délai'],['urgente','urgent']],sp:['Le adjunto el informe solicitado','Quedo a su disposición','Le ruego que me responda antes del viernes']},
+{id:'es-B2-93',t:'Réunion en espagnol',tp:'conv',xp:100,wp:[['orden del día','ordre du jour'],['acta','compte rendu'],['propuesta','proposition'],['votación','vote'],['consenso','consensus'],['intervención','prise de parole'],['plazo','deadline']],sp:['El primer punto del orden del día','¿Alguien tiene alguna propuesta?','Necesitamos llegar a un consenso']},
+{id:'es-B2-94',t:'Négociation',tp:'conv',xp:105,wp:[['oferta','offre'],['contraoferta','contre-offre'],['condiciones','conditions'],['acuerdo','accord'],['ceder','céder'],['ventaja','avantage'],['inconveniente','inconvénient']],sp:['Mi oferta inicial es...','¿Podemos llegar a un acuerdo?','Es una ventaja para ambos']},
+{id:'es-B2-95',t:'Entretien d\'embauche',tp:'conv',xp:105,wp:[['currículum','CV'],['fortaleza','force'],['debilidad','faiblesse'],['logro','accomplissement'],['disponibilidad','disponibilité'],['salario','salaire'],['expectativas','attentes'],['incorporación','intégration']],sp:['Mi principal fortaleza es la adaptabilidad','He logrado aumentar las ventas un 20%','Mi expectativa salarial es...']},
+{id:'es-B2-96',t:'Présentation orale',tp:'conv',xp:100,wp:[['diapositiva','diapositive'],['gráfico','graphique'],['estadística','statistique'],['crecimiento','croissance'],['tendencia','tendance'],['análisis','analyse']],sp:['Como pueden ver en este gráfico','La tendencia muestra un crecimiento','En resumen los datos indican que']},
+{id:'es-B2-97',t:'Monde des affaires',tp:'vocab',xp:100,wp:[['empresa','entreprise'],['inversión','investissement'],['beneficio','bénéfice'],['pérdida','perte'],['mercado','marché'],['competencia','concurrence'],['accionista','actionnaire'],['startup','startup']],sp:['La empresa tuvo beneficios este año','El mercado es muy competitivo','Los inversores están interesados']}
+]},
+{sec:'B2',emoji:'⚙️',unit:'Grammaire B2',lessons:[
+{id:'es-B2-98',t:'Subjonctif imparfait',tp:'grammar',xp:110,wp:[['hablara/hablase','que je parlasse'],['comiera/comiese','que je mangeasse'],['viviera/viviese','que je vécusse'],['quisiera','que je voulusse'],['supiera','que je susse'],['dijera','que je disse']],sp:['Si tuviera más tiempo estudiaría','Quisiera que me ayudaras','No creía que fuera posible']},
+{id:'es-B2-99',t:'Temps composés',tp:'grammar',xp:110,wp:[['había hablado','j\'avais parlé'],['habría hablado','j\'aurais parlé'],['haya hablado','que j\'aie parlé'],['hubiera hablado','que j\'eusse parlé']],sp:['Si hubiera sabido no habría venido','Cuando haya terminado te llamaré']},
+{id:'es-B2-100',t:'Voix passive',tp:'grammar',xp:105,wp:[['fue construido','a été construit'],['es conocido','est connu'],['será publicado','sera publié'],['ha sido elegido','a été élu'],['se dice','on dit'],['se cree','on croit']],sp:['La casa fue construida en 1920','Se dice que va a llover','Ha sido elegido presidente']},
+{id:'es-B2-101',t:'Propositions relatives',tp:'grammar',xp:105,wp:[['que','qui/que'],['quien','qui (personne)'],['cuyo','dont'],['donde','où'],['el cual','lequel'],['lo que','ce que']],sp:['El hombre que vino ayer','La casa cuyo tejado es rojo','Lo que dices es verdad']},
+{id:'es-B2-102',t:'Style indirect',tp:'grammar',xp:110,wp:[['dijo que','il a dit que'],['preguntó si','il a demandé si'],['pidió que','il a demandé que'],['explicó que','il a expliqué que'],['contó que','il a raconté que']],sp:['Dijo que vendría mañana','Me preguntó si hablaba español','Le pidió que esperara']},
+{id:'es-B2-103',t:'Participes avancés',tp:'grammar',xp:105,wp:[['habiendo hablado','ayant parlé'],['siendo','étant'],['dicho','dit'],['hecho','fait'],['escrito','écrit'],['puesto','mis'],['vuelto','revenu'],['roto','cassé']],sp:['Habiendo terminado el trabajo se fue','Una vez dicho esto pasemos al tema','El jarrón está roto']}
+]},
+{sec:'B2',emoji:'📚',unit:'Textes authentiques',lessons:[
+{id:'es-B2-104',t:'Article de journal',tp:'culture',xp:100,wp:[['fuente','source'],['cita','citation'],['redacción','rédaction'],['editorial','éditorial'],['crónica','chronique'],['entrevista','interview']],sp:['Según fuentes oficiales','El editorial del periódico','Una crónica sobre la ciudad']},
+{id:'es-B2-105',t:'Publicité en espagnol',tp:'culture',xp:95,wp:[['eslogan','slogan'],['marca','marque'],['consumidor','consommateur'],['campaña','campagne'],['anuncio','annonce'],['persuadir','persuader']],sp:['El eslogan de esta marca es genial','La campaña publicitaria fue exitosa']},
+{id:'es-B2-106',t:'Paroles de chansons',tp:'culture',xp:95,wp:[['estribillo','refrain'],['verso','couplet'],['rima','rime'],['melodía','mélodie'],['letra','paroles'],['ritmo','rythme']],sp:['El estribillo es muy pegadizo','La letra habla de amor','El ritmo es contagioso']},
+{id:'es-B2-107',t:'Extraits littéraires',tp:'culture',xp:105,wp:[['narrador','narrateur'],['personaje','personnage'],['trama','intrigue'],['metáfora','métaphore'],['símbolo','symbole'],['estilo','style']],sp:['El narrador es en primera persona','La trama es muy compleja','Es una metáfora de la vida']},
+{id:'es-B2-108',t:'Films et séries',tp:'culture',xp:95,wp:[['taquilla','box-office'],['estreno','sortie'],['subtítulos','sous-titres'],['doblaje','doublage'],['temporada','saison'],['capítulo','épisode']],sp:['La película fue un éxito de taquilla','Prefiero ver con subtítulos','La segunda temporada es mejor']},
+{id:'es-B2-109',t:'Podcasts et interviews',tp:'culture',xp:100,wp:[['oyente','auditeur'],['episodio','épisode'],['invitado','invité'],['tema','sujet'],['debate','débat'],['tertulia','émission de discussion']],sp:['En el episodio de hoy hablamos de','Nuestro invitado es un experto en','Los oyentes preguntan']}
+]},
+{sec:'B2',emoji:'🔬',unit:'Sciences & technologie',lessons:[
+{id:'es-B2-110',t:'Vocabulaire scientifique',tp:'vocab',xp:105,wp:[['investigación','recherche'],['experimento','expérience'],['hipótesis','hypothèse'],['resultado','résultat'],['descubrimiento','découverte'],['laboratorio','laboratoire']],sp:['La investigación muestra que','El experimento confirma la hipótesis']},
+{id:'es-B2-111',t:'Technologie et numérique',tp:'vocab',xp:100,wp:[['inteligencia artificial','intelligence artificielle'],['base de datos','base de données'],['ciberseguridad','cybersécurité'],['nube','cloud'],['código','code'],['aplicación','application']],sp:['La inteligencia artificial avanza rápido','Los datos están en la nube']},
+{id:'es-B2-112',t:'Énergies et environnement',tp:'vocab',xp:100,wp:[['energía solar','énergie solaire'],['eólica','éolienne'],['emisiones','émissions'],['huella de carbono','empreinte carbone'],['biodiversidad','biodiversité'],['calentamiento','réchauffement']],sp:['Las emisiones de CO2 deben reducirse','La energía solar es el futuro']},
+{id:'es-B2-113',t:'Médecine et santé',tp:'vocab',xp:105,wp:[['vacuna','vaccin'],['diagnóstico','diagnostic'],['tratamiento','traitement'],['cirugía','chirurgie'],['paciente','patient'],['enfermedad','maladie']],sp:['La vacuna es segura y eficaz','El diagnóstico fue positivo']},
+{id:'es-B2-114',t:'IA et avenir',tp:'culture',xp:105,wp:[['automatización','automatisation'],['robot','robot'],['algoritmo','algorithme'],['ética','éthique'],['sesgo','biais'],['aprendizaje automático','apprentissage automatique']],sp:['La automatización cambiará el empleo','Hay que debatir la ética de la IA']},
+{id:'es-B2-115',t:'Débat tech et société',tp:'conv',xp:105,wp:[['privacidad','vie privée'],['vigilancia','surveillance'],['libertad','liberté'],['regulación','régulation'],['impacto','impact'],['progreso','progrès']],sp:['La tecnología impacta en la privacidad','Necesitamos regular las redes sociales']}
+]},
+{sec:'B2',emoji:'😄',unit:'Humour & culture pop',lessons:[
+{id:'es-B2-116',t:'Jeux de mots',tp:'culture',xp:95,wp:[['doble sentido','double sens'],['juego de palabras','jeu de mots'],['ambigüedad','ambiguïté'],['refrán','proverbe'],['dicho','dicton']],sp:['Es un juego de palabras muy ingenioso','Este refrán tiene doble sentido']},
+{id:'es-B2-117',t:'Cinéma hispanique',tp:'culture',xp:100,wp:[['Almodóvar','Almodóvar'],['Buñuel','Buñuel'],['del Toro','del Toro'],['Cuarón','Cuarón'],['cine negro','film noir'],['neorrealismo','néoréalisme']],sp:['Almodóvar es un genio del cine','Del Toro ganó el Oscar']},
+{id:'es-B2-118',t:'Musique hispanophone',tp:'culture',xp:95,wp:[['reggaetón','reggaeton'],['flamenco','flamenco'],['salsa','salsa'],['bachata','bachata'],['cumbia','cumbia'],['ranchera','ranchera']],sp:['El reggaetón nació en Puerto Rico','El flamenco es patrimonio de la humanidad']},
+{id:'es-B2-119',t:'Mèmes et internet',tp:'culture',xp:90,wp:[['meme','mème'],['viral','viral'],['troll','troll'],['hater','hater'],['challenge','défi'],['sticker','autocollant']],sp:['Este meme se hizo viral','No hagas caso a los trolls']},
+{id:'es-B2-120',t:'Séries cultes',tp:'culture',xp:95,wp:[['La Casa de Papel','La Casa de Papel'],['Élite','Élite'],['Narcos','Narcos'],['protagonista','protagoniste'],['spoiler','spoiler'],['maratón','marathon']],sp:['La Casa de Papel es famosa mundialmente','No me hagas spoiler']}
+]},
+{sec:'B2',emoji:'🎤',unit:'Discours & rhétorique',lessons:[
+{id:'es-B2-121',t:'Structurer un discours',tp:'conv',xp:105,wp:[['introducción','introduction'],['desarrollo','développement'],['conclusión','conclusion'],['transición','transition'],['resumen','résumé'],['síntesis','synthèse']],sp:['Para empezar quiero hablar de','En resumen podemos decir que']},
+{id:'es-B2-122',t:'Techniques de persuasion',tp:'conv',xp:110,wp:[['pathos','pathos'],['logos','logos'],['ethos','ethos'],['anécdota','anecdote'],['pregunta retórica','question rhétorique'],['repetición','répétition']],sp:['¿No creen ustedes que es injusto?','Les voy a contar una anécdota']},
+{id:'es-B2-123',t:'Discours publics',tp:'culture',xp:105,wp:[['mitin','meeting'],['conferencia','conférence'],['ponencia','exposé'],['tribuna','tribune'],['auditorio','auditorium']],sp:['El ponente habló durante una hora','La conferencia fue muy interesante']},
+{id:'es-B2-124',t:'Débat contradictoire',tp:'conv',xp:110,wp:[['réplica','réplique'],['objeción','objection'],['concesión','concession'],['matizar','nuancer'],['rebatir','réfuter']],sp:['Permítame matizar su afirmación','Tengo una objeción','Concedo que tiene parte de razón']},
+{id:'es-B2-125',t:'Préparer un exposé',tp:'conv',xp:100,wp:[['esquema','plan'],['fuente','source'],['citar','citer'],['bibliografía','bibliographie'],['datos','données'],['visual','visuel']],sp:['Según los datos de este estudio','Como cita el autor en su libro']},
+{id:'es-B2-126',t:'Éloquence hispanique',tp:'culture',xp:105,wp:[['oratoria','art oratoire'],['elocuencia','éloquence'],['carisma','charisme'],['pasión','passion'],['convicción','conviction']],sp:['La oratoria es un arte','Habla con mucha pasión y convicción']}
+]},
+// ══════ C1 ══════
+{sec:'C1',emoji:'🏆',unit:'Maîtrise linguistique',lessons:[
+{id:'es-C1-127',t:'Nuances sémantiques',tp:'vocab',xp:120,wp:[['efímero','éphémère'],['intrínseco','intrinsèque'],['paradoja','paradoxe'],['ambivalente','ambivalent'],['sutil','subtil'],['matiz','nuance'],['connotación','connotation']],sp:['La diferencia es sutil pero importante','Es una paradoja interesante']},
+{id:'es-C1-128',t:'Syntaxe complexe',tp:'grammar',xp:125,wp:[['de no ser por','sans'],['no bien','à peine'],['con tal de que','pourvu que'],['a sabiendas de','en sachant que'],['dicho sea de paso','soit dit en passant']],sp:['De no ser por ti no lo habría logrado','No bien llegó se puso a llover']},
+{id:'es-C1-129',t:'Lexique soutenu',tp:'vocab',xp:120,wp:[['desaforado','démesuré'],['inmisericorde','impitoyable'],['sempiterno','éternel'],['perentorio','péremptoire'],['recóndito','reculé'],['acervo','patrimoine culturel']],sp:['Un crecimiento desaforado de la población','Los rincones más recónditos del país']},
+{id:'es-C1-130',t:'Procédés stylistiques',tp:'culture',xp:125,wp:[['metáfora','métaphore'],['hipérbole','hyperbole'],['oxímoron','oxymore'],['ironía','ironie'],['alegoría','allégorie'],['elipsis','ellipse']],sp:['Es una hipérbole evidente','La ironía de la situación','Una alegoría de la sociedad moderna']}
+]},
+{sec:'C1',emoji:'🎓',unit:'Espagnol académique',lessons:[
+{id:'es-C1-131',t:'Essai académique',tp:'conv',xp:130,wp:[['tesis','thèse'],['antítesis','antithèse'],['argumento','argument'],['contraargumento','contre-argument'],['marco teórico','cadre théorique'],['metodología','méthodologie']],sp:['La tesis principal de este ensayo','El marco teórico se basa en']},
+{id:'es-C1-132',t:'Recherche documentaire',tp:'conv',xp:125,wp:[['fuente primaria','source primaire'],['fuente secundaria','source secondaire'],['referencia','référence'],['bibliografía','bibliographie'],['peer review','revue par les pairs']],sp:['Según las fuentes primarias','La bibliografía incluye diez artículos']},
+{id:'es-C1-133',t:'Citations et références',tp:'grammar',xp:125,wp:[['según','selon'],['de acuerdo con','conformément à'],['tal como afirma','comme l\'affirme'],['cabe destacar','il convient de souligner'],['en palabras de','selon les mots de']],sp:['Según García Márquez la soledad es...','Cabe destacar que este fenómeno']},
+{id:'es-C1-134',t:'Soutenir une thèse',tp:'conv',xp:130,wp:[['demostrar','démontrer'],['fundamentar','fonder'],['corroborar','corroborer'],['desmentir','démentir'],['cuestionar','questionner'],['poner en tela de juicio','remettre en question']],sp:['Los datos demuestran que','Es necesario cuestionar esta afirmación']}
+]},
+{sec:'C1',emoji:'🏛️',unit:'Immersion culturelle',lessons:[
+{id:'es-C1-135',t:'Poésie — Lorca & Neruda',tp:'culture',xp:130,wp:[['verso','vers'],['estrofa','strophe'],['metáfora','métaphore'],['Romance','Romance'],['Veinte poemas','Vingt poèmes'],['surrealismo','surréalisme']],sp:['Verde que te quiero verde — Lorca','Puedo escribir los versos más tristes — Neruda']},
+{id:'es-C1-136',t:'Roman hispano-américain',tp:'culture',xp:130,wp:[['Cien años de soledad','Cent ans de solitude'],['Rayuela','Marelle'],['boom latinoamericano','boom latino-américain'],['realismo mágico','réalisme magique'],['Borges','Borges']],sp:['Cien años de soledad es una obra maestra','El boom latinoamericano cambió la literatura']},
+{id:'es-C1-137',t:'Philosophie hispanique',tp:'culture',xp:125,wp:[['Ortega y Gasset','Ortega y Gasset'],['existencialismo','existentialisme'],['razón vital','raison vitale'],['identidad','identité'],['ensayo','essai']],sp:['Yo soy yo y mi circunstancia — Ortega','La filosofía hispánica tiene tradición propia']},
+{id:'es-C1-138',t:'Histoire de la langue',tp:'culture',xp:125,wp:[['latín','latin'],['castellano','castillan'],['evolución','évolution'],['Real Academia','Académie Royale'],['neologismo','néologisme'],['extranjerismo','emprunt']],sp:['El español viene del latín vulgar','La Real Academia regula el idioma']}
+]},
+{sec:'C1',emoji:'💎',unit:'Communication au sommet',lessons:[
+{id:'es-C1-139',t:'Débats complexes',tp:'conv',xp:130,wp:[['dilema ético','dilemme éthique'],['matizar','nuancer'],['contrastar','contraster'],['conciliar','concilier'],['postura','position']],sp:['Es un dilema ético complejo','Hay que matizar esta afirmación']},
+{id:'es-C1-140',t:'Humour subtil et ironie',tp:'culture',xp:120,wp:[['sátira','satire'],['parodia','parodie'],['guasa','ironie moqueuse'],['doble rasero','deux poids deux mesures'],['autocrítica','autocritique']],sp:['Es pura sátira política','Usa la guasa andaluza']},
+{id:'es-C1-141',t:'Nuances culturelles',tp:'culture',xp:125,wp:[['tabú','tabou'],['eufemismo','euphémisme'],['corrección política','politiquement correct'],['sensibilidad','sensibilité'],['contexto','contexte']],sp:['Es un tema tabú en España','Depende del contexto cultural']},
+{id:'es-C1-142',t:'Textes ambigus',tp:'grammar',xp:130,wp:[['ambigüedad','ambiguïté'],['implícito','implicite'],['explícito','explicite'],['subtexto','sous-texte'],['lectura entre líneas','lecture entre les lignes']],sp:['Hay que leer entre líneas','El subtexto es más importante']}
+]},
+{sec:'C1',emoji:'🎯',unit:'Certification DELE',lessons:[
+{id:'es-C1-143',t:'DELE C1 — Comprensión lectora',tp:'grammar',xp:140,wp:[['comprensión','compréhension'],['texto','texte'],['inferir','inférer'],['deducir','déduire'],['vocabulario en contexto','vocabulaire en contexte']],sp:['Según el texto el autor quiere decir','Se puede inferir que','El vocabulario del texto indica']},
+{id:'es-C1-144',t:'DELE C1 — Producción oral',tp:'conv',xp:140,wp:[['exposición','exposé'],['interacción','interaction'],['registro','registre'],['coherencia','cohérence'],['fluidez','fluidité']],sp:['En primer lugar quisiera exponer','¿Podría desarrollar más esa idea?']},
+{id:'es-C1-145',t:'DELE C1 — Comprensión auditiva',tp:'conv',xp:140,wp:[['conferencia','conférence'],['noticiario','journal télévisé'],['entrevista','interview'],['debate','débat'],['idea principal','idée principale']],sp:['La idea principal del audio es','El ponente argumenta que']},
+{id:'es-C1-146',t:'Test final C1',tp:'grammar',xp:150,wp:[['dominio','maîtrise'],['fluidez','fluidité'],['precisión','précision'],['registro','registre'],['complejidad','complexité']],sp:['Demuestra un dominio avanzado del idioma','Su fluidez y precisión son excelentes']}
+]}
+],
+// ══════ ENGLISH ══════
+en:[
+{sec:'A1',emoji:'👋',unit:'First words',lessons:[
+{id:'en-A1-1',t:'Greetings',tp:'vocab',xp:50,ex:[
+{t:'tr',q:'"Hello" means:',opts:['Au revoir','Merci','Bonjour','S\'il vous plaît'],a:2},
+{t:'tr',q:'How do you say "Au revoir"?',opts:['Hello','Goodbye','Sorry','Please'],a:1},
+{t:'fill',q:'"Good ___, how are you?" (matin)',opts:['night','evening','morning','afternoon'],a:2,sentence:'Good ___, how are you?'},
+{t:'tr',q:'"How are you?" is asking:',opts:['Your name','Your age','How you feel','Where you live'],a:2},
+{t:'fill',q:'"I am ___, thank you!"',opts:['sad','fine','tired','angry'],a:1,sentence:'I am ___, thank you!'},
+{t:'order',q:'Put in order:',words:['name','My','is','Lucas'],correct:'My name is Lucas'},
+{t:'tr',q:'"Nice to meet you" means:',opts:['Au revoir','Désolé','Enchanté','À bientôt'],a:2},
+{t:'match',q:'Match',pairs:[['hello','bonjour'],['goodbye','au revoir'],['please','s\'il vous plaît'],['thank you','merci']]},
+{t:'listen',q:'Listen:',audio:'Good morning',opts:['Good night','Good evening','Good morning','Good afternoon'],a:2},
+{t:'speech',q:'Pronounce:',target:'Hello, how are you?'}
+]},
+{id:'en-A1-2',t:'Numbers 1-20',tp:'vocab',xp:50,ex:[
+{t:'tr',q:'"Five" means:',opts:['3','4','5','6'],a:2},
+{t:'tr',q:'How do you say "12"?',opts:['ten','eleven','twelve','thirteen'],a:2},
+{t:'fill',q:'"I am ___ years old." (18)',opts:['sixteen','seventeen','eighteen','nineteen'],a:2,sentence:'I am ___ years old.'},
+{t:'tr',q:'"Fifteen" is:',opts:['13','14','15','16'],a:2},
+{t:'order',q:'Put in order:',words:['am','I','old','years','twenty'],correct:'I am twenty years old'},
+{t:'fill',q:'"___ plus six is ten."',opts:['Three','Four','Five','Six'],a:1,sentence:'___ plus six is ten.'},
+{t:'match',q:'Match',pairs:[['one','1'],['five','5'],['ten','10'],['twenty','20']]},
+{t:'tr',q:'"Seventeen" is:',opts:['15','16','17','18'],a:2},
+{t:'listen',q:'Listen:',audio:'fourteen',opts:['twelve','thirteen','fourteen','fifteen'],a:2},
+{t:'speech',q:'Say:',target:'nineteen'}
+]},
+{id:'en-A1-3',t:'Introducing yourself',tp:'conv',xp:60,wp:[['name','nom'],['age','âge'],['from','de'],['live','vivre'],['country','pays'],['city','ville'],['student','étudiant'],['work','travail'],['speak','parler'],['language','langue']],sp:['My name is Mathis','I am from France','I live in Paris','I speak French and English']},
+{id:'en-A1-4',t:'Politeness',tp:'culture',xp:50,wp:[['please','s\'il vous plaît'],['thank you','merci'],['sorry','désolé'],['excuse me','excusez-moi'],['you\'re welcome','de rien'],['no problem','pas de problème'],['pardon','pardon'],['cheers','merci (familier)']],sp:['Thank you very much','Excuse me, where is the station?','Sorry, I don\'t understand']}
+]},
+{sec:'A1',emoji:'🏠',unit:'Daily life',lessons:[
+{id:'en-A1-5',t:'Colors',tp:'vocab',xp:50,wp:[['red','rouge'],['blue','bleu'],['green','vert'],['yellow','jaune'],['black','noir'],['white','blanc'],['orange','orange'],['pink','rose'],['purple','violet'],['brown','marron']],sp:['The sky is blue','My car is red','I like the color green']},
+{id:'en-A1-6',t:'The house',tp:'vocab',xp:55,wp:[['kitchen','cuisine'],['bedroom','chambre'],['bathroom','salle de bain'],['living room','salon'],['garden','jardin'],['door','porte'],['window','fenêtre'],['table','table'],['chair','chaise'],['bed','lit']],sp:['I live in a big house','The kitchen is downstairs','My bedroom is small']},
+{id:'en-A1-7',t:'Daily routine',tp:'grammar',xp:65,wp:[['wake up','se réveiller'],['get up','se lever'],['have breakfast','prendre le petit-déjeuner'],['go to work','aller au travail'],['have lunch','déjeuner'],['come home','rentrer'],['have dinner','dîner'],['go to bed','aller au lit']],sp:['I wake up at seven','I have breakfast at eight','I go to bed at eleven']},
+{id:'en-A1-8',t:'Days and months',tp:'vocab',xp:50,wp:[['Monday','lundi'],['Tuesday','mardi'],['Wednesday','mercredi'],['Thursday','jeudi'],['Friday','vendredi'],['Saturday','samedi'],['Sunday','dimanche'],['January','janvier'],['July','juillet'],['December','décembre']],sp:['Today is Monday','My birthday is in March','I work from Monday to Friday']}
+]},
+{sec:'A1',emoji:'👨‍👩‍👧',unit:'Family & people',lessons:[
+{id:'en-A1-9',t:'Family members',tp:'vocab',xp:50,wp:[['mother','mère'],['father','père'],['brother','frère'],['sister','sœur'],['son','fils'],['daughter','fille'],['grandfather','grand-père'],['grandmother','grand-mère'],['uncle','oncle'],['aunt','tante']],sp:['My mother is a teacher','I have two brothers','My grandmother lives in London']},
+{id:'en-A1-10',t:'Physical description',tp:'vocab',xp:55,wp:[['tall','grand'],['short','petit'],['thin','mince'],['fat','gros'],['young','jeune'],['old','vieux'],['hair','cheveux'],['eyes','yeux'],['blonde','blond'],['dark','brun']],sp:['She is tall and thin','He has brown hair','My sister has blue eyes']},
+{id:'en-A1-11',t:'Personality',tp:'vocab',xp:55,wp:[['kind','gentil'],['funny','drôle'],['shy','timide'],['smart','intelligent'],['friendly','amical'],['serious','sérieux'],['lazy','paresseux'],['brave','courageux']],sp:['My friend is very funny','She is kind and friendly','He is a brave person']},
+{id:'en-A1-12',t:'Talking about family',tp:'conv',xp:60,wp:[['married','marié'],['single','célibataire'],['only child','enfant unique'],['twins','jumeaux'],['older','plus âgé'],['younger','plus jeune']],sp:['I am the oldest of three children','My parents are married','She is an only child']}
+]},
+{sec:'A1',emoji:'🍽️',unit:'Food & drinks',lessons:[
+{id:'en-A1-13',t:'Basic food',tp:'vocab',xp:50,wp:[['bread','pain'],['milk','lait'],['egg','œuf'],['cheese','fromage'],['chicken','poulet'],['rice','riz'],['fish','poisson'],['meat','viande'],['fruit','fruit'],['vegetable','légume']],sp:['I like chicken and rice','Can I have some bread?','I eat fruit every day']},
+{id:'en-A1-14',t:'At the restaurant',tp:'conv',xp:60,wp:[['menu','menu'],['bill','addition'],['waiter','serveur'],['tip','pourboire'],['dish','plat'],['dessert','dessert'],['starter','entrée'],['main course','plat principal']],sp:['Can I have the menu please?','The bill please','I would like the chicken']},
+{id:'en-A1-15',t:'Likes and dislikes',tp:'conv',xp:55,wp:[['like','aimer'],['love','adorer'],['hate','détester'],['prefer','préférer'],['sweet','sucré'],['salty','salé'],['spicy','épicé'],['delicious','délicieux']],sp:['I love chocolate','I don\'t like fish','I prefer tea to coffee']},
+{id:'en-A1-16',t:'Meals',tp:'vocab',xp:50,wp:[['breakfast','petit-déjeuner'],['lunch','déjeuner'],['dinner','dîner'],['snack','goûter'],['cook','cuisiner'],['recipe','recette'],['hungry','faim'],['thirsty','soif']],sp:['Breakfast is at eight','I am hungry','She is cooking dinner']}
+]},
+{sec:'A1',emoji:'☀️',unit:'Weather & time',lessons:[
+{id:'en-A1-17',t:'Weather',tp:'vocab',xp:50,wp:[['sun','soleil'],['rain','pluie'],['snow','neige'],['wind','vent'],['cloud','nuage'],['hot','chaud'],['cold','froid'],['storm','orage']],sp:['It is sunny today','It is raining','It is very cold outside']},
+{id:'en-A1-18',t:'Seasons',tp:'vocab',xp:50,wp:[['spring','printemps'],['summer','été'],['autumn','automne'],['winter','hiver'],['beach','plage'],['flower','fleur'],['leaf','feuille']],sp:['I love summer','In winter it snows','Spring is my favourite season']},
+{id:'en-A1-19',t:'Telling the time',tp:'grammar',xp:60,wp:[['hour','heure'],['minute','minute'],['o\'clock','pile'],['half past','et demie'],['quarter past','et quart'],['quarter to','moins le quart'],['early','tôt'],['late','tard']],sp:['It is three o\'clock','It is half past five','I am late']},
+{id:'en-A1-20',t:'Dates and holidays',tp:'culture',xp:55,wp:[['birthday','anniversaire'],['Christmas','Noël'],['holiday','vacances'],['party','fête'],['gift','cadeau'],['celebration','célébration'],['New Year','nouvel an']],sp:['My birthday is in May','Merry Christmas','Happy New Year']}
+]},
+{sec:'A2',emoji:'🚗',unit:'Transport & directions',lessons:[
+{id:'en-A2-21',t:'Transport vocabulary',tp:'vocab',xp:65,wp:[['bus','bus'],['train','train'],['plane','avion'],['car','voiture'],['bicycle','vélo'],['taxi','taxi'],['station','gare'],['airport','aéroport'],['ticket','billet'],['platform','quai']],sp:['I take the bus to work','The train leaves at nine','Where is the airport?']},
+{id:'en-A2-22',t:'Asking for directions',tp:'conv',xp:65,wp:[['turn left','tourner à gauche'],['turn right','tourner à droite'],['go straight','allez tout droit'],['next to','à côté de'],['opposite','en face de'],['corner','coin'],['crossroads','carrefour'],['traffic lights','feux']],sp:['Turn left at the traffic lights','It is next to the bank','Go straight for 200 metres']},
+{id:'en-A2-23',t:'At the airport',tp:'conv',xp:70,wp:[['flight','vol'],['boarding','embarquement'],['passport','passeport'],['luggage','bagage'],['gate','porte'],['delay','retard'],['arrival','arrivée'],['departure','départ']],sp:['My flight is delayed','Where is gate 12?','Please show your passport']},
+{id:'en-A2-24',t:'Prepositions of place',tp:'grammar',xp:65,wp:[['in','dans'],['on','sur'],['under','sous'],['between','entre'],['behind','derrière'],['in front of','devant'],['above','au-dessus'],['below','en dessous']],sp:['The book is on the table','The cat is under the bed','The shop is between the bank and the café']},
+{id:'en-A2-25',t:'Buying a ticket',tp:'conv',xp:70,wp:[['single','aller simple'],['return','aller-retour'],['first class','première classe'],['fare','tarif'],['discount','réduction'],['timetable','horaire'],['change','correspondance']],sp:['A return ticket to London please','How much is the fare?','Do I need to change?']}
+]},
+{sec:'A2',emoji:'💼',unit:'Work & school',lessons:[
+{id:'en-A2-26',t:'Jobs and professions',tp:'vocab',xp:65,wp:[['teacher','professeur'],['doctor','médecin'],['lawyer','avocat'],['engineer','ingénieur'],['nurse','infirmier'],['firefighter','pompier'],['police officer','policier'],['chef','cuisinier']],sp:['I am a teacher','My father is a doctor','She wants to be an engineer']},
+{id:'en-A2-27',t:'Workplace',tp:'vocab',xp:65,wp:[['office','bureau'],['computer','ordinateur'],['meeting','réunion'],['boss','patron'],['colleague','collègue'],['email','email'],['report','rapport'],['project','projet']],sp:['I work in an office','I have a meeting at ten','My boss is nice']},
+{id:'en-A2-28',t:'Daily work routine',tp:'conv',xp:70,wp:[['commute','trajet'],['shift','horaire'],['deadline','date limite'],['break','pause'],['overtime','heures supplémentaires'],['salary','salaire']],sp:['My commute is one hour','I work nine to five','The deadline is Friday']},
+{id:'en-A2-29',t:'Studying',tp:'vocab',xp:65,wp:[['university','université'],['exam','examen'],['homework','devoirs'],['subject','matière'],['grade','note'],['pass','réussir'],['fail','échouer'],['degree','diplôme']],sp:['I study at university','I have an exam tomorrow','I passed all my exams']},
+{id:'en-A2-30',t:'Skills and abilities',tp:'conv',xp:70,wp:[['can','pouvoir'],['skill','compétence'],['experience','expérience'],['team','équipe'],['language','langue'],['manage','gérer'],['lead','diriger']],sp:['I can speak three languages','I have experience in marketing','I can work in a team']}
+]},
+{sec:'A2',emoji:'🏥',unit:'Health & body',lessons:[
+{id:'en-A2-31',t:'Body parts',tp:'vocab',xp:60,wp:[['head','tête'],['arm','bras'],['leg','jambe'],['hand','main'],['foot','pied'],['back','dos'],['stomach','estomac'],['tooth','dent']],sp:['My head hurts','I broke my arm','My feet are tired']},
+{id:'en-A2-32',t:'At the doctor',tp:'conv',xp:70,wp:[['sick','malade'],['fever','fièvre'],['cough','toux'],['prescription','ordonnance'],['pill','comprimé'],['appointment','rendez-vous'],['emergency','urgence']],sp:['I have a fever','I need a prescription','I have an appointment at three']},
+{id:'en-A2-33',t:'Sports & exercise',tp:'vocab',xp:65,wp:[['run','courir'],['swim','nager'],['walk','marcher'],['gym','salle de sport'],['match','match'],['team','équipe'],['win','gagner'],['lose','perdre']],sp:['I run every morning','I play football on Saturdays','My team won the match']},
+{id:'en-A2-34',t:'Feelings',tp:'vocab',xp:65,wp:[['happy','heureux'],['sad','triste'],['angry','en colère'],['tired','fatigué'],['worried','inquiet'],['excited','excité'],['scared','effrayé'],['bored','ennuyé']],sp:['I am very happy today','She is tired after work','Don\'t be worried']},
+{id:'en-A2-35',t:'Grammar A2 — Past tenses',tp:'grammar',xp:75,wp:[['went','suis allé'],['ate','ai mangé'],['saw','ai vu'],['did','ai fait'],['came','suis venu'],['took','ai pris'],['gave','ai donné'],['said','ai dit']],sp:['I went to the cinema yesterday','She ate pizza for dinner','We saw a great film']}
+]},
+{sec:'A2',emoji:'🎭',unit:'Free time',lessons:[
+{id:'en-A2-36',t:'Hobbies',tp:'vocab',xp:65,wp:[['read','lire'],['dance','danser'],['sing','chanter'],['draw','dessiner'],['travel','voyager'],['photography','photographie'],['music','musique'],['sport','sport']],sp:['I like reading books','My hobby is photography','I love travelling']},
+{id:'en-A2-37',t:'Music and arts',tp:'culture',xp:65,wp:[['song','chanson'],['singer','chanteur'],['concert','concert'],['painting','peinture'],['museum','musée'],['exhibition','exposition']],sp:['My favourite singer is Adele','I went to a concert last week','The exhibition was amazing']},
+{id:'en-A2-38',t:'Going out',tp:'conv',xp:70,wp:[['cinema','cinéma'],['restaurant','restaurant'],['park','parc'],['theatre','théâtre'],['bar','bar'],['club','club'],['ticket','billet']],sp:['Do you want to go to the cinema?','Let\'s meet at eight','The park is beautiful']},
+{id:'en-A2-39',t:'Internet and social media',tp:'vocab',xp:65,wp:[['post','publier'],['share','partager'],['follow','suivre'],['like','aimer'],['message','message'],['comment','commentaire'],['password','mot de passe']],sp:['I posted a photo on Instagram','Follow me on Twitter','I changed my password']},
+{id:'en-A2-40',t:'Grammar A2 — Future',tp:'grammar',xp:75,wp:[['will','(futur)'],['going to','aller (intention)'],['tomorrow','demain'],['next week','la semaine prochaine'],['soon','bientôt'],['plan','projet']],sp:['I will study tomorrow','I am going to travel next year','We are planning a trip']}
+]},
+{sec:'A2',emoji:'📝',unit:'Grammar A2',lessons:[
+{id:'en-A2-41',t:'Present simple vs continuous',tp:'grammar',xp:75,wp:[['always','toujours'],['usually','habituellement'],['now','maintenant'],['at the moment','en ce moment'],['every day','chaque jour'],['right now','tout de suite']],sp:['I usually wake up at seven','I am studying right now','She always drinks tea']},
+{id:'en-A2-42',t:'Questions and negations',tp:'grammar',xp:75,wp:[['do','(auxiliaire)'],['does','(auxiliaire 3e pers)'],['don\'t','ne...pas'],['doesn\'t','ne...pas (3e)'],['did','(passé)'],['didn\'t','ne...pas (passé)']],sp:['Do you like coffee?','She doesn\'t speak French','Did you go to the party?']},
+{id:'en-A2-43',t:'There is / there are',tp:'grammar',xp:70,wp:[['there is','il y a (singulier)'],['there are','il y a (pluriel)'],['there isn\'t','il n\'y a pas'],['there aren\'t','il n\'y a pas (pluriel)'],['is there','y a-t-il'],['how many','combien']],sp:['There is a book on the table','There are three cats','Is there a bank near here?']},
+{id:'en-A2-44',t:'Possessives',tp:'grammar',xp:70,wp:[['my','mon'],['your','ton'],['his','son (à lui)'],['her','son (à elle)'],['our','notre'],['their','leur'],['mine','le mien'],['yours','le tien']],sp:['This is my book','Is this yours?','Their house is big']},
+{id:'en-A2-45',t:'Prepositions of time',tp:'grammar',xp:70,wp:[['at','à (heure)'],['in','en (mois/année)'],['on','le (jour)'],['during','pendant'],['before','avant'],['after','après'],['since','depuis'],['for','pendant/pour']],sp:['I wake up at seven','My birthday is in March','I work on Monday']}
+]},
+// B1-C1 English — condensed structure
+{sec:'B1',emoji:'✈️',unit:'Travel & tourism',lessons:[
+{id:'en-B1-46',t:'Planning a trip',tp:'conv',xp:85,wp:[['destination','destination'],['budget','budget'],['accommodation','hébergement'],['itinerary','itinéraire'],['book','réserver'],['season','saison']],sp:['I want to book a flight to New York','What is your budget?','I prefer low season']},
+{id:'en-B1-47',t:'At the hotel',tp:'conv',xp:80,wp:[['room','chambre'],['reception','réception'],['key','clé'],['breakfast included','petit-déjeuner inclus'],['check in','enregistrement'],['check out','départ']],sp:['I have a reservation under Smith','Is breakfast included?','What time is check out?']},
+{id:'en-B1-48',t:'Sightseeing',tp:'conv',xp:85,wp:[['monument','monument'],['cathedral','cathédrale'],['square','place'],['district','quartier'],['tourist office','office de tourisme'],['guided tour','visite guidée']],sp:['Where is the tourist office?','I love this district','The cathedral is impressive']},
+{id:'en-B1-49',t:'Emergencies abroad',tp:'conv',xp:90,wp:[['emergency','urgence'],['embassy','ambassade'],['theft','vol'],['police','police'],['lost','perdu'],['insurance','assurance']],sp:['I have been robbed','I need to go to the embassy','I lost my passport']},
+{id:'en-B1-50',t:'Telling a story',tp:'conv',xp:85,wp:[['experience','expérience'],['landscape','paysage'],['unforgettable','inoubliable'],['adventure','aventure'],['memory','souvenir'],['recommend','recommander']],sp:['It was an unforgettable experience','The landscape was breathtaking','I recommend visiting Japan']}
+]},
+{sec:'B1',emoji:'📰',unit:'News & media',lessons:[
+{id:'en-B1-51',t:'Reading news',tp:'vocab',xp:80,wp:[['newspaper','journal'],['headline','titre'],['article','article'],['journalist','journaliste'],['source','source'],['breaking news','dernières nouvelles']],sp:['According to the newspaper','The headline says that','This is breaking news']},
+{id:'en-B1-52',t:'Giving opinions',tp:'conv',xp:85,wp:[['I think','je pense'],['in my opinion','à mon avis'],['I agree','je suis d\'accord'],['I disagree','je ne suis pas d\'accord'],['however','cependant'],['on one hand','d\'un côté']],sp:['I think you are right','In my opinion it is unfair','I disagree with you']},
+{id:'en-B1-53',t:'Environment',tp:'vocab',xp:85,wp:[['climate change','changement climatique'],['pollution','pollution'],['recycling','recyclage'],['renewable energy','énergie renouvelable'],['sustainable','durable'],['carbon footprint','empreinte carbone']],sp:['Climate change is real','We must recycle more','Solar energy is renewable']},
+{id:'en-B1-54',t:'Grammar B1 — Present perfect',tp:'grammar',xp:100,wp:[['have done','ai fait'],['have been','ai été'],['have seen','ai vu'],['have never','n\'ai jamais'],['since','depuis'],['for','pendant'],['already','déjà'],['yet','encore']],sp:['I have lived here for five years','Have you ever been to London?','I have already finished']},
+{id:'en-B1-55',t:'Modal verbs',tp:'grammar',xp:95,wp:[['must','devoir'],['should','devrait'],['could','pourrait'],['might','pourrait (possibilité)'],['have to','être obligé de'],['ought to','devrait']],sp:['You should study more','You must wear a seatbelt','It might rain tomorrow']}
+]},
+{sec:'B1',emoji:'🔧',unit:'Grammar B1',lessons:[
+{id:'en-B1-56',t:'Conditionals 1 & 2',tp:'grammar',xp:100,wp:[['if I have','si j\'ai'],['if I had','si j\'avais'],['I will','je ferai'],['I would','je ferais']],sp:['If I have time I will come','If I had money I would travel','If it rains we will stay home']},
+{id:'en-B1-57',t:'Reported speech intro',tp:'grammar',xp:100,wp:[['said that','a dit que'],['told me','m\'a dit'],['asked if','a demandé si'],['explained that','a expliqué que']],sp:['She said that she was tired','He told me to wait','They asked if I spoke English']},
+{id:'en-B1-58',t:'Relative clauses',tp:'grammar',xp:95,wp:[['who','qui (personne)'],['which','qui/que (chose)'],['that','qui/que'],['where','où'],['whose','dont']],sp:['The man who came yesterday','The book which I read','The city where I was born']},
+{id:'en-B1-59',t:'Passive voice intro',tp:'grammar',xp:95,wp:[['is made','est fabriqué'],['was built','a été construit'],['is spoken','est parlé'],['was written','a été écrit']],sp:['English is spoken worldwide','This house was built in 1900','The book was written by Dickens']},
+{id:'en-B1-60',t:'Connectors',tp:'grammar',xp:90,wp:[['although','bien que'],['however','cependant'],['therefore','par conséquent'],['moreover','de plus'],['nevertheless','néanmoins'],['furthermore','en outre']],sp:['Although it was cold we went out','However I disagree','Therefore we must act now']}
+]},
+{sec:'B1',emoji:'🌍',unit:'Culture & society',lessons:[
+{id:'en-B1-61',t:'British customs',tp:'culture',xp:85,wp:[['queue','file d\'attente'],['pub','pub'],['tea time','heure du thé'],['polite','poli'],['understatement','euphémisme'],['weather talk','parler de la météo']],sp:['British people love queuing','Tea time is a tradition','Talking about weather is very British']},
+{id:'en-B1-62',t:'American culture',tp:'culture',xp:85,wp:[['Thanksgiving','Thanksgiving'],['Fourth of July','4 juillet'],['Super Bowl','Super Bowl'],['road trip','road trip'],['diner','diner'],['tip','pourboire']],sp:['Thanksgiving is in November','Road trips are very American','You should tip 15 to 20 percent']},
+{id:'en-B1-63',t:'Slang and colloquialisms',tp:'vocab',xp:90,wp:[['gonna','going to'],['wanna','want to'],['gotta','got to'],['kinda','kind of'],['ain\'t','isn\'t/aren\'t'],['chill','se détendre'],['cool','super'],['awesome','génial']],sp:['I\'m gonna go home','Wanna grab a coffee?','That\'s awesome']},
+{id:'en-B1-64',t:'False friends FR-EN',tp:'vocab',xp:90,wp:[['actually','en fait (pas actuellement)'],['eventually','finalement (pas éventuellement)'],['library','bibliothèque (pas librairie)'],['sensible','raisonnable (pas sensible)'],['attend','assister à (pas attendre)'],['sympathetic','compatissant (pas sympathique)']],sp:['Actually means en fait not actuellement','A library is a bibliothèque','Eventually means finalement']},
+{id:'en-B1-65',t:'Debates',tp:'conv',xp:95,wp:[['argue','argumenter'],['point of view','point de vue'],['evidence','preuve'],['counter-argument','contre-argument'],['on the other hand','d\'un autre côté']],sp:['From my point of view','There is evidence that','On the other hand we could say']}
+]},
+{sec:'B2',emoji:'🎯',unit:'Idioms & phrasal verbs',lessons:[
+{id:'en-B2-66',t:'Common idioms',tp:'vocab',xp:100,wp:[['break the ice','briser la glace'],['piece of cake','facile'],['hit the nail on the head','mettre dans le mille'],['under the weather','patraque'],['cost an arm and a leg','coûter les yeux de la tête'],['bite the bullet','prendre son courage']],sp:['The exam was a piece of cake','I\'m feeling under the weather','Let\'s break the ice']},
+{id:'en-B2-67',t:'Phrasal verbs GET',tp:'vocab',xp:100,wp:[['get up','se lever'],['get along','s\'entendre'],['get over','surmonter'],['get by','se débrouiller'],['get away','s\'échapper'],['get through','traverser']],sp:['I get up at seven','We get along well','It took me a while to get over it']},
+{id:'en-B2-68',t:'Phrasal verbs TAKE/MAKE',tp:'vocab',xp:100,wp:[['take off','décoller/enlever'],['take over','reprendre'],['take up','commencer (hobby)'],['make up','inventer/se maquiller'],['make out','comprendre'],['make do','se contenter']],sp:['I took up yoga last year','She made up an excuse','We\'ll have to make do']},
+{id:'en-B2-69',t:'Grammar B2 — Conditionals 3',tp:'grammar',xp:110,wp:[['if I had known','si j\'avais su'],['would have','aurais'],['could have','aurais pu'],['should have','aurais dû'],['might have','aurait pu']],sp:['If I had known I would have come','You should have told me','It might have worked']},
+{id:'en-B2-70',t:'Grammar B2 — Inversion',tp:'grammar',xp:110,wp:[['never have I','jamais je n\'ai'],['rarely does','rarement'],['not only','non seulement'],['had I known','si j\'avais su'],['seldom','rarement']],sp:['Never have I seen such beauty','Rarely does he come late','Not only is she smart but also kind']},
+{id:'en-B2-71',t:'Professional English',tp:'conv',xp:105,wp:[['agenda','ordre du jour'],['minutes','compte rendu'],['stakeholder','partie prenante'],['deadline','date limite'],['deliverable','livrable'],['feedback','retour']],sp:['Let\'s review the agenda','The deadline is next Friday','I need your feedback']}
+]},
+{sec:'B2',emoji:'📚',unit:'Authentic English',lessons:[
+{id:'en-B2-72',t:'Newspaper articles',tp:'culture',xp:100,wp:[['source','source'],['bias','biais'],['editorial','éditorial'],['headline','gros titre'],['investigative','d\'investigation']],sp:['According to reliable sources','The editorial argues that','This is investigative journalism']},
+{id:'en-B2-73',t:'Song lyrics',tp:'culture',xp:95,wp:[['chorus','refrain'],['verse','couplet'],['rhyme','rime'],['melody','mélodie'],['lyrics','paroles']],sp:['The chorus is catchy','The lyrics are about love','This verse is powerful']},
+{id:'en-B2-74',t:'Literature extracts',tp:'culture',xp:105,wp:[['narrator','narrateur'],['character','personnage'],['plot','intrigue'],['metaphor','métaphore'],['symbolism','symbolisme']],sp:['The narrator is unreliable','The plot is complex','It is a metaphor for freedom']},
+{id:'en-B2-75',t:'Public speaking',tp:'conv',xp:110,wp:[['thesis','thèse'],['argument','argument'],['rhetoric','rhétorique'],['persuade','persuader'],['audience','public']],sp:['My thesis is that','This argument is compelling','We need to persuade the audience']},
+{id:'en-B2-76',t:'TED Talk analysis',tp:'culture',xp:105,wp:[['keynote','discours principal'],['insight','aperçu'],['takeaway','enseignement'],['engage','captiver'],['inspire','inspirer']],sp:['The key takeaway is','The speaker engaged the audience','An inspiring talk']},
+{id:'en-B2-77',t:'Advanced grammar review',tp:'grammar',xp:110,wp:[['cleft sentence','phrase clivée'],['emphasis','emphase'],['inversion','inversion'],['subjunctive','subjonctif'],['ellipsis','ellipse']],sp:['It was John who called','What I need is more time','Were I to know I would tell you']}
+]},
+{sec:'C1',emoji:'🏆',unit:'Mastery',lessons:[
+{id:'en-C1-78',t:'Semantic nuances',tp:'vocab',xp:120,wp:[['ephemeral','éphémère'],['ubiquitous','omniprésent'],['paradigm','paradigme'],['dichotomy','dichotomie'],['nuance','nuance'],['connotation','connotation']],sp:['The distinction is nuanced','It is a false dichotomy','The word has negative connotations']},
+{id:'en-C1-79',t:'Complex syntax',tp:'grammar',xp:125,wp:[['were it not for','sans'],['no sooner than','à peine'],['provided that','à condition que'],['albeit','bien que'],['notwithstanding','nonobstant']],sp:['Were it not for you I would have failed','No sooner had I arrived than it rained']},
+{id:'en-C1-80',t:'Academic English',tp:'conv',xp:130,wp:[['thesis','thèse'],['hypothesis','hypothèse'],['methodology','méthodologie'],['framework','cadre'],['peer review','revue par les pairs'],['citation','citation']],sp:['The thesis of this paper is','According to the theoretical framework','The methodology is sound']},
+{id:'en-C1-81',t:'Advanced vocabulary',tp:'vocab',xp:125,wp:[['to dwindle','diminuer'],['to thrive','prospérer'],['to undermine','saper'],['to encompass','englober'],['to exacerbate','exacerber'],['to mitigate','atténuer']],sp:['The population is dwindling','The company continues to thrive','This will exacerbate the problem']}
+]}
+],
+// ══════ ITALIANO ══════
+it:[
+{sec:'A1',emoji:'👋',unit:'Benvenuti!',lessons:[
+{id:'it-A1-1',t:'Saluti',tp:'vocab',xp:50,ex:[
+{t:'tr',q:'"Ciao" significa :',opts:['Bonjour formel','Salut','Merci','S\'il vous plaît'],a:1},
+{t:'tr',q:'Come si dice "bonsoir" ?',opts:['Buongiorno','Buonanotte','Buonasera','Arrivederci'],a:2},
+{t:'fill',q:'"___ mi chiamo Marco."',opts:['Come','Dove','Io','Mi'],a:2,sentence:'___ mi chiamo Marco.'},
+{t:'tr',q:'"Come stai?" significa :',opts:['Comment tu t\'appelles','Comment vas-tu','Où habites-tu','Quel âge as-tu'],a:1},
+{t:'fill',q:'"Sto ___, grazie!"',opts:['male','poco','bene','tanto'],a:2,sentence:'Sto ___, grazie!'},
+{t:'order',q:'Rimetti in ordine:',words:['chiamo','Mi','Luca'],correct:'Mi chiamo Luca'},
+{t:'tr',q:'"Piacere!" signifie :',opts:['Au revoir','Bonjour','Enchanté','Merci'],a:2},
+{t:'match',q:'Associa',pairs:[['ciao','salut'],['grazie','merci'],['prego','de rien'],['arrivederci','au revoir']]},
+{t:'listen',q:'Ascolta:',audio:'Buongiorno',opts:['Buonanotte','Buonasera','Buongiorno','Arrivederci'],a:2},
+{t:'speech',q:'Pronuncia:',target:'Ciao, come stai?'}
+]},
+{id:'it-A1-2',t:'Numeri 1-20',tp:'vocab',xp:50,wp:[['uno','1'],['due','2'],['tre','3'],['cinque','5'],['dieci','10'],['quindici','15'],['venti','20'],['dodici','12'],['diciotto','18'],['undici','11']],sp:['Ho venti anni','Sono le tre','Cinque più cinque fa dieci']},
+{id:'it-A1-3',t:'Presentarsi',tp:'conv',xp:60,wp:[['nome','nom'],['cognome','nom de famille'],['età','âge'],['nazionalità','nationalité'],['lavoro','travail'],['abitare','habiter'],['parlare','parler'],['studiare','étudier']],sp:['Mi chiamo Mathis','Sono francese','Abito a Parigi','Parlo italiano e francese']},
+{id:'it-A1-4',t:'Le buone maniere',tp:'culture',xp:50,wp:[['grazie','merci'],['prego','de rien'],['per favore','s\'il vous plaît'],['scusa','excuse'],['mi dispiace','désolé'],['permesso','pardon (passage)'],['gentile','gentil']],sp:['Grazie mille','Per favore un caffè','Mi dispiace molto','Scusa il ritardo']}
+]},
+{sec:'A1',emoji:'🏠',unit:'Vita quotidiana',lessons:[
+{id:'it-A1-5',t:'I colori',tp:'vocab',xp:50,wp:[['rosso','rouge'],['blu','bleu'],['verde','vert'],['giallo','jaune'],['nero','noir'],['bianco','blanc'],['arancione','orange'],['rosa','rose'],['grigio','gris'],['marrone','marron']],sp:['Il cielo è blu','La mela è rossa','Mi piace il verde']},
+{id:'it-A1-6',t:'La casa',tp:'vocab',xp:55,wp:[['cucina','cuisine'],['camera','chambre'],['bagno','salle de bain'],['soggiorno','salon'],['giardino','jardin'],['porta','porte'],['finestra','fenêtre'],['tavolo','table'],['sedia','chaise'],['letto','lit']],sp:['Vivo in una casa grande','La cucina è al piano terra','La mia camera è piccola']},
+{id:'it-A1-7',t:'La routine',tp:'grammar',xp:65,wp:[['svegliarsi','se réveiller'],['alzarsi','se lever'],['fare colazione','prendre le petit-déjeuner'],['andare al lavoro','aller au travail'],['pranzare','déjeuner'],['cenare','dîner'],['addormentarsi','s\'endormir'],['lavarsi','se laver']],sp:['Mi sveglio alle sette','Faccio colazione alle otto','Vado a letto alle undici']},
+{id:'it-A1-8',t:'Giorni e mesi',tp:'vocab',xp:50,wp:[['lunedì','lundi'],['martedì','mardi'],['mercoledì','mercredi'],['giovedì','jeudi'],['venerdì','vendredi'],['sabato','samedi'],['domenica','dimanche'],['gennaio','janvier'],['luglio','juillet'],['dicembre','décembre']],sp:['Oggi è lunedì','Il mio compleanno è a marzo','Lavoro dal lunedì al venerdì']}
+]},
+{sec:'A1',emoji:'👨‍👩‍👧',unit:'Famiglia',lessons:[
+{id:'it-A1-9',t:'Membri della famiglia',tp:'vocab',xp:50,wp:[['madre','mère'],['padre','père'],['fratello','frère'],['sorella','sœur'],['nonno','grand-père'],['nonna','grand-mère'],['zio','oncle'],['zia','tante'],['figlio','fils'],['figlia','fille']],sp:['Mia madre si chiama Anna','Ho due fratelli','I miei nonni vivono in campagna']},
+{id:'it-A1-10',t:'Aspetto fisico',tp:'vocab',xp:55,wp:[['alto','grand'],['basso','petit'],['magro','mince'],['biondo','blond'],['bruno','brun'],['giovane','jeune'],['vecchio','vieux'],['occhi','yeux'],['capelli','cheveux']],sp:['Mia sorella è alta e bionda','Ha gli occhi azzurri','Ha i capelli lunghi']},
+{id:'it-A1-11',t:'Carattere',tp:'vocab',xp:55,wp:[['simpatico','sympathique'],['timido','timide'],['allegro','joyeux'],['serio','sérieux'],['intelligente','intelligent'],['gentile','gentil'],['divertente','amusant'],['tranquillo','tranquille']],sp:['Mio fratello è simpatico','È una persona molto gentile','Sono allegro e divertente']},
+{id:'it-A1-12',t:'Parlare della famiglia',tp:'conv',xp:60,wp:[['sposato','marié'],['single','célibataire'],['maggiore','aîné'],['minore','cadet'],['nipote','neveu/nièce'],['cognato','beau-frère']],sp:['Siamo quattro in famiglia','Mio fratello maggiore ha 25 anni']}
+]},
+{sec:'A1',emoji:'🍝',unit:'Cibo e bevande',lessons:[
+{id:'it-A1-13',t:'Alimenti',tp:'vocab',xp:50,wp:[['pane','pain'],['latte','lait'],['uovo','œuf'],['formaggio','fromage'],['pollo','poulet'],['riso','riz'],['pesce','poisson'],['carne','viande'],['frutta','fruit'],['verdura','légume']],sp:['Mi piace la pasta','Vorrei un caffè','Mangio frutta ogni giorno']},
+{id:'it-A1-14',t:'Al ristorante',tp:'conv',xp:60,wp:[['il conto','l\'addition'],['il menù','le menu'],['cameriere','serveur'],['piatto','plat'],['dolce','dessert'],['prenotazione','réservation'],['tavolo','table']],sp:['Vorrei prenotare un tavolo','Il conto per favore','Cosa mi consiglia?']},
+{id:'it-A1-15',t:'Gusti',tp:'conv',xp:55,wp:[['mi piace','j\'aime'],['non mi piace','je n\'aime pas'],['preferisco','je préfère'],['dolce','sucré'],['salato','salé'],['piccante','épicé'],['buono','bon'],['cattivo','mauvais']],sp:['Mi piace molto il gelato','Non mi piace il pesce','Preferisco la pizza alla pasta']},
+{id:'it-A1-16',t:'I pasti',tp:'vocab',xp:50,wp:[['colazione','petit-déjeuner'],['pranzo','déjeuner'],['cena','dîner'],['merenda','goûter'],['cucinare','cuisiner'],['ricetta','recette']],sp:['La colazione è alle otto','Oggi cucino io','La cena è pronta']}
+]},
+{sec:'A1',emoji:'☀️',unit:'Tempo e stagioni',lessons:[
+{id:'it-A1-17',t:'Il meteo',tp:'vocab',xp:50,wp:[['sole','soleil'],['pioggia','pluie'],['neve','neige'],['vento','vent'],['nuvoloso','nuageux'],['caldo','chaud'],['freddo','froid'],['temporale','orage']],sp:['Oggi c\'è il sole','Domani pioverà','Fa molto caldo']},
+{id:'it-A1-18',t:'Le stagioni',tp:'vocab',xp:50,wp:[['primavera','printemps'],['estate','été'],['autunno','automne'],['inverno','hiver'],['fiore','fleur'],['spiaggia','plage'],['foglia','feuille']],sp:['In estate vado al mare','L\'inverno è freddo','La primavera è la mia stagione preferita']},
+{id:'it-A1-19',t:'L\'ora',tp:'grammar',xp:60,wp:[['ora','heure'],['minuti','minutes'],['in punto','pile'],['e mezza','et demie'],['meno un quarto','moins le quart'],['presto','tôt'],['tardi','tard']],sp:['Sono le tre in punto','È l\'una e mezza','Sono le otto meno un quarto']},
+{id:'it-A1-20',t:'Date e feste',tp:'culture',xp:55,wp:[['compleanno','anniversaire'],['Natale','Noël'],['festa','fête'],['vacanze','vacances'],['regalo','cadeau'],['Capodanno','Nouvel An'],['Ferragosto','15 août']],sp:['Il mio compleanno è a marzo','Buon Natale','Le vacanze sono ad agosto']}
+]},
+// A2-C1 Italian condensed
+{sec:'A2',emoji:'🚗',unit:'Trasporti e direzioni',lessons:[
+{id:'it-A2-21',t:'Mezzi di trasporto',tp:'vocab',xp:65,wp:[['autobus','bus'],['treno','train'],['aereo','avion'],['macchina','voiture'],['bicicletta','vélo'],['stazione','gare'],['aeroporto','aéroport'],['biglietto','billet']],sp:['Prendo il treno per Roma','L\'aereo parte alle tre','Dove posso comprare un biglietto?']},
+{id:'it-A2-22',t:'Chiedere indicazioni',tp:'conv',xp:65,wp:[['giri a sinistra','tournez à gauche'],['giri a destra','tournez à droite'],['vada dritto','allez tout droit'],['accanto a','à côté de'],['di fronte a','en face de'],['angolo','coin'],['incrocio','carrefour']],sp:['Scusi, dov\'è la stazione?','Vada dritto e giri a sinistra','È accanto alla banca']},
+{id:'it-A2-23',t:'In aeroporto',tp:'conv',xp:70,wp:[['volo','vol'],['imbarco','embarquement'],['bagaglio','bagage'],['passaporto','passeport'],['ritardo','retard'],['arrivo','arrivée'],['partenza','départ']],sp:['Il mio volo è in ritardo','Dov\'è il gate numero 5?','Mi mostri il passaporto']},
+{id:'it-A2-24',t:'Preposizioni di luogo',tp:'grammar',xp:65,wp:[['sopra','au-dessus'],['sotto','sous'],['dentro','dedans'],['fuori','dehors'],['tra','entre'],['dietro','derrière'],['davanti a','devant']],sp:['Il libro è sul tavolo','Il gatto è sotto il letto','La farmacia è tra la banca e il bar']},
+{id:'it-A2-25',t:'Comprare un biglietto',tp:'conv',xp:70,wp:[['andata','aller'],['ritorno','retour'],['andata e ritorno','aller-retour'],['prima classe','première classe'],['tariffa','tarif'],['sconto','réduction']],sp:['Un biglietto di andata e ritorno per Milano','Quanto costa?','C\'è uno sconto per studenti?']}
+]},
+{sec:'A2',emoji:'💼',unit:'Lavoro e scuola',lessons:[
+{id:'it-A2-26',t:'Le professioni',tp:'vocab',xp:65,wp:[['professore','professeur'],['medico','médecin'],['avvocato','avocat'],['ingegnere','ingénieur'],['infermiere','infirmier'],['cuoco','cuisinier'],['giornalista','journaliste'],['architetto','architecte']],sp:['Sono professore di italiano','Mio padre fa il medico','Voglio diventare ingegnere']},
+{id:'it-A2-27',t:'In ufficio',tp:'vocab',xp:65,wp:[['ufficio','bureau'],['computer','ordinateur'],['riunione','réunion'],['capo','patron'],['collega','collègue'],['email','email'],['progetto','projet']],sp:['Lavoro in un ufficio grande','Ho una riunione alle dieci']},
+{id:'it-A2-28',t:'Gli studi',tp:'vocab',xp:65,wp:[['università','université'],['esame','examen'],['compiti','devoirs'],['materia','matière'],['voto','note'],['superare','réussir'],['laurea','diplôme']],sp:['Studio all\'università','Ho un esame domani','Ho superato tutti gli esami']},
+{id:'it-A2-29',t:'Grammatica A2 — Passato',tp:'grammar',xp:75,wp:[['ho mangiato','j\'ai mangé'],['sono andato','je suis allé'],['ho visto','j\'ai vu'],['ho fatto','j\'ai fait'],['sono venuto','je suis venu'],['ho detto','j\'ai dit']],sp:['Ieri sono andato al cinema','Ho mangiato la pizza','Ho visto un bel film']},
+{id:'it-A2-30',t:'Tempo libero',tp:'vocab',xp:65,wp:[['leggere','lire'],['ballare','danser'],['cantare','chanter'],['disegnare','dessiner'],['viaggiare','voyager'],['musica','musique'],['sport','sport']],sp:['Mi piace molto leggere','Il mio hobby è la fotografia','Amo viaggiare']}
+]},
+{sec:'B1',emoji:'✈️',unit:'Viaggi e avventura',lessons:[
+{id:'it-B1-31',t:'Pianificare un viaggio',tp:'conv',xp:85,wp:[['destinazione','destination'],['budget','budget'],['alloggio','hébergement'],['prenotare','réserver'],['stagione','saison']],sp:['Voglio prenotare un volo per Firenze','Preferisco viaggiare in bassa stagione']},
+{id:'it-B1-32',t:'In albergo',tp:'conv',xp:80,wp:[['camera','chambre'],['chiave','clé'],['colazione inclusa','petit-déjeuner inclus'],['vista','vue'],['piscina','piscine']],sp:['Ho una prenotazione a nome Rossi','La camera ha la vista mare?']},
+{id:'it-B1-33',t:'Il congiuntivo presente',tp:'grammar',xp:100,wp:[['che io parli','que je parle'],['che tu mangi','que tu manges'],['che lui viva','qu\'il vive'],['che noi abbiamo','que nous ayons'],['che siano','qu\'ils soient']],sp:['Spero che tu venga alla festa','È importante che studi','Penso che sia vero']},
+{id:'it-B1-34',t:'Opinioni e sentimenti',tp:'conv',xp:85,wp:[['penso che','je pense que'],['secondo me','selon moi'],['sono d\'accordo','je suis d\'accord'],['non sono d\'accordo','je ne suis pas d\'accord'],['tuttavia','cependant']],sp:['Secondo me è giusto','Non sono d\'accordo con te']},
+{id:'it-B1-35',t:'Cultura italiana',tp:'culture',xp:85,wp:[['Rinascimento','Renaissance'],['opera','opéra'],['moda','mode'],['design','design'],['Ferrari','Ferrari'],['gelato','glace']],sp:['Il Rinascimento è nato in Italia','L\'opera italiana è famosa nel mondo']}
+]},
+{sec:'B2',emoji:'🎯',unit:'Lingua e sfumature',lessons:[
+{id:'it-B2-36',t:'Modi di dire',tp:'vocab',xp:100,wp:[['in bocca al lupo','bonne chance'],['non vedo l\'ora','j\'ai hâte'],['fare il furbo','faire le malin'],['prendere in giro','se moquer'],['andare a genio','plaire'],['avere la testa fra le nuvole','être dans la lune']],sp:['In bocca al lupo per l\'esame','Non vedo l\'ora di vederti']},
+{id:'it-B2-37',t:'Italiano professionale',tp:'conv',xp:105,wp:[['colloquio','entretien'],['stipendio','salaire'],['curriculum','CV'],['candidatura','candidature'],['assunzione','embauche'],['dimissioni','démission']],sp:['Ho un colloquio domani','La mia candidatura è stata accettata']},
+{id:'it-B2-38',t:'Grammatica B2',tp:'grammar',xp:110,wp:[['congiuntivo imperfetto','subjonctif imparfait'],['condizionale passato','conditionnel passé'],['periodo ipotetico','phrase conditionnelle'],['discorso indiretto','discours indirect']],sp:['Se avessi tempo viaggerei','Ha detto che sarebbe venuto']},
+{id:'it-B2-39',t:'Cinema italiano',tp:'culture',xp:100,wp:[['Fellini','Fellini'],['neorealismo','néoréalisme'],['commedia all\'italiana','comédie à l\'italienne'],['Sorrentino','Sorrentino'],['colonna sonora','bande originale']],sp:['Fellini è un maestro del cinema','Il neorealismo ha cambiato il cinema']},
+{id:'it-B2-40',t:'Textes authentiques',tp:'culture',xp:105,wp:[['articolo','article'],['saggio','essai'],['romanzo','roman'],['poesia','poésie'],['Dante','Dante'],['Divina Commedia','Divine Comédie']],sp:['Dante è il padre della lingua italiana','La Divina Commedia è un capolavoro']}
+]},
+{sec:'C1',emoji:'🏆',unit:'Padronanza',lessons:[
+{id:'it-C1-41',t:'Sfumature semantiche',tp:'vocab',xp:120,wp:[['efimero','éphémère'],['intrinseco','intrinsèque'],['paradosso','paradoxe'],['ambivalente','ambivalent'],['sfumatura','nuance']],sp:['La differenza è sottile ma importante','È un paradosso interessante']},
+{id:'it-C1-42',t:'Italiano accademico',tp:'conv',xp:130,wp:[['tesi','thèse'],['ipotesi','hypothèse'],['metodologia','méthodologie'],['bibliografia','bibliographie'],['citazione','citation']],sp:['La tesi di questo saggio è','Secondo la metodologia adottata']},
+{id:'it-C1-43',t:'Dante e letteratura',tp:'culture',xp:130,wp:[['Inferno','Enfer'],['Purgatorio','Purgatoire'],['Paradiso','Paradis'],['Boccaccio','Boccace'],['Petrarca','Pétrarque'],['Leopardi','Leopardi']],sp:['Nel mezzo del cammin di nostra vita','La letteratura italiana è ricchissima']},
+{id:'it-C1-44',t:'Test finale C1',tp:'grammar',xp:150,wp:[['padronanza','maîtrise'],['fluidità','fluidité'],['precisione','précision'],['registro','registre'],['complessità','complexité']],sp:['Dimostra una padronanza avanzata','La sua fluidità è eccellente']}
+]}
+]};
+
+/* ============ EXERCISE GENERATOR ============ */
+function generateExercises(lesson,lang){
+  if(lesson.ex&&lesson.ex.length>=10)return lesson.ex;
+  const ex=lesson.ex?[...lesson.ex]:[];
+  const wp=lesson.wp||[];
+  const sp=lesson.sp||[];
+  if(wp.length===0&&sp.length===0)return ex;
+  const langCode=lang==='es'?'es-ES':lang==='it'?'it-IT':'en-US';
+  let idx=0;
+  // Generate exercises to reach 10
+  while(ex.length<10&&(wp.length>0||sp.length>0)){
+    const type=idx%6;
+    if(type===0&&wp.length>=4){// QCM from word pool
+      const ci=idx%wp.length;const w=wp[ci];
+      const wrongs=shuffle(wp.filter((_,i)=>i!==ci)).slice(0,3).map(x=>x[1]);
+      const opts=shuffle([w[1],...wrongs]);
+      ex.push({t:'tr',q:'"'+w[0]+'" signifie :',opts:opts,a:opts.indexOf(w[1])});
+    }else if(type===1&&sp.length>0){// Fill from sentence
+      const s=sp[idx%sp.length];const words=s.split(' ');
+      if(words.length>=3){
+        const ri=1+Math.floor(Math.random()*(words.length-2));
+        const answer=words[ri];const blanked=[...words];blanked[ri]='___';
+        const wrongs=wp.length>=3?shuffle(wp).slice(0,3).map(w=>w[0]):[answer+'s',answer+'r',answer+'n'];
+        const opts=shuffle([answer,...wrongs.filter(w=>w!==answer)]).slice(0,4);
+        if(!opts.includes(answer))opts[0]=answer;
+        ex.push({t:'fill',q:'Complète :',opts:opts,a:opts.indexOf(answer),sentence:blanked.join(' ')});
+      }
+    }else if(type===2&&wp.length>=4){// Match
+      const pairs=shuffle(wp).slice(0,4).map(w=>[w[0],w[1]]);
+      ex.push({t:'match',q:'Associez',pairs:pairs});
+    }else if(type===3&&sp.length>0){// Listen
+      const s=sp[idx%sp.length];const firstWord=s.split(' ').slice(0,4).join(' ');
+      const wrongs=sp.filter(x=>x!==s).slice(0,3);while(wrongs.length<3)wrongs.push(firstWord+' ?');
+      const opts=shuffle([firstWord,...wrongs.map(w=>w.split(' ').slice(0,4).join(' '))]).slice(0,4);
+      if(!opts.includes(firstWord))opts[0]=firstWord;
+      ex.push({t:'listen',q:'Écoute :',audio:s,opts:opts,a:opts.indexOf(firstWord)});
+    }else if(type===4&&sp.length>0){// Speak
+      ex.push({t:'speech',q:'Prononce :',target:sp[idx%sp.length]});
+    }else if(type===5&&sp.length>0){// Order
+      const s=sp[idx%sp.length];const words=s.split(' ');
+      if(words.length>=3&&words.length<=8){
+        ex.push({t:'order',q:'Remets dans l\'ordre :',words:shuffle(words),correct:s});
+      }
+    }
+    idx++;
+    if(idx>30)break; // safety
+  }
+  return ex.slice(0,10);
+}
+
+/* Helper: get flat lesson list for a language */
+function getAllLessons(lang){
+  const units=CURRICULUM[lang]||[];
+  const lessons=[];let globalIdx=1;
+  units.forEach(u=>{
+    u.lessons.forEach(l=>{
+      lessons.push({...l,sec:u.sec,emoji:u.emoji,unit:u.unit,globalIdx:globalIdx++,level:u.sec});
+    });
+  });
+  return lessons;
+}
+function getLessonById(id,lang){return getAllLessons(lang).find(l=>l.id===id)}
+function getLessonCount(lang){return getAllLessons(lang).length}
 
 const VOCAL_CONTENT={
   es:{
@@ -1028,9 +1537,9 @@ const DEFAULT_STATE=()=>({
   lastSeen:null,streak:0,longestStreak:0,
   sessionsVoice:0,
   langs:{
-    es:{level:'A1',xp:0,lessonsCompleted:[],currentLesson:1,bestStars:{}},
-    en:{level:'A1',xp:0,lessonsCompleted:[],currentLesson:1,bestStars:{}},
-    it:{level:'A1',xp:0,lessonsCompleted:[],currentLesson:1,bestStars:{}}
+    es:{level:'A1',xp:0,lessonsCompleted:[],bestStars:{},lessonResults:{},sectionMastery:{A1:0,A2:0,B1:0,B2:0,C1:0}},
+    en:{level:'A1',xp:0,lessonsCompleted:[],bestStars:{},lessonResults:{},sectionMastery:{A1:0,A2:0,B1:0,B2:0,C1:0}},
+    it:{level:'A1',xp:0,lessonsCompleted:[],bestStars:{},lessonResults:{},sectionMastery:{A1:0,A2:0,B1:0,B2:0,C1:0}}
   },
   wordCards:[],
   badges:[],
@@ -1038,6 +1547,85 @@ const DEFAULT_STATE=()=>({
   dailyChallenges:null,
   dailyTasks:{}
 });
+
+/* ============ MASTERY SYSTEM ============ */
+function calculateStars(errors,total){const acc=((total-errors)/total)*100;if(acc===100)return 3;if(acc>=75)return 2;if(acc>=50)return 1;return 0}
+function getDaysSince(dateStr){if(!dateStr)return 999;return Math.floor((Date.now()-new Date(dateStr).getTime())/86400000)}
+function calculateSectionMastery(lang,section){
+  const all=getAllLessons(lang).filter(l=>l.sec===section);
+  const results=S.langs[lang].lessonResults||{};
+  let total=0,weightSum=0;
+  all.forEach(l=>{
+    const r=results[l.id];if(!r)return;
+    const starScore=r.stars===3?100:r.stars===2?70:r.stars===1?40:0;
+    const repBonus=Math.min(20,(r.attempts-1)*5);
+    const days=getDaysSince(r.lastPlayed);
+    const rust=days>30?15:days>14?8:days>7?3:0;
+    const score=Math.max(0,Math.min(100,starScore+repBonus-rust));
+    const weight=days<7?1.5:1;
+    total+=score*weight;weightSum+=weight;
+  });
+  return weightSum>0?Math.round(total/weightSum):0;
+}
+function updateAllMastery(lang){
+  ['A1','A2','B1','B2','C1'].forEach(s=>{S.langs[lang].sectionMastery[s]=calculateSectionMastery(lang,s)});
+}
+function calculateCECR(lang){
+  const m=S.langs[lang].sectionMastery;
+  if(m.A1>=80&&m.A2>=75&&m.B1>=70&&m.B2>=70)return 'C1';
+  if(m.A1>=80&&m.A2>=75&&m.B1>=70)return 'B2';
+  if(m.A1>=80&&m.A2>=75)return 'B1';
+  if(m.A1>=80)return 'A2';
+  return 'A1';
+}
+function checkLevelUp(lang){
+  updateAllMastery(lang);
+  const newLevel=calculateCECR(lang);
+  const oldLevel=S.langs[lang].level;
+  if(newLevel!==oldLevel){
+    const levels=['A1','A2','B1','B2','C1'];
+    if(levels.indexOf(newLevel)>levels.indexOf(oldLevel)){
+      S.langs[lang].level=newLevel;
+      triggerLevelUpCeremony(oldLevel,newLevel,lang);
+      grantBadge(newLevel.toLowerCase(),newLevel+' atteint');
+    }
+  }
+  S.langs[lang].level=newLevel;
+  saveState();
+}
+function applyRustDecay(lang){
+  const days=getDaysSince(S.langs[lang]?.lastPracticed);
+  if(days>=14)toast('⚠️ Ta maîtrise '+lang.toUpperCase()+' baisse ! Reviens pratiquer.');
+  updateAllMastery(lang);
+}
+function triggerLevelUpCeremony(from,to,lang){
+  const colors={es:['#c60b1e','#ffd700'],en:['#012169','#cf142b'],it:['#009246','#ce2b37']}[lang]||['#7c6fcd','#ffd700'];
+  playSound('levelup');
+  setTimeout(()=>{try{confetti({particleCount:200,spread:120,origin:{y:.4},colors:colors})}catch(e){}},300);
+  setTimeout(()=>{try{confetti({particleCount:100,spread:80,origin:{y:.5},colors:colors})}catch(e){}},1200);
+  toast('🎉 Félicitations ! Tu passes de '+from+' à '+to+' !');
+  addXp(500);
+}
+function getLessonStatus(lessonId,lang){
+  const all=getAllLessons(lang);
+  const idx=all.findIndex(l=>l.id===lessonId);
+  if(idx===0)return 'unlocked';
+  const completed=S.langs[lang].lessonsCompleted||[];
+  if(completed.includes(lessonId))return 'completed';
+  const prev=all[idx-1];
+  if(prev&&completed.includes(prev.id))return 'unlocked';
+  // Also unlock first lesson of each section if previous section mastery >= threshold
+  const lesson=all[idx];
+  const sectionLessons=all.filter(l=>l.sec===lesson.sec);
+  if(sectionLessons[0]&&sectionLessons[0].id===lessonId){
+    const secOrder=['A1','A2','B1','B2','C1'];
+    const si=secOrder.indexOf(lesson.sec);
+    if(si===0)return 'unlocked';
+    const prevSec=secOrder[si-1];
+    if((S.langs[lang].sectionMastery[prevSec]||0)>=50)return 'unlocked';
+  }
+  return 'locked';
+}
 let S=loadState();
 function loadState(){try{const x=localStorage.getItem('lingua');if(x){const s=JSON.parse(x);return Object.assign(DEFAULT_STATE(),s)}}catch(e){}return DEFAULT_STATE();}
 function saveState(){localStorage.setItem('lingua',JSON.stringify(S))}
@@ -1258,16 +1846,17 @@ function renderHome(){
   // reco
   const nextLesson=findNextLesson();
   if(nextLesson){
+    const tpLabel={vocab:'Vocabulaire',grammar:'Grammaire',conv:'Conversation',culture:'Culture'}[nextLesson.tp]||'Leçon';
     document.getElementById('recoCard').innerHTML=`
       <div class="reco-tag">📌 Recommandé pour toi</div>
-      <div class="reco-title">${nextLesson.emoji} ${nextLesson.title}</div>
+      <div class="reco-title">${nextLesson.emoji||'📖'} ${nextLesson.t}</div>
       <div class="reco-meta">
-        <span class="pill pill-${nextLesson.level.toLowerCase()}">${nextLesson.level}</span>
-        <span>⏱ ${Math.max(5,nextLesson.q.length*2)} min</span>
-        <span>📖 ${nextLesson.type==='vocab'?'Vocabulaire':nextLesson.type==='grammar'?'Grammaire':'Conversation'}</span>
+        <span class="pill pill-${nextLesson.sec.toLowerCase()}">${nextLesson.sec}</span>
+        <span>⏱ 5-8 min</span>
+        <span>📖 ${tpLabel}</span>
         <span>⚡ +${nextLesson.xp} XP</span>
       </div>
-      <button class="btn" onclick="startLesson(${nextLesson.id})">Commencer maintenant →</button>`;
+      <button class="btn" onclick="startLesson('${nextLesson.id}')">Commencer maintenant →</button>`;
   } else {
     document.getElementById('recoCard').innerHTML=`<div class="reco-title">🎉 Tu as fait toutes les leçons !</div><p style="color:var(--text-muted);margin-top:8px">Explore une autre langue ou révise tes mots.</p>`;
   }
@@ -1275,7 +1864,7 @@ function renderHome(){
   // stats
   document.getElementById('sStreak').textContent=S.streak;
   document.getElementById('sXp').textContent=S.xpToday;
-  document.getElementById('sLessons').textContent=S.langs[S.activeLang].lessonsCompleted.length;
+  document.getElementById('sLessons').textContent=(S.langs[S.activeLang].lessonsCompleted||[]).length;
   document.getElementById('sVoice').textContent=S.sessionsVoice;
 
   // revise
@@ -1289,9 +1878,9 @@ function renderHome(){
   drawWeekChart();
 }
 function findNextLesson(){
-  const l=LESSONS[S.activeLang]||[];
-  const completed=S.langs[S.activeLang].lessonsCompleted;
-  return l.find(x=>!completed.includes(x.id)&&!x.locked&&x.q.length>0);
+  const all=getAllLessons(S.activeLang);
+  const completed=S.langs[S.activeLang].lessonsCompleted||[];
+  return all.find(x=>!completed.includes(x.id)&&getLessonStatus(x.id,S.activeLang)==='unlocked');
 }
 function drawWeekChart(){
   const cv=document.getElementById('weekChart');if(!cv)return;
@@ -1320,36 +1909,43 @@ let lessonFilter='all';
 function renderLessons(){
   document.querySelectorAll('#langTabs .lang-tab').forEach(t=>t.classList.toggle('active',t.dataset.lang===S.activeLang));
   document.getElementById('lessonsLevel').className='pill pill-'+S.langs[S.activeLang].level.toLowerCase();
-  document.getElementById('lessonsLevel').textContent=S.langs[S.activeLang].level;
-  const lessons=(LESSONS[S.activeLang]||[]).filter(l=>lessonFilter==='all'||l.type===lessonFilter);
-  const completed=S.langs[S.activeLang].lessonsCompleted;
-  const currentId=S.langs[S.activeLang].currentLesson;
-  const bySec={A1:[],A2:[],B1:[],B2:[],C1:[]};
-  lessons.forEach(l=>{if(bySec[l.sec])bySec[l.sec].push(l)});
+  document.getElementById('lessonsLevel').textContent=S.langs[S.activeLang].level+' — '+getLessonCount(S.activeLang)+' leçons';
+  const allLessons=getAllLessons(S.activeLang).filter(l=>lessonFilter==='all'||l.tp===lessonFilter);
+  const completed=S.langs[S.activeLang].lessonsCompleted||[];
+  const mastery=S.langs[S.activeLang].sectionMastery||{};
+  const units=CURRICULUM[S.activeLang]||[];
   let html='<div class="lpath">';
-  Object.keys(bySec).forEach(sec=>{
-    if(bySec[sec].length===0)return;
-    html+=`<div class="lpath-section"><h4>Section ${sec}</h4><div class="lpath-nodes">`;
-    bySec[sec].forEach(l=>{
+  let prevSec='';
+  units.forEach(u=>{
+    const uLessons=u.lessons.filter(l=>lessonFilter==='all'||l.tp===lessonFilter);
+    if(uLessons.length===0)return;
+    if(u.sec!==prevSec){
+      const m=mastery[u.sec]||0;
+      html+=`<div class="lpath-section" style="margin-top:${prevSec?'40':'0'}px"><h4>Section ${u.sec} ${m>0?'— '+m+'% maîtrise':''}</h4>`;
+      prevSec=u.sec;
+    }
+    html+=`<div style="text-align:center;margin:8px 0;font-size:13px;color:var(--text-muted)">${u.emoji} ${u.unit}</div><div class="lpath-nodes">`;
+    uLessons.forEach(l=>{
+      const status=getLessonStatus(l.id,S.activeLang);
       const isDone=completed.includes(l.id);
-      const isCurrent=!isDone&&l.id===currentId;
-      const isLocked=l.locked||(l.q.length===0)||(l.id>currentId&&!isDone);
+      const isLocked=status==='locked';
+      const isCurrent=status==='unlocked'&&!isDone;
       const cls=isDone?'completed':(isCurrent?'current':(isLocked?'locked':''));
       const stars=S.langs[S.activeLang].bestStars[l.id]||0;
       const starsHtml=isDone?'<div class="lnode-stars">'+('⭐'.repeat(stars))+('☆'.repeat(3-stars))+'</div>':'';
-      const stateLbl=isDone?'Complété':(isCurrent?'🔥 Recommandé':(isLocked?'🔒 Verrouillé':'Disponible'));
-      html+=`<div class="lnode ${cls}" ${!isLocked?`onclick="startLesson(${l.id})"`:''}>
-        <div class="lnode-circle">${l.emoji}</div>
+      const stateLbl=isDone?'Complété':(isCurrent?'🔥 Disponible':(isLocked?'🔒 Verrouillé':''));
+      html+=`<div class="lnode ${cls}" ${!isLocked?`onclick="startLesson('${l.id}')"`:''}>
+        <div class="lnode-circle">${u.emoji}</div>
         <div class="lnode-info">
-          <div class="lnode-title">${l.title}</div>
-          <div class="lnode-meta"><span class="pill pill-${l.level.toLowerCase()}">${l.level}</span><span>${stateLbl}</span></div>
+          <div class="lnode-title">${l.t}</div>
+          <div class="lnode-meta"><span class="pill pill-${u.sec.toLowerCase()}">${u.sec}</span><span>${stateLbl}</span></div>
           ${starsHtml}
         </div>
       </div>`;
     });
-    html+='</div></div>';
+    html+='</div>';
   });
-  html+='</div>';
+  html+='</div></div>';
   document.getElementById('lpathContainer').innerHTML=html;
 }
 document.querySelectorAll('#langTabs .lang-tab').forEach(t=>t.addEventListener('click',()=>{S.activeLang=t.dataset.lang;saveState();renderLessons();}));
@@ -1358,9 +1954,12 @@ document.getElementById('filters').addEventListener('click',e=>{if(e.target.matc
 /* ============ LESSON ENGINE ============ */
 let lesson=null;
 function startLesson(id){
-  const l=(LESSONS[S.activeLang]||[]).find(x=>x.id===id);
-  if(!l||!l.q||l.q.length===0){toast('Leçon non disponible');return}
-  lesson={data:l,idx:0,hearts:3,xp:0,correct:0,total:l.q.length,combo:0,comboMulti:1};
+  const l=getLessonById(id,S.activeLang);
+  if(!l){toast('Leçon non disponible');return}
+  const exercises=generateExercises(l,S.activeLang);
+  if(!exercises||exercises.length===0){toast('Leçon non disponible');return}
+  const data={...l,q:exercises,title:l.t,emoji:l.emoji||'📖',type:l.tp};
+  lesson={data:data,idx:0,hearts:3,xp:0,correct:0,total:exercises.length,combo:0,comboMulti:1,errors:0};
   document.getElementById('lessonModal').classList.add('active');
   renderLesson();
 }
@@ -1563,11 +2162,16 @@ function renderLessonEnd(success){
     addXp(lesson.xp);
     if(!S.langs[S.activeLang].lessonsCompleted.includes(lesson.data.id)){
       S.langs[S.activeLang].lessonsCompleted.push(lesson.data.id);
-      S.langs[S.activeLang].currentLesson=Math.max(S.langs[S.activeLang].currentLesson,lesson.data.id+1);
       S.dailyTasks=S.dailyTasks||{};S.dailyTasks.lesson=true;
     }
     const prev=S.langs[S.activeLang].bestStars[lesson.data.id]||0;
     if(stars>prev)S.langs[S.activeLang].bestStars[lesson.data.id]=stars;
+    // Update lesson results for mastery
+    const lr=S.langs[S.activeLang].lessonResults||{};
+    const prevR=lr[lesson.data.id]||{stars:0,accuracy:0,attempts:0};
+    lr[lesson.data.id]={stars:Math.max(prevR.stars,stars),accuracy:accuracy,attempts:prevR.attempts+1,lastPlayed:today()};
+    S.langs[S.activeLang].lessonResults=lr;
+    S.langs[S.activeLang].lastPracticed=today();
     // add words to SRS
     lesson.data.q.forEach(q=>{
       if(q.t==='tr'||q.t==='listen'||q.t==='speech'){
@@ -1577,21 +2181,20 @@ function renderLessonEnd(success){
         }
       }
     });
+    // XP
+    addXp(lesson.xp);
+    S.langs[S.activeLang].xp=(S.langs[S.activeLang].xp||0)+lesson.xp;
     // badges
     grantBadge('first_lesson','Première leçon');
-    const totalLessons=Object.values(S.langs).reduce((a,b)=>a+b.lessonsCompleted.length,0);
+    const totalLessons=Object.values(S.langs).reduce((a,b)=>a+(b.lessonsCompleted||[]).length,0);
     if(totalLessons>=10)grantBadge('lessons_10','Curieux');
     if(totalLessons>=50)grantBadge('lessons_50','Studieux');
     if(totalLessons>=100)grantBadge('lessons_100','Érudit');
     if(stars===3)grantBadge('perfect','Perfection');
-    // trilingue
-    const langsA1=Object.entries(S.langs).filter(([k,v])=>v.lessonsCompleted.length>0).length;
+    const langsA1=Object.entries(S.langs).filter(([k,v])=>(v.lessonsCompleted||[]).length>0).length;
     if(langsA1>=3)grantBadge('trilingue','Trilingue');
-    // level up
-    const xpLang=S.langs[S.activeLang].xp+lesson.xp;
-    S.langs[S.activeLang].xp=xpLang;
-    const newLevel=xpLang>=3000?'C1':xpLang>=2000?'B2':xpLang>=1000?'B1':xpLang>=400?'A2':'A1';
-    if(newLevel!==S.langs[S.activeLang].level){S.langs[S.activeLang].level=newLevel;toast('🎉 Niveau '+newLevel+' atteint !');playSound('levelup');grantBadge(newLevel.toLowerCase(),newLevel+' atteint')}
+    // Mastery-based level check
+    checkLevelUp(S.activeLang);
     saveState();
     try{confetti({particleCount:150,spread:100,origin:{y:.5},colors:['#7c6fcd','#9d8ff0','#ffd700','#4ecb71']})}catch(e){}
     playSound('levelup');
@@ -1599,7 +2202,7 @@ function renderLessonEnd(success){
   }
 }
 function endLessonNext(){document.getElementById('lessonModal').classList.remove('active');lesson=null;location.hash='#lessons';renderLessons()}
-function restartLesson(){const id=lesson.data.id;document.getElementById('lessonModal').classList.remove('active');setTimeout(()=>startLesson(id),100)}
+function restartLesson(){const id=lesson.data.id;document.getElementById('lessonModal').classList.remove('active');setTimeout(function(){startLesson(id)},100)}
 function startReview(){toast('Mode révision — à venir. Pour l\'instant, utilise les leçons SRS.')}
 
 /* ============ VOCAL ============ */

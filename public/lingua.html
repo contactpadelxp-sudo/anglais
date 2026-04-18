@@ -483,6 +483,118 @@ a{color:inherit;text-decoration:none}
 .user-menu-dd button:hover{background:var(--surface-2);color:var(--text)}
 
 .hide{display:none!important}
+
+/* ===== LEAGUES ===== */
+.league-podium{display:flex;align-items:flex-end;justify-content:center;gap:1.2rem;padding:2rem 1rem 1rem}
+.league-podium-slot{display:flex;flex-direction:column;align-items:center;position:relative}
+.league-podium-slot--1{order:2}.league-podium-slot--2{order:1}.league-podium-slot--3{order:3}
+.league-podium-bar{width:80px;border-radius:8px 8px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:.6rem;font:700 1.1rem var(--font-display);color:var(--bg)}
+.league-podium-slot--1 .league-podium-bar{height:120px;background:linear-gradient(180deg,#ffd700,#b8960f)}
+.league-podium-slot--2 .league-podium-bar{height:90px;background:linear-gradient(180deg,#c0c0c0,#8a8a8a)}
+.league-podium-slot--3 .league-podium-bar{height:65px;background:linear-gradient(180deg,#cd7f32,#8b4513)}
+.league-crown{font-size:1.6rem;animation:crownBob 2s ease-in-out infinite;position:absolute;top:-2rem}
+@keyframes crownBob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-6px) rotate(3deg)}}
+.league-podium-name{font:600 .85rem var(--font-body);color:var(--text);margin-top:.3rem}
+.league-podium-xp{font:700 .75rem var(--font-body);color:var(--gold)}
+.league-tier-banner{text-align:center;padding:.8rem 1.2rem;border-radius:12px;font:700 1.1rem var(--font-display);text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px}
+.league-tier--bronze{background:linear-gradient(135deg,#cd7f32,#8b4513);color:#fff}
+.league-tier--argent{background:linear-gradient(135deg,#c0c0c0,#808080);color:#1a1a2e}
+.league-tier--or{background:linear-gradient(135deg,#ffd700,#b8960f);color:#1a1a2e}
+.league-tier--platine{background:linear-gradient(135deg,#e5e4e2,#a0a0a0);color:#1a1a2e}
+.league-tier--diamant{background:linear-gradient(135deg,#b9f2ff,#5bc4d4);color:#0c0c12}
+.league-player-row{display:flex;align-items:center;gap:.75rem;padding:.65rem .9rem;border-radius:10px;background:var(--surface);border:1px solid var(--border);margin-bottom:4px;transition:background .2s}
+.league-player-row:hover{background:var(--surface-2)}
+.league-player-row.is-user{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+.league-rank{font:700 .95rem var(--font-display);color:var(--text-muted);min-width:28px;text-align:center}
+.league-avatar{width:36px;height:36px;border-radius:50%;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.league-name{flex:1;font:500 .9rem var(--font-body);color:var(--text)}
+.league-xp{font:700 .85rem var(--font-body);color:var(--accent-2)}
+.league-countdown{text-align:center;padding:.6rem;font:600 .85rem var(--font-body);color:var(--text-muted);background:var(--surface);border-radius:8px;border:1px solid var(--border);margin-top:16px}
+
+/* ===== STORY / DIALOGUE ===== */
+.story-chat{display:flex;flex-direction:column;gap:.6rem;padding:1rem;max-width:520px;margin:0 auto}
+.story-bubble{max-width:78%;padding:.7rem 1rem;border-radius:16px;font:.9rem/1.45 var(--font-body);color:var(--text);animation:storyPop .25s ease-out}
+@keyframes storyPop{from{opacity:0;transform:scale(.92) translateY(6px)}to{opacity:1;transform:none}}
+.story-bubble--char{align-self:flex-start;background:var(--surface-2);border:1px solid var(--border);border-bottom-left-radius:4px}
+.story-bubble--other{align-self:flex-start;background:var(--surface-3);border:1px solid var(--border);border-bottom-left-radius:4px}
+.story-bubble--user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.story-speaker{font:600 .7rem var(--font-body);color:var(--text-muted);margin-bottom:2px}
+
+/* ===== CALENDAR HEATMAP ===== */
+.heatmap-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-width:420px;margin:0 auto}
+.heatmap-cell{aspect-ratio:1;border-radius:4px;background:var(--surface-2);position:relative;cursor:pointer;transition:transform .15s}
+.heatmap-cell:hover{transform:scale(1.3);z-index:2}
+.heatmap-cell--1{background:rgba(78,203,113,.2)}.heatmap-cell--2{background:rgba(78,203,113,.45)}.heatmap-cell--3{background:rgba(78,203,113,.7)}.heatmap-cell--4{background:var(--success)}
+.heatmap-cell.today{outline:2px solid var(--accent);outline-offset:1px}
+.heatmap-labels{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-width:420px;margin:0 auto 4px;font:.65rem var(--font-body);color:var(--text-faint);text-align:center}
+.heatmap-tip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--surface-3);color:var(--text);font:600 .72rem var(--font-body);padding:.3rem .55rem;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:10}
+.heatmap-cell:hover .heatmap-tip{opacity:1}
+
+/* ===== COMBO ===== */
+.combo-badge{position:fixed;top:5.5rem;right:1.2rem;background:var(--surface-2);border:2px solid var(--accent);border-radius:12px;padding:.35rem .7rem;font:800 1rem var(--font-display);color:var(--accent-2);z-index:350;pointer-events:none;animation:comboPulse 1s ease-in-out infinite}
+.combo-badge--gold{border-color:var(--gold);color:var(--gold);box-shadow:0 0 18px var(--gold-glow)}
+@keyframes comboPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+
+/* ===== PLAYER LEVEL ===== */
+.plevel-badge{display:inline-flex;align-items:center;gap:.45rem;padding:.35rem .75rem;border-radius:20px;font:600 .8rem var(--font-body);border:1.5px solid var(--border-strong)}
+.plevel-icon{font-size:1.1rem}
+
+/* ===== WORD OF DAY ===== */
+.wod-card{background:linear-gradient(145deg,var(--surface),var(--surface-2));border:1px solid var(--border-strong);border-radius:16px;padding:1.5rem;text-align:center;position:relative;overflow:hidden}
+.wod-word{font:700 2rem var(--font-display);color:var(--text);margin-bottom:.15rem}
+.wod-pron{font:.85rem var(--font-body);color:var(--text-muted);margin-bottom:.6rem}
+.wod-meaning{font:500 1rem var(--font-body);color:var(--accent-2);margin-bottom:.8rem}
+.wod-etym{background:var(--surface-3);border-radius:10px;padding:.7rem .9rem;margin-bottom:.8rem;text-align:left;font:.82rem var(--font-body);color:var(--text-muted);font-style:italic}
+.wod-example{font:.88rem var(--font-body);color:var(--text-muted);margin-bottom:1rem}
+.wod-example em{color:var(--accent-2);font-style:normal;font-weight:600}
+
+/* ===== GREETING ===== */
+.greeting-banner{position:relative;padding:1.2rem 1.4rem;border-radius:16px;overflow:hidden;margin-bottom:16px}
+.greeting-banner--morning{background:linear-gradient(135deg,#1a1040,#2d1b69)}
+.greeting-banner--afternoon{background:linear-gradient(135deg,#1a2040,#2b3a6b)}
+.greeting-banner--evening{background:linear-gradient(135deg,#0d0d1a,#1a1333)}
+.greeting-banner--night{background:linear-gradient(135deg,#0a0a14,#111128)}
+.greeting-text{font:700 1.3rem var(--font-display);color:var(--text);position:relative;z-index:1}
+.greeting-sub{font:.85rem var(--font-body);color:var(--text-muted);margin-top:.2rem;position:relative;z-index:1}
+.greeting-char{position:absolute;right:1rem;bottom:-.2rem;font-size:3rem;animation:charFloat 3s ease-in-out infinite}
+@keyframes charFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* ===== GOAL SELECTOR ===== */
+.goal-sel{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin:12px 0}
+.goal-sel-card{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:1rem .8rem;text-align:center;cursor:pointer;transition:all .25s}
+.goal-sel-card:hover{border-color:var(--accent)}
+.goal-sel-card.active{border-color:var(--accent);background:rgba(124,111,205,.1);box-shadow:0 0 20px var(--accent-glow)}
+.goal-sel-card .i{font-size:1.8rem;margin-bottom:.3rem;display:block}
+.goal-sel-card h5{font-size:13px;margin-bottom:2px}
+.goal-sel-card p{font-size:11px;color:var(--text-muted)}
+
+/* ===== STREAK FREEZE ===== */
+.freeze-badge{display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .65rem;border-radius:10px;font:600 .78rem var(--font-body);background:rgba(79,156,249,.08);color:var(--en);border:1.5px solid rgba(79,156,249,.25)}
+.freeze-badge--glow{box-shadow:0 0 14px rgba(79,156,249,.2);animation:freezeGlow 2.5s ease-in-out infinite}
+@keyframes freezeGlow{0%,100%{box-shadow:0 0 14px rgba(79,156,249,.2)}50%{box-shadow:0 0 20px rgba(79,156,249,.35)}}
+
+/* ===== EMOJI IN EXERCISES ===== */
+.ex-emoji{font-size:76px;line-height:1;text-align:center;padding:.8rem 0;user-select:none}
+.ex-emoji-beside{display:flex;align-items:center;gap:.8rem}
+.ex-emoji-beside .emoji{font-size:48px}
+
+/* ===== ENHANCED XP FLOAT ===== */
+.xp-float.combo{color:var(--gold);text-shadow:0 0 16px var(--gold-glow)}
+
+/* ===== CHALLENGE MODAL ===== */
+.challenge-timer{height:5px;background:var(--surface-3);border-radius:3px;overflow:hidden;margin-bottom:16px}
+.challenge-timer-fill{height:100%;background:linear-gradient(90deg,var(--success),var(--warning),var(--error));transition:width .3s linear}
+.challenge-timer-fill.urgent{animation:timerUrgent .5s ease-in-out infinite}
+@keyframes timerUrgent{0%,100%{opacity:1}50%{opacity:.5}}
+.challenge-countdown{font:800 2.2rem var(--font-display);text-align:center;font-variant-numeric:tabular-nums;margin-bottom:12px}
+.challenge-countdown.low{color:var(--error)}
+
+/* ===== FLUENCE ===== */
+.fluence-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.75rem}
+.fluence-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem;text-align:center;cursor:pointer;transition:all .2s}
+.fluence-card:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.fluence-card .i{font-size:2rem;display:block;margin-bottom:.3rem}
+.fluence-card h4{font-size:13px}
 </style>
 </head>
 <body>
@@ -654,6 +766,18 @@ a{color:inherit;text-decoration:none}
   </div>
 </div>
 
+<!-- LEAGUES -->
+<div class="view" id="view-leagues">
+  <h2 style="margin-bottom:20px">Ligues hebdomadaires 🏆</h2>
+  <div id="leagueTierBanner"></div>
+  <div id="leaguePodium"></div>
+  <div class="card card-lg" style="margin-top:16px">
+    <h3 style="margin-bottom:12px">Classement</h3>
+    <div id="leagueList"></div>
+  </div>
+  <div class="league-countdown" id="leagueCountdown"></div>
+</div>
+
 <!-- PROFILE -->
 <div class="view" id="view-profile">
   <div class="prof-header">
@@ -706,6 +830,7 @@ a{color:inherit;text-decoration:none}
   <button class="fnav-item" data-route="lessons"><i data-lucide="book-open"></i><span>Leçons</span></button>
   <button class="fnav-item" data-route="vocal"><i data-lucide="mic"></i><span>Vocal</span></button>
   <button class="fnav-item" data-route="streak"><i data-lucide="flame"></i><span>Streak</span></button>
+  <button class="fnav-item" data-route="leagues"><i data-lucide="trophy"></i><span>Ligues</span></button>
   <button class="fnav-item" data-route="profile"><i data-lucide="user"></i><span>Profil</span></button>
 </nav>
 
@@ -1696,6 +1821,429 @@ const BADGES=[
   {id:'trilingue',i:'🌍',n:'Trilingue',d:'A1 dans 3 langues'},
 ];
 
+/* ============ CHARACTERS ============ */
+const CHARACTERS={
+  es:{name:'Carlos',emoji:'👨‍🦱',origin:'Madrid',desc:'Jeune espagnol curieux et drôle',color:'#ffd93d'},
+  en:{name:'Emma',emoji:'👩‍🦰',origin:'Londres',desc:'Britannique passionnée de voyage',color:'#4f9cf9'},
+  it:{name:'Sofia',emoji:'👩‍🎓',origin:'Rome',desc:'Étudiante en architecture',color:'#ff6b6b'}
+};
+
+/* ============ STORIES ============ */
+const STORIES={es:[
+{id:'story-es-1',title:'Carlos au marché',level:'A1',lines:[
+{speaker:'carlos',text:'Buenos días. ¿Cuánto cuestan las manzanas?'},
+{speaker:'vendedor',text:'Dos euros el kilo, señor.'},
+{speaker:'carlos',text:'Me llevo un kilo, por favor.'},
+{speaker:'vendedor',text:'¿Algo más?'},
+{speaker:'carlos',text:'Sí, también quiero naranjas.'},
+{speaker:'vendedor',text:'Las naranjas están a tres euros el kilo.'},
+{speaker:'carlos',text:'Perfecto. ¿Cuánto es todo?'},
+{speaker:'vendedor',text:'Son cinco euros en total.'},
+{speaker:'carlos',text:'Aquí tiene. ¡Gracias!'},
+{speaker:'vendedor',text:'¡Hasta luego!'}
+],questions:[
+{q:'Où est Carlos ?',opts:['Au marché','Au restaurant','À la maison','À l\'école'],a:0},
+{q:'Combien coûtent les pommes ?',opts:['1€/kg','2€/kg','3€/kg','5€/kg'],a:1},
+{q:'Combien paie Carlos au total ?',opts:['2€','3€','5€','10€'],a:2}
+],newWords:[['manzanas','pommes'],['naranjas','oranges'],['cuánto','combien']]},
+{id:'story-es-2',title:'Un café con Carlos',level:'A1',lines:[
+{speaker:'carlos',text:'¡Hola! Un café con leche, por favor.'},
+{speaker:'camarero',text:'¿Grande o pequeño?'},
+{speaker:'carlos',text:'Grande, por favor.'},
+{speaker:'camarero',text:'¿Quiere algo para comer?'},
+{speaker:'carlos',text:'Sí, un croissant.'},
+{speaker:'camarero',text:'Muy bien. Son cuatro euros con cincuenta.'},
+{speaker:'carlos',text:'Aquí tiene. ¿Tienen wifi?'},
+{speaker:'camarero',text:'Sí, la contraseña está en la mesa.'}
+],questions:[
+{q:'Que commande Carlos ?',opts:['Un thé','Un café au lait','Un jus','Un chocolat'],a:1},
+{q:'Quelle taille ?',opts:['Petit','Moyen','Grand','Extra'],a:2},
+{q:'Combien ça coûte ?',opts:['3€','3,50€','4€','4,50€'],a:3}
+],newWords:[['café con leche','café au lait'],['grande','grand'],['contraseña','mot de passe']]},
+{id:'story-es-3',title:'Carlos prend le métro',level:'A2',lines:[
+{speaker:'carlos',text:'Perdone, ¿cómo llego al centro?'},
+{speaker:'pasajero',text:'Tiene que tomar la línea 3 dirección Sol.'},
+{speaker:'carlos',text:'¿Dónde compro el billete?'},
+{speaker:'pasajero',text:'En esa máquina. Cuesta un euro con cincuenta.'},
+{speaker:'carlos',text:'Gracias. ¿Cuántas paradas son?'},
+{speaker:'pasajero',text:'Son cinco paradas. Unos diez minutos.'},
+{speaker:'carlos',text:'Perfecto, muchas gracias.'},
+{speaker:'pasajero',text:'De nada. ¡Buen viaje!'}
+],questions:[
+{q:'Où veut aller Carlos ?',opts:['À l\'aéroport','Au centre','À la gare','Au parc'],a:1},
+{q:'Quelle ligne doit-il prendre ?',opts:['Ligne 1','Ligne 2','Ligne 3','Ligne 5'],a:2},
+{q:'Combien de temps dure le trajet ?',opts:['5 min','10 min','15 min','20 min'],a:1}
+],newWords:[['billete','billet'],['parada','arrêt'],['línea','ligne']]},
+{id:'story-es-4',title:'La fiesta de Carlos',level:'A2',lines:[
+{speaker:'carlos',text:'¡Hola Ana! ¿Vienes a mi fiesta el sábado?'},
+{speaker:'ana',text:'¡Claro! ¿A qué hora es?'},
+{speaker:'carlos',text:'A las nueve de la noche.'},
+{speaker:'ana',text:'¿En tu casa?'},
+{speaker:'carlos',text:'No, en el bar de la esquina. Se llama "El Sol".'},
+{speaker:'ana',text:'¿Qué llevo? ¿Comida, bebida?'},
+{speaker:'carlos',text:'Trae algo de beber. Yo preparo la comida.'},
+{speaker:'ana',text:'¡Genial! ¿Viene mucha gente?'},
+{speaker:'carlos',text:'Somos unos quince amigos. ¡Va a ser divertido!'}
+],questions:[
+{q:'Quand est la fête ?',opts:['Vendredi','Samedi','Dimanche','Lundi'],a:1},
+{q:'Où est la fête ?',opts:['Chez Carlos','Au parc','Dans un bar','Au restaurant'],a:2},
+{q:'Combien de personnes viennent ?',opts:['5','10','15','20'],a:2}
+],newWords:[['fiesta','fête'],['esquina','coin de rue'],['divertido','amusant']]},
+{id:'story-es-5',title:'Carlos cherche un appart',level:'B1',lines:[
+{speaker:'carlos',text:'Buenos días. Llamo por el anuncio del piso.'},
+{speaker:'propietaria',text:'Sí, es un piso de dos habitaciones en el centro.'},
+{speaker:'carlos',text:'¿Cuánto cuesta el alquiler?'},
+{speaker:'propietaria',text:'Ochocientos euros al mes, gastos incluidos.'},
+{speaker:'carlos',text:'¿Tiene balcón?'},
+{speaker:'propietaria',text:'Sí, y mucha luz natural. ¿Quiere visitarlo?'},
+{speaker:'carlos',text:'Sí, ¿puedo ir esta tarde?'},
+{speaker:'propietaria',text:'Claro, a las cinco. Le mando la dirección.'},
+{speaker:'carlos',text:'Perfecto. ¿Se admiten mascotas?'},
+{speaker:'propietaria',text:'Sí, sin problema.'}
+],questions:[
+{q:'Combien coûte le loyer ?',opts:['600€','700€','800€','900€'],a:2},
+{q:'L\'appartement a combien de chambres ?',opts:['1','2','3','4'],a:1},
+{q:'Les animaux sont-ils acceptés ?',opts:['Oui','Non','Pas mentionné','Seulement les chats'],a:0}
+],newWords:[['alquiler','loyer'],['habitación','chambre'],['mascota','animal de compagnie']]}
+],en:[
+{id:'story-en-1',title:'Emma at the airport',level:'A1',lines:[
+{speaker:'emma',text:'Hello! I\'d like to check in for my flight.'},
+{speaker:'agent',text:'Of course. May I see your passport?'},
+{speaker:'emma',text:'Here you are.'},
+{speaker:'agent',text:'Thank you. Window or aisle seat?'},
+{speaker:'emma',text:'Window, please.'},
+{speaker:'agent',text:'Do you have any luggage to check in?'},
+{speaker:'emma',text:'Yes, one suitcase.'},
+{speaker:'agent',text:'Your gate is B12. Boarding starts at 3 PM.'}
+],questions:[
+{q:'Où est Emma ?',opts:['Gare','Aéroport','Hôtel','Bureau'],a:1},
+{q:'Quel siège choisit-elle ?',opts:['Couloir','Milieu','Fenêtre','Première classe'],a:2},
+{q:'À quelle heure commence l\'embarquement ?',opts:['14h','15h','16h','17h'],a:1}
+],newWords:[['check in','enregistrement'],['aisle','couloir'],['boarding','embarquement']]},
+{id:'story-en-2',title:'Emma\'s first day',level:'A1',lines:[
+{speaker:'emma',text:'Good morning! I\'m Emma, the new marketing manager.'},
+{speaker:'colleague',text:'Welcome, Emma! I\'m Tom. Let me show you around.'},
+{speaker:'emma',text:'Thank you! Where\'s my desk?'},
+{speaker:'colleague',text:'Right here, next to the window.'},
+{speaker:'emma',text:'Great! Where\'s the kitchen?'},
+{speaker:'colleague',text:'Down the hall, on the left. Coffee\'s free!'},
+{speaker:'emma',text:'Perfect. What time is the team meeting?'},
+{speaker:'colleague',text:'At ten o\'clock. I\'ll introduce you to everyone.'}
+],questions:[
+{q:'Quel est le poste d\'Emma ?',opts:['Développeuse','Marketing manager','Comptable','Designer'],a:1},
+{q:'Où est son bureau ?',opts:['Au sous-sol','Près de la porte','Près de la fenêtre','Au 2e étage'],a:2},
+{q:'À quelle heure est la réunion ?',opts:['9h','10h','11h','14h'],a:1}
+],newWords:[['desk','bureau'],['down the hall','au bout du couloir'],['team meeting','réunion d\'équipe']]},
+{id:'story-en-3',title:'Emma visits a museum',level:'A2',lines:[
+{speaker:'emma',text:'Hi! Two tickets for the exhibition, please.'},
+{speaker:'cashier',text:'That\'s twenty pounds. Would you like an audio guide?'},
+{speaker:'emma',text:'Yes, please. How much is it?'},
+{speaker:'cashier',text:'Five pounds extra. It\'s available in six languages.'},
+{speaker:'emma',text:'I\'ll take one in English. How long is the tour?'},
+{speaker:'cashier',text:'About two hours. The museum closes at six.'},
+{speaker:'emma',text:'Can I take photos inside?'},
+{speaker:'cashier',text:'Yes, but no flash, please.'}
+],questions:[
+{q:'Combien coûtent les billets ?',opts:['10£','15£','20£','25£'],a:2},
+{q:'Combien coûte l\'audioguide ?',opts:['3£','5£','7£','10£'],a:1},
+{q:'Peut-on prendre des photos ?',opts:['Non','Oui, sans flash','Oui, avec flash','Pas mentionné'],a:1}
+],newWords:[['exhibition','exposition'],['audio guide','audioguide'],['flash','flash']]},
+{id:'story-en-4',title:'Emma at the doctor',level:'A2',lines:[
+{speaker:'emma',text:'Doctor, I\'ve had a headache for three days.'},
+{speaker:'doctor',text:'I see. Do you have any other symptoms?'},
+{speaker:'emma',text:'Yes, I feel very tired and my throat hurts.'},
+{speaker:'doctor',text:'Let me check your temperature. You have a slight fever.'},
+{speaker:'emma',text:'Is it serious?'},
+{speaker:'doctor',text:'No, it\'s just a cold. You need to rest.'},
+{speaker:'emma',text:'Should I take any medicine?'},
+{speaker:'doctor',text:'Take paracetamol twice a day and drink lots of water.'}
+],questions:[
+{q:'Depuis combien de temps Emma a mal à la tête ?',opts:['1 jour','2 jours','3 jours','1 semaine'],a:2},
+{q:'Qu\'est-ce qu\'elle a ?',opts:['La grippe','Un rhume','Une allergie','Une infection'],a:1},
+{q:'Que doit-elle prendre ?',opts:['Antibiotiques','Paracétamol','Aspirine','Sirop'],a:1}
+],newWords:[['headache','mal de tête'],['fever','fièvre'],['rest','se reposer']]},
+{id:'story-en-5',title:'Emma\'s job interview',level:'B1',lines:[
+{speaker:'interviewer',text:'Tell me about yourself, Emma.'},
+{speaker:'emma',text:'I have five years of experience in marketing.'},
+{speaker:'interviewer',text:'Why do you want to work here?'},
+{speaker:'emma',text:'Your company is innovative and I love the company culture.'},
+{speaker:'interviewer',text:'What\'s your greatest strength?'},
+{speaker:'emma',text:'I\'m very organized and I work well under pressure.'},
+{speaker:'interviewer',text:'Where do you see yourself in five years?'},
+{speaker:'emma',text:'I hope to lead a marketing team and drive growth.'},
+{speaker:'interviewer',text:'Excellent. We\'ll contact you by Friday.'}
+],questions:[
+{q:'Combien d\'années d\'expérience a Emma ?',opts:['3','4','5','7'],a:2},
+{q:'Pourquoi veut-elle ce poste ?',opts:['Le salaire','La culture d\'entreprise','Le lieu','Les vacances'],a:1},
+{q:'Quand aura-t-elle une réponse ?',opts:['Lundi','Mercredi','Vendredi','La semaine prochaine'],a:2}
+],newWords:[['strength','point fort'],['under pressure','sous pression'],['growth','croissance']]}
+],it:[
+{id:'story-it-1',title:'Sofia al ristorante',level:'A1',lines:[
+{speaker:'sofia',text:'Ciao! Avete un tavolo per due?'},
+{speaker:'cameriere',text:'Sì, certo. Questa parte, prego.'},
+{speaker:'sofia',text:'Grazie. Cosa mi consiglia?'},
+{speaker:'cameriere',text:'La pasta al pomodoro è ottima oggi.'},
+{speaker:'sofia',text:'Perfetto, prendo quella. E un\'acqua minerale.'},
+{speaker:'cameriere',text:'Naturale o frizzante?'},
+{speaker:'sofia',text:'Naturale, grazie.'},
+{speaker:'cameriere',text:'Arrivo subito con il pane.'}
+],questions:[
+{q:'Pour combien de personnes Sofia veut une table ?',opts:['1','2','3','4'],a:1},
+{q:'Qu\'est-ce qui est recommandé ?',opts:['La pizza','La pasta al pomodoro','Le risotto','La salade'],a:1},
+{q:'Quel type d\'eau choisit-elle ?',opts:['Plate','Gazeuse','Avec citron','Chaude'],a:0}
+],newWords:[['tavolo','table'],['consiglia','recommande'],['acqua minerale','eau minérale']]},
+{id:'story-it-2',title:'Sofia al mercato',level:'A1',lines:[
+{speaker:'sofia',text:'Buongiorno! Quanto costa questo formaggio?'},
+{speaker:'venditore',text:'Dieci euro al chilo. È parmigiano reggiano.'},
+{speaker:'sofia',text:'Ne prendo mezzo chilo.'},
+{speaker:'venditore',text:'Ecco. Vuole altro?'},
+{speaker:'sofia',text:'Sì, un chilo di pomodori.'},
+{speaker:'venditore',text:'Sono tre euro. Belli freschi, di oggi.'},
+{speaker:'sofia',text:'Perfetto. Quant\'è in tutto?'},
+{speaker:'venditore',text:'Otto euro in tutto.'}
+],questions:[
+{q:'Combien coûte le fromage ?',opts:['5€/kg','8€/kg','10€/kg','12€/kg'],a:2},
+{q:'Combien de fromage achète Sofia ?',opts:['250g','500g','1kg','2kg'],a:1},
+{q:'Combien paie-t-elle au total ?',opts:['5€','8€','10€','13€'],a:1}
+],newWords:[['formaggio','fromage'],['pomodori','tomates'],['fresco','frais']]},
+{id:'story-it-3',title:'Sofia prende il treno',level:'A2',lines:[
+{speaker:'sofia',text:'Buongiorno. Un biglietto per Firenze, per favore.'},
+{speaker:'bigliettaio',text:'Solo andata o andata e ritorno?'},
+{speaker:'sofia',text:'Andata e ritorno. Quanto costa?'},
+{speaker:'bigliettaio',text:'Venticinque euro. Il treno parte alle dieci.'},
+{speaker:'sofia',text:'Da quale binario?'},
+{speaker:'bigliettaio',text:'Binario tre. Deve convalidare il biglietto prima di salire.'},
+{speaker:'sofia',text:'Quanto dura il viaggio?'},
+{speaker:'bigliettaio',text:'Un\'ora e mezza circa.'}
+],questions:[
+{q:'Où va Sofia ?',opts:['Milan','Florence','Naples','Venise'],a:1},
+{q:'Combien coûte le billet ?',opts:['15€','20€','25€','30€'],a:2},
+{q:'Combien dure le voyage ?',opts:['45 min','1h','1h30','2h'],a:2}
+],newWords:[['biglietto','billet'],['binario','quai'],['convalidare','composter']]},
+{id:'story-it-4',title:'Sofia visita Firenze',level:'A2',lines:[
+{speaker:'sofia',text:'Scusi, dov\'è il Duomo?'},
+{speaker:'passante',text:'Vada dritto e poi giri a destra. Lo vedrà subito.'},
+{speaker:'sofia',text:'È lontano da qui?'},
+{speaker:'passante',text:'No, cinque minuti a piedi.'},
+{speaker:'sofia',text:'E il Ponte Vecchio?'},
+{speaker:'passante',text:'Dopo il Duomo, continui verso il fiume. Circa dieci minuti.'},
+{speaker:'sofia',text:'Grazie mille! Firenze è bellissima.'},
+{speaker:'passante',text:'Prego! Buona visita!'}
+],questions:[
+{q:'Que cherche d\'abord Sofia ?',opts:['Le Ponte Vecchio','La gare','Le Duomo','Un restaurant'],a:2},
+{q:'À combien de minutes est le Duomo ?',opts:['2 min','5 min','10 min','15 min'],a:1},
+{q:'Comment Sofia trouve Florence ?',opts:['Ennuyeuse','Très belle','Trop grande','Normale'],a:1}
+],newWords:[['dritto','tout droit'],['fiume','fleuve'],['bellissima','très belle']]},
+{id:'story-it-5',title:'Sofia cerca lavoro',level:'B1',lines:[
+{speaker:'intervistatrice',text:'Mi parli di lei, Sofia.'},
+{speaker:'sofia',text:'Studio architettura a Roma e cerco uno stage.'},
+{speaker:'intervistatrice',text:'Perché vuole lavorare qui?'},
+{speaker:'sofia',text:'Il vostro studio è famoso per il design sostenibile.'},
+{speaker:'intervistatrice',text:'Quali sono le sue competenze?'},
+{speaker:'sofia',text:'So usare AutoCAD e Revit. Parlo tre lingue.'},
+{speaker:'intervistatrice',text:'Quando potrebbe iniziare?'},
+{speaker:'sofia',text:'Dal mese prossimo. Sono molto motivata.'},
+{speaker:'intervistatrice',text:'Ottimo. La contatteremo presto.'}
+],questions:[
+{q:'Que cherche Sofia ?',opts:['Un CDI','Un stage','Un freelance','Un master'],a:1},
+{q:'Pourquoi cet studio ?',opts:['Le salaire','La localisation','Le design durable','La taille'],a:2},
+{q:'Combien de langues parle-t-elle ?',opts:['1','2','3','4'],a:2}
+],newWords:[['stage','stage'],['sostenibile','durable'],['competenze','compétences']]}
+]};
+
+/* ============ WORD OF THE DAY ============ */
+const WORD_OF_DAY={es:[
+{word:'efímero',translation:'éphémère',example:'La belleza es <em>efímera</em>.',etymology:'Du grec ephemeros: qui dure un jour'},
+{word:'madrugada',translation:'petit matin',example:'Llegó de <em>madrugada</em>.',etymology:'De madrugár: se lever tôt'},
+{word:'desvelarse',translation:'rester éveillé',example:'Me <em>desvelé</em> leyendo.',etymology:'Des- (privation) + velo (voile du sommeil)'},
+{word:'añoranza',translation:'nostalgie',example:'Siento <em>añoranza</em> de mi tierra.',etymology:'Du catalan enyorança'},
+{word:'atardecer',translation:'crépuscule',example:'El <em>atardecer</em> era hermoso.',etymology:'De tarde: après-midi'},
+{word:'sosiego',translation:'sérénité',example:'Necesito un poco de <em>sosiego</em>.',etymology:'Du latin sessicare: s\'asseoir'},
+{word:'vislumbrar',translation:'entrevoir',example:'Pude <em>vislumbrar</em> la solución.',etymology:'Du latin vis + lumen: lumière'},
+{word:'entrañable',translation:'attachant',example:'Es una persona <em>entrañable</em>.',etymology:'De entrañas: entrailles'},
+{word:'desenlace',translation:'dénouement',example:'El <em>desenlace</em> fue sorprendente.',etymology:'Des- + enlace: dénouement'},
+{word:'resquicio',translation:'fissure/brèche',example:'Ni un <em>resquicio</em> de duda.',etymology:'Du latin resecare: couper'},
+{word:'escueto',translation:'concis',example:'Su respuesta fue <em>escueta</em>.',etymology:'Du latin excoctus: distillé'},
+{word:'abrumador',translation:'accablant',example:'El calor es <em>abrumador</em>.',etymology:'De bruma: brume pesante'},
+{word:'desamparo',translation:'détresse',example:'Sentía un gran <em>desamparo</em>.',etymology:'Des- + amparo: protection'},
+{word:'diáfano',translation:'limpide/transparent',example:'Un cielo <em>diáfano</em>.',etymology:'Du grec diaphanes'},
+{word:'soliviantar',translation:'exciter/soulever',example:'Sus palabras <em>soliviantaron</em> al público.',etymology:'De sub + levantare'},
+{word:'albergar',translation:'héberger/nourrir',example:'<em>Albergo</em> esperanzas.',etymology:'Du germanique heriberga'},
+{word:'desaforado',translation:'démesuré',example:'Un grito <em>desaforado</em>.',etymology:'Des- + fuero: hors la loi'},
+{word:'recóndito',translation:'caché/secret',example:'Un lugar <em>recóndito</em>.',etymology:'Du latin reconditus'},
+{word:'ataviarse',translation:'se parer',example:'Se <em>atavió</em> para la fiesta.',etymology:'Du gotique taujan: préparer'},
+{word:'embelesar',translation:'fasciner',example:'Su voz me <em>embelesó</em>.',etymology:'De bel: beau'},
+{word:'resarcir',translation:'dédommager',example:'Hay que <em>resarcir</em> el daño.',etymology:'Du latin resarcire: réparer'},
+{word:'anuencia',translation:'consentement',example:'Con su <em>anuencia</em>, procedimos.',etymology:'Du latin annuentia'},
+{word:'deslumbrante',translation:'éblouissant',example:'Una sonrisa <em>deslumbrante</em>.',etymology:'Des- + lumbre: lumière'},
+{word:'perenne',translation:'pérenne',example:'Una fuente <em>perenne</em>.',etymology:'Du latin perennis: à travers l\'année'},
+{word:'escudriñar',translation:'scruter',example:'<em>Escudriñó</em> cada rincón.',etymology:'Du latin scrutinium'},
+{word:'conmoción',translation:'commotion',example:'La noticia causó <em>conmoción</em>.',etymology:'Du latin commotio'},
+{word:'desliz',translation:'faux pas',example:'Fue solo un <em>desliz</em>.',etymology:'De deslizar: glisser'},
+{word:'ensimismado',translation:'absorbé',example:'Estaba <em>ensimismado</em> en sus pensamientos.',etymology:'En + sí mismo'},
+{word:'vaivén',translation:'va-et-vient',example:'El <em>vaivén</em> del columpio.',etymology:'De va + y + ven'},
+{word:'trasnochar',translation:'veiller tard',example:'Me gusta <em>trasnochar</em>.',etymology:'Tras + noche: après la nuit'}
+],en:[
+{word:'serendipity',translation:'sérendipité',example:'Finding this book was pure <em>serendipity</em>.',etymology:'Coined by Horace Walpole, 1754'},
+{word:'ephemeral',translation:'éphémère',example:'Fame is <em>ephemeral</em>.',etymology:'From Greek ephemeros: lasting a day'},
+{word:'ubiquitous',translation:'omniprésent',example:'Smartphones are <em>ubiquitous</em>.',etymology:'From Latin ubique: everywhere'},
+{word:'eloquent',translation:'éloquent',example:'She gave an <em>eloquent</em> speech.',etymology:'From Latin eloquens: speaking out'},
+{word:'resilience',translation:'résilience',example:'Her <em>resilience</em> was remarkable.',etymology:'From Latin resilire: to spring back'},
+{word:'candour',translation:'franchise',example:'I appreciate your <em>candour</em>.',etymology:'From Latin candor: whiteness'},
+{word:'meticulous',translation:'méticuleux',example:'He is very <em>meticulous</em>.',etymology:'From Latin metus: fear'},
+{word:'ambivalent',translation:'ambivalent',example:'I feel <em>ambivalent</em> about it.',etymology:'Latin ambi + valens: both strong'},
+{word:'quintessential',translation:'par excellence',example:'A <em>quintessential</em> English village.',etymology:'From quinta essentia: fifth element'},
+{word:'paradigm',translation:'paradigme',example:'A <em>paradigm</em> shift in thinking.',etymology:'From Greek paradeigma: pattern'},
+{word:'pervasive',translation:'omniprésent',example:'A <em>pervasive</em> sense of dread.',etymology:'From Latin pervadere: to go through'},
+{word:'conundrum',translation:'énigme',example:'It\'s quite a <em>conundrum</em>.',etymology:'Origin unknown, possibly pseudo-Latin'},
+{word:'nuance',translation:'nuance',example:'A subtle <em>nuance</em> of meaning.',etymology:'From French nuer: to shade'},
+{word:'pragmatic',translation:'pragmatique',example:'A <em>pragmatic</em> approach.',etymology:'From Greek pragmatikos: practical'},
+{word:'ostensible',translation:'apparent',example:'The <em>ostensible</em> reason.',etymology:'From Latin ostendere: to show'},
+{word:'aberration',translation:'aberration',example:'A statistical <em>aberration</em>.',etymology:'From Latin aberrare: to wander'},
+{word:'benevolent',translation:'bienveillant',example:'A <em>benevolent</em> ruler.',etymology:'From Latin bene + volens: wishing well'},
+{word:'dwindle',translation:'diminuer',example:'Supplies began to <em>dwindle</em>.',etymology:'From Old English dwinan: to waste away'},
+{word:'eloquence',translation:'éloquence',example:'His <em>eloquence</em> moved the crowd.',etymology:'From Latin eloquentia'},
+{word:'gregarious',translation:'grégaire',example:'She\'s very <em>gregarious</em>.',etymology:'From Latin grex: flock'},
+{word:'impeccable',translation:'impeccable',example:'Her taste is <em>impeccable</em>.',etymology:'From Latin impeccabilis: sinless'},
+{word:'juxtapose',translation:'juxtaposer',example:'The artist <em>juxtaposes</em> old and new.',etymology:'From Latin juxta + ponere'},
+{word:'leverage',translation:'levier/influence',example:'Use your <em>leverage</em> wisely.',etymology:'From French levier: to raise'},
+{word:'meander',translation:'serpenter',example:'The river <em>meanders</em> through the valley.',etymology:'From Greek Maiandros: a winding river'},
+{word:'nonchalant',translation:'nonchalant',example:'He seemed <em>nonchalant</em>.',etymology:'From French non + chaloir: not to care'},
+{word:'penchant',translation:'penchant',example:'A <em>penchant</em> for drama.',etymology:'From French pencher: to lean'},
+{word:'repercussion',translation:'répercussion',example:'Serious <em>repercussions</em>.',etymology:'From Latin repercussio: rebound'},
+{word:'scrutinize',translation:'examiner',example:'She <em>scrutinized</em> every detail.',etymology:'From Latin scrutinium: a search'},
+{word:'tenacious',translation:'tenace',example:'A <em>tenacious</em> negotiator.',etymology:'From Latin tenax: holding fast'},
+{word:'vindicate',translation:'justifier',example:'He was finally <em>vindicated</em>.',etymology:'From Latin vindicare: to claim'}
+],it:[
+{word:'sfumatura',translation:'nuance',example:'Ogni <em>sfumatura</em> di colore.',etymology:'Da sfumare: estomper'},
+{word:'meraviglia',translation:'émerveillement',example:'Che <em>meraviglia</em>!',etymology:'Dal latino mirabilia: choses merveilleuses'},
+{word:'lungimirante',translation:'clairvoyant',example:'Una scelta <em>lungimirante</em>.',etymology:'Da lungo + mirare: voir loin'},
+{word:'travolgente',translation:'bouleversant',example:'Un\'emozione <em>travolgente</em>.',etymology:'Da travolgere: emporter'},
+{word:'inesorabile',translation:'inexorable',example:'Il tempo è <em>inesorabile</em>.',etymology:'Dal latino inexorabilis'},
+{word:'accattivante',translation:'captivant',example:'Un sorriso <em>accattivante</em>.',etymology:'Da accattare: attirer'},
+{word:'spensierato',translation:'insouciant',example:'Un pomeriggio <em>spensierato</em>.',etymology:'S- + pensiero: sans souci'},
+{word:'efferato',translation:'atroce',example:'Un crimine <em>efferato</em>.',etymology:'Dal latino efferatus: rendu sauvage'},
+{word:'etereo',translation:'éthéré',example:'Una bellezza <em>eterea</em>.',etymology:'Dal greco aitherios: céleste'},
+{word:'indomito',translation:'indomptable',example:'Uno spirito <em>indomito</em>.',etymology:'Dal latino indomitus'},
+{word:'crepuscolo',translation:'crépuscule',example:'Il <em>crepuscolo</em> è magico.',etymology:'Dal latino crepusculum'},
+{word:'sbigottire',translation:'stupéfier',example:'La notizia mi ha <em>sbigottito</em>.',etymology:'Da bi- + gotique: frapper deux fois'},
+{word:'ardimentoso',translation:'audacieux',example:'Un piano <em>ardimentoso</em>.',etymology:'Da ardimento: audace'},
+{word:'vagheggiare',translation:'rêvasser',example:'<em>Vagheggiavo</em> il futuro.',etymology:'Da vago: errant'},
+{word:'accorato',translation:'poignant',example:'Un appello <em>accorato</em>.',etymology:'Da cuore: cœur'},
+{word:'avvincente',translation:'passionnant',example:'Un libro <em>avvincente</em>.',etymology:'Da avvincere: enlacer'},
+{word:'briosa',translation:'pétillante',example:'Una ragazza <em>briosa</em>.',etymology:'Da brio: vivacité'},
+{word:'caparbio',translation:'obstiné',example:'È molto <em>caparbio</em>.',etymology:'Da capo + arbio: tête dure'},
+{word:'dirompente',translation:'fracassant',example:'Un successo <em>dirompente</em>.',etymology:'Da dirompere: briser'},
+{word:'esimio',translation:'éminent',example:'Un <em>esimio</em> professore.',etymology:'Dal latino eximius: exceptionnel'},
+{word:'fugace',translation:'fugace',example:'Un momento <em>fugace</em>.',etymology:'Dal latino fugax: qui fuit'},
+{word:'galoppo',translation:'galop',example:'Il cuore batteva al <em>galoppo</em>.',etymology:'Dal francese galop'},
+{word:'ilare',translation:'hilare',example:'Un\'atmosfera <em>ilare</em>.',etymology:'Dal latino hilaris: joyeux'},
+{word:'laconico',translation:'laconique',example:'Una risposta <em>laconica</em>.',etymology:'Da Laconia: région de Sparte'},
+{word:'magniloquente',translation:'grandiloquent',example:'Un discorso <em>magniloquente</em>.',etymology:'Dal latino magnus + loqui'},
+{word:'nefasto',translation:'néfaste',example:'Un giorno <em>nefasto</em>.',etymology:'Dal latino nefastus: interdit'},
+{word:'pacato',translation:'posé/calme',example:'Un uomo <em>pacato</em>.',etymology:'Da pace: paix'},
+{word:'risoluto',translation:'résolu',example:'Era molto <em>risoluta</em>.',etymology:'Dal latino resolutus'},
+{word:'sopraffino',translation:'raffiné',example:'Un gusto <em>sopraffino</em>.',etymology:'Da sopra + fino: au-dessus du fin'},
+{word:'veemente',translation:'véhément',example:'Una protesta <em>veemente</em>.',etymology:'Dal latino vehemens: impétueux'}
+]};
+
+/* ============ PLAYER LEVELS ============ */
+const PLAYER_LEVELS=[
+{name:'Apprenti',minXp:0,emoji:'🌱',color:'#4ecb71'},
+{name:'Explorateur',minXp:500,emoji:'🧭',color:'#74c0fc'},
+{name:'Voyageur',minXp:1500,emoji:'✈️',color:'#4f9cf9'},
+{name:'Expert',minXp:3500,emoji:'🎓',color:'#a78bfa'},
+{name:'Maître',minXp:7000,emoji:'👑',color:'#ffd700'},
+{name:'Légende',minXp:15000,emoji:'💎',color:'#b9f2ff'}
+];
+
+/* ============ LEAGUE SYSTEM ============ */
+const LEAGUE_TIERS=[
+{name:'Bronze',color:'#cd7f32',emoji:'🥉',cls:'bronze',minXpWeek:0},
+{name:'Argent',color:'#c0c0c0',emoji:'🥈',cls:'argent',minXpWeek:100},
+{name:'Or',color:'#ffd700',emoji:'🥇',cls:'or',minXpWeek:300},
+{name:'Platine',color:'#e5e4e2',emoji:'💠',cls:'platine',minXpWeek:600},
+{name:'Diamant',color:'#b9f2ff',emoji:'💎',cls:'diamant',minXpWeek:1000}
+];
+const FAKE_PLAYERS=[
+{name:'Lucas_M',emoji:'🔥'},{name:'Marie_D',emoji:'⭐'},{name:'Pedro_R',emoji:'💪'},
+{name:'Chiara_V',emoji:'📚'},{name:'Thomas_B',emoji:'🎯'},{name:'Aisha_K',emoji:'✨'},
+{name:'Romain_F',emoji:'🏃'},{name:'Yuki_T',emoji:'💡'},{name:'Elena_S',emoji:'🌟'}
+];
+
+/* ============ FLUENCE SCENARIOS ============ */
+const FLUENCE_SCENARIOS={es:[
+{id:'fl-es-1',title:'Au restaurant',emoji:'🍽️',level:'A2',steps:[
+{role:'system',text:'Buenos días, ¿qué desea comer?',keywords:['quiero','quisiera','tomar','pedir']},
+{role:'system',text:'¿Y de beber?',keywords:['agua','vino','cerveza','zumo']},
+{role:'system',text:'¿Desea postre?',keywords:['sí','no','flan','tarta','helado']},
+{role:'system',text:'Aquí tiene la cuenta. Son 25 euros.',keywords:['gracias','tarjeta','efectivo','pagar']}
+]},
+{id:'fl-es-2',title:'Chez le médecin',emoji:'🏥',level:'B1',steps:[
+{role:'system',text:'Buenos días, ¿qué le pasa?',keywords:['duele','dolor','fiebre','mal']},
+{role:'system',text:'¿Desde cuándo tiene estos síntomas?',keywords:['días','ayer','semana','hace']},
+{role:'system',text:'¿Es alérgico a algo?',keywords:['no','sí','alergia','penicilina']},
+{role:'system',text:'Le receto estos medicamentos. Tome uno cada 8 horas.',keywords:['gracias','entendido','cuánto','vale']}
+]},
+{id:'fl-es-3',title:'Entretien d\'embauche',emoji:'💼',level:'B2',steps:[
+{role:'system',text:'Hábleme de usted.',keywords:['experiencia','trabajo','estudié','soy']},
+{role:'system',text:'¿Por qué quiere trabajar aquí?',keywords:['empresa','interesa','oportunidad','crecimiento']},
+{role:'system',text:'¿Cuáles son sus puntos fuertes?',keywords:['organizado','equipo','responsable','creativo']},
+{role:'system',text:'¿Tiene alguna pregunta?',keywords:['salario','horario','equipo','empezar']}
+]}
+],en:[
+{id:'fl-en-1',title:'At a hotel',emoji:'🏨',level:'A2',steps:[
+{role:'system',text:'Good evening! How can I help you?',keywords:['reservation','room','book','stay']},
+{role:'system',text:'For how many nights?',keywords:['night','two','three','week']},
+{role:'system',text:'Would you prefer a single or double room?',keywords:['double','single','twin','suite']},
+{role:'system',text:'Here is your key. Breakfast is from 7 to 10.',keywords:['thank','thanks','great','perfect']}
+]},
+{id:'fl-en-2',title:'At the bank',emoji:'🏦',level:'B1',steps:[
+{role:'system',text:'Hello, how may I assist you today?',keywords:['account','open','transfer','exchange']},
+{role:'system',text:'Could you provide your ID, please?',keywords:['here','passport','card','sure']},
+{role:'system',text:'Would you like a debit or credit card?',keywords:['debit','credit','both','debit card']},
+{role:'system',text:'Your account is now active. Is there anything else?',keywords:['no','thank','that','all']}
+]},
+{id:'fl-en-3',title:'Négociation',emoji:'🤝',level:'B2',steps:[
+{role:'system',text:'Let\'s discuss the terms of the contract.',keywords:['agree','terms','price','proposal']},
+{role:'system',text:'The price seems a bit high. Can we negotiate?',keywords:['lower','discount','offer','reduce']},
+{role:'system',text:'What about delivery timelines?',keywords:['week','month','deadline','delivery']},
+{role:'system',text:'I think we have a deal. Shall we sign?',keywords:['yes','agree','sign','deal']}
+]}
+],it:[
+{id:'fl-it-1',title:'Dal dottore',emoji:'🩺',level:'A2',steps:[
+{role:'system',text:'Buongiorno, come si sente oggi?',keywords:['male','dolore','febbre','stanco']},
+{role:'system',text:'Da quanto tempo ha questi sintomi?',keywords:['giorni','ieri','settimana','mese']},
+{role:'system',text:'È allergico a qualcosa?',keywords:['no','sì','allergia','niente']},
+{role:'system',text:'Le prescrivo delle medicine. Una pastiglia ogni 8 ore.',keywords:['grazie','capito','quando','va bene']}
+]},
+{id:'fl-it-2',title:'All\'agenzia immobiliare',emoji:'🏠',level:'B1',steps:[
+{role:'system',text:'Buongiorno, sta cercando un appartamento?',keywords:['sì','cerco','affitto','bilocale']},
+{role:'system',text:'In quale zona preferisce?',keywords:['centro','periferia','vicino','zona']},
+{role:'system',text:'Il budget mensile?',keywords:['euro','mese','massimo','budget']},
+{role:'system',text:'Ho un bilocale perfetto. Vuole visitarlo?',keywords:['sì','quando','volentieri','certo']}
+]},
+{id:'fl-it-3',title:'Colloquio di lavoro',emoji:'💼',level:'B2',steps:[
+{role:'system',text:'Mi parli di lei.',keywords:['studio','lavoro','esperienza','laurea']},
+{role:'system',text:'Perché vuole lavorare qui?',keywords:['azienda','opportunità','crescita','interessante']},
+{role:'system',text:'Quali sono i suoi punti di forza?',keywords:['organizzato','team','creativo','responsabile']},
+{role:'system',text:'Ha domande per noi?',keywords:['stipendio','orario','team','quando']}
+]}
+]};
+
+/* ============ ENHANCED BADGES ============ */
+const ENHANCED_BADGES=[
+{id:'premier_pas',i:'👣',n:'Premier pas',d:'Première leçon complétée',check:s=>Object.values(s.langs).some(l=>(l.lessonsCompleted||[]).length>=1)},
+{id:'perfectionniste',i:'💯',n:'Perfectionniste',d:'5 leçons à 3 étoiles',check:s=>{let c=0;Object.values(s.langs).forEach(l=>Object.values(l.bestStars||{}).forEach(st=>{if(st===3)c++}));return c>=5}},
+{id:'sans_faille',i:'🛡️',n:'Sans faille',d:'7 jours de streak',check:s=>s.streak>=7},
+{id:'bilingue',i:'🗣️',n:'Bilingue',d:'Niveau B1+ dans une langue',check:s=>Object.values(s.langs).some(l=>['B1','B2','C1'].includes(l.level))},
+{id:'polyglotte_badge',i:'🌍',n:'Polyglotte',d:'2 langues au niveau A2+',check:s=>Object.values(s.langs).filter(l=>['A2','B1','B2','C1'].includes(l.level)).length>=2},
+{id:'chasseur_etoiles',i:'⭐',n:'Chasseur d\'étoiles',d:'20 leçons à 3 étoiles',check:s=>{let c=0;Object.values(s.langs).forEach(l=>Object.values(l.bestStars||{}).forEach(st=>{if(st===3)c++}));return c>=20}},
+{id:'reviseur',i:'🔁',n:'Réviseur',d:'10 révisions SRS complétées',check:s=>(s.srsCompleted||0)>=10},
+{id:'explorateur_badge',i:'🧭',n:'Explorateur',d:'Toutes unités A1 terminées',check:s=>Object.keys(s.langs).some(k=>{const all=getAllLessons(k).filter(l=>l.sec==='A1');return all.length>0&&all.every(l=>(s.langs[k].lessonsCompleted||[]).includes(l.id))})},
+{id:'cerebral',i:'🧠',n:'Cérébral',d:'Score parfait sur un checkpoint',check:s=>(s.perfectCheckpoints||0)>=1}
+];
+
 const DAILY_CHALLENGES=[
   {id:'no_err',n:'Termine une leçon sans erreur',xp:100,i:'🎯'},
   {id:'voice_5',n:'Fais 5 exercices vocaux',xp:80,i:'🎤'},
@@ -1820,19 +2368,25 @@ async function logout(){
 /* ============ STATE ============ */
 const DEFAULT_STATE=()=>({
   name:'Apprenant',onboarded:false,activeLang:'es',
-  xpTotal:0,xpToday:0,dailyGoal:500,
+  xpTotal:0,xpToday:0,dailyGoal:100,goalLevel:'regular',
   lastSeen:null,streak:0,longestStreak:0,
   sessionsVoice:0,
+  streakFreezes:0,
+  srsCompleted:0,
+  perfectCheckpoints:0,
+  collectedWords:[],
+  league:{tier:'Bronze',weekXp:0,weekStart:null,players:[]},
   langs:{
-    es:{level:'A1',xp:0,lessonsCompleted:[],bestStars:{},lessonResults:{},sectionMastery:{A1:0,A2:0,B1:0,B2:0,C1:0}},
-    en:{level:'A1',xp:0,lessonsCompleted:[],bestStars:{},lessonResults:{},sectionMastery:{A1:0,A2:0,B1:0,B2:0,C1:0}},
-    it:{level:'A1',xp:0,lessonsCompleted:[],bestStars:{},lessonResults:{},sectionMastery:{A1:0,A2:0,B1:0,B2:0,C1:0}}
+    es:{level:'A1',xp:0,lessonsCompleted:[],bestStars:{},lessonResults:{},sectionMastery:{A1:0,A2:0,B1:0,B2:0,C1:0},lastPracticed:null,rustLevel:0},
+    en:{level:'A1',xp:0,lessonsCompleted:[],bestStars:{},lessonResults:{},sectionMastery:{A1:0,A2:0,B1:0,B2:0,C1:0},lastPracticed:null,rustLevel:0},
+    it:{level:'A1',xp:0,lessonsCompleted:[],bestStars:{},lessonResults:{},sectionMastery:{A1:0,A2:0,B1:0,B2:0,C1:0},lastPracticed:null,rustLevel:0}
   },
   wordCards:[],
   badges:[],
   xpHistory:new Array(30).fill(0),
   dailyChallenges:null,
-  dailyTasks:{}
+  dailyTasks:{},
+  fluenceScores:{}
 });
 
 /* ============ MASTERY SYSTEM ============ */
@@ -1920,29 +2474,37 @@ function triggerLevelUpCeremony(from,to,lang){
     </div>
   </div>`;
   document.body.appendChild(cer);
-  // Step 1 (0-800ms): overlay + sound
-  playSound('levelup');
-  // Step 2 (800ms): old badge fades out
-  // Step 3 (2s): confetti
+  // Step 1 (0-800ms): overlay + ascending sound
+  playSound('victory');
+  // Step 2 (800ms-2s): old badge fades out
+  // Step 3 (2s-3.5s): confetti in language colors
   setTimeout(()=>{try{confetti({particleCount:200,spread:120,origin:{y:.4},colors:colors})}catch(e){}},2000);
-  // Step 4 (3.5s): new badge appears
+  setTimeout(()=>{try{confetti({particleCount:100,angle:60,spread:55,origin:{x:0,y:.5},colors:colors})}catch(e){}},2500);
+  setTimeout(()=>{try{confetti({particleCount:100,angle:120,spread:55,origin:{x:1,y:.5},colors:colors})}catch(e){}},2500);
+  // Step 4 (3.5s-5s): new badge descends with glow
   setTimeout(()=>{
     document.getElementById('cerBadgeOld').style.display='none';
     const nb=document.getElementById('cerBadgeNew');nb.style.display='';
     playSound('levelup');
   },3500);
-  setTimeout(()=>{try{confetti({particleCount:100,spread:80,origin:{y:.5},colors:colors})}catch(e){}},4000);
-  // Step 5 (5s): title + stats
+  setTimeout(()=>{try{confetti({particleCount:80,spread:80,origin:{y:.5},colors:colors})}catch(e){}},4500);
+  // Step 5 (5s-7s): recap with stats + XP counter animation
   setTimeout(()=>{
     document.getElementById('cerTitle').style.display='';
     document.getElementById('cerSub').style.display='';
     document.getElementById('cerStats').style.display='';
+    // Animate XP counter
+    const xpEl=document.querySelector('.cer-stat .v');
+    if(xpEl){let count=0;const interval=setInterval(()=>{count+=25;if(count>=500){count=500;clearInterval(interval)}xpEl.textContent='+'+count},30)}
   },5000);
-  // Step 6 (6.5s): unlocked content + buttons
+  // Step 6 (7s+): unlocked content preview
   setTimeout(()=>{
     document.getElementById('cerUnlocked').style.display='';
+  },7000);
+  // Step 7: action buttons
+  setTimeout(()=>{
     document.getElementById('cerActions').style.display='';
-  },6500);
+  },7500);
   addXp(500);
 }
 function closeCeremony(){const el=document.getElementById('ceremonyOverlay');if(el)el.remove()}
@@ -2061,17 +2623,15 @@ function renderPostCurriculum(lang){
     `<div class="post-card" onclick="${a.action}()"><span class="i">${a.i}</span><h4>${a.t}</h4><p>${a.d}</p></div>`
   ).join('')}</div></div>`;
 }
-function startChallenge(){toast('Défi du jour — bientôt disponible !')}
+function startChallenge(){startDailyChallenge()}
 function showImprovable(){location.hash='#profile'}
-function startStory(){toast('Histoire du jour — bientôt disponible !')}
+function startStory(){startStoryMode()}
 function showWordOfDay(){
-  const lang=S.activeLang;const wp=[];
-  (CURRICULUM[lang]||[]).forEach(u=>u.lessons.forEach(l=>{if(l.wp)l.wp.forEach(w=>wp.push(w))}));
-  if(wp.length===0)return toast('Aucun mot disponible');
-  const w=wp[Math.floor(Math.random()*wp.length)];
-  toast('🌟 Mot du jour : '+w[0]+' = '+w[1]);
+  const w=getWordOfDay(S.activeLang);
+  if(!w)return toast('Aucun mot disponible');
+  toast('🌟 Mot du jour : '+w.word+' = '+w.translation);
 }
-function startFluence(){location.hash='#vocal'}
+function startFluence(){startFluenceMode()}
 window.startChallenge=startChallenge;window.showImprovable=showImprovable;window.startStory=startStory;window.showWordOfDay=showWordOfDay;window.startFluence=startFluence;
 function getLessonStatus(lessonId,lang){
   const all=getAllLessons(lang);
@@ -2107,7 +2667,502 @@ function playSound(type){
     else if(type==='incorrect'){const o=c.createOscillator();const g=c.createGain();o.connect(g);g.connect(c.destination);o.type='sawtooth';o.frequency.value=200;g.gain.setValueAtTime(.18,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.4);o.start();o.stop(c.currentTime+.4)}
     else if(type==='levelup'){[523,659,784].forEach((f,i)=>{const o=c.createOscillator();const g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f;g.gain.setValueAtTime(0,c.currentTime+i*.15);g.gain.linearRampToValueAtTime(.18,c.currentTime+i*.15+.05);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+i*.15+.4);o.start(c.currentTime+i*.15);o.stop(c.currentTime+i*.15+.5)})}
     else if(type==='tick'){const o=c.createOscillator();const g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=1200;g.gain.setValueAtTime(.1,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.1);o.start();o.stop(c.currentTime+.1)}
+    else if(type==='combo'){[660,880,1100].forEach((f,i)=>{const o=c.createOscillator();const g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f;g.gain.setValueAtTime(0,c.currentTime+i*.08);g.gain.linearRampToValueAtTime(.15,c.currentTime+i*.08+.03);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+i*.08+.2);o.start(c.currentTime+i*.08);o.stop(c.currentTime+i*.08+.25)})}
+    else if(type==='victory'){[523,659,784,1047].forEach((f,i)=>{const o=c.createOscillator();const g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f;g.gain.setValueAtTime(0,c.currentTime+i*.2);g.gain.linearRampToValueAtTime(.2,c.currentTime+i*.2+.05);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+i*.2+.5);o.start(c.currentTime+i*.2);o.stop(c.currentTime+i*.2+.6)})}
   }catch(e){}
+}
+
+/* ============ PLAYER LEVEL ============ */
+function getPlayerLevel(xp){
+  let lvl=PLAYER_LEVELS[0];
+  for(let i=PLAYER_LEVELS.length-1;i>=0;i--){if(xp>=PLAYER_LEVELS[i].minXp){lvl=PLAYER_LEVELS[i];break}}
+  const idx=PLAYER_LEVELS.indexOf(lvl);
+  const next=PLAYER_LEVELS[idx+1];
+  const progress=next?Math.round((xp-lvl.minXp)/(next.minXp-lvl.minXp)*100):100;
+  return{...lvl,progress,nextName:next?next.name:null,nextXp:next?next.minXp:null};
+}
+
+/* ============ LEAGUE SYSTEM ============ */
+function initLeague(){
+  const now=new Date();const monday=new Date(now);monday.setDate(monday.getDate()-((monday.getDay()+6)%7));monday.setHours(0,0,0,0);
+  const weekKey=monday.toISOString().slice(0,10);
+  if(!S.league||S.league.weekStart!==weekKey){
+    // New week — generate new fake players
+    const fakePlayers=FAKE_PLAYERS.map(p=>({name:p.name,emoji:p.emoji,xp:50+Math.floor(Math.random()*450),isUser:false}));
+    S.league={tier:S.league?.tier||'Bronze',weekXp:0,weekStart:weekKey,players:fakePlayers};
+    saveState();
+  }
+}
+function getLeagueTier(weekXp){
+  let tier=LEAGUE_TIERS[0];
+  for(let i=LEAGUE_TIERS.length-1;i>=0;i--){if(weekXp>=LEAGUE_TIERS[i].minXpWeek){tier=LEAGUE_TIERS[i];break}}
+  return tier;
+}
+function getLeagueResetCountdown(){
+  const now=new Date();const next=new Date(now);next.setDate(next.getDate()+((8-next.getDay())%7||7));next.setHours(0,0,0,0);
+  const diff=next-now;
+  return{days:Math.floor(diff/86400000),hours:Math.floor(diff%86400000/3600000),minutes:Math.floor(diff%3600000/60000)};
+}
+function renderLeagues(){
+  initLeague();
+  // Update user in leaderboard
+  const allPlayers=[...S.league.players.filter(p=>!p.isUser),{name:S.name||'Toi',emoji:'🎯',xp:S.league.weekXp||0,isUser:true}];
+  allPlayers.sort((a,b)=>b.xp-a.xp);
+  // Simulate fake players gaining XP over the week
+  const dayOfWeek=(new Date().getDay()+6)%7;
+  allPlayers.forEach(p=>{if(!p.isUser)p.xp=Math.round(p.xp*(1+dayOfWeek*0.15))});
+  allPlayers.sort((a,b)=>b.xp-a.xp);
+  // Tier
+  const tier=getLeagueTier(S.league.weekXp||0);
+  document.getElementById('leagueTierBanner').innerHTML=`<div class="league-tier-banner league-tier--${tier.cls}">${tier.emoji} Ligue ${tier.name}</div>`;
+  // Podium top 3
+  const top3=allPlayers.slice(0,3);
+  const crowns=['👑','🥈','🥉'];
+  document.getElementById('leaguePodium').innerHTML=`<div class="league-podium">${
+    [1,0,2].map(i=>{const p=top3[i];if(!p)return '';return`<div class="league-podium-slot league-podium-slot--${i+1}"><div class="league-crown">${crowns[i]}</div><div class="league-avatar">${p.emoji}</div><div class="league-podium-bar">${i+1}</div><div class="league-podium-name">${p.isUser?'⭐ '+p.name:p.name}</div><div class="league-podium-xp">${p.xp} XP</div></div>`}).join('')
+  }</div>`;
+  // Full list
+  document.getElementById('leagueList').innerHTML=allPlayers.map((p,i)=>`<div class="league-player-row ${p.isUser?'is-user':''}"><div class="league-rank">${i+1}</div><div class="league-avatar">${p.emoji}</div><div class="league-name">${p.isUser?'⭐ '+p.name:p.name}</div><div class="league-xp">${p.xp} XP</div></div>`).join('');
+  // Countdown
+  const cd=getLeagueResetCountdown();
+  document.getElementById('leagueCountdown').innerHTML=`⏳ Reset dans <span>${cd.days}j ${cd.hours}h ${cd.minutes}min</span> · Top 3 montent, bottom 3 descendent`;
+}
+
+/* ============ SRS REVIEW (SM-2) ============ */
+function getSRSDueCards(lang){return(S.wordCards||[]).filter(c=>c.lang===lang&&c.nextReview<=Date.now())}
+function startSRSReview(){
+  const lang=S.activeLang;
+  const due=getSRSDueCards(lang);
+  if(due.length===0){toast('Aucun mot à réviser pour le moment !');return}
+  const cards=shuffle(due).slice(0,10);
+  document.getElementById('lessonModal').classList.add('active');
+  renderSRSCard(cards,0,0);
+}
+function renderSRSCard(cards,idx,score){
+  if(idx>=cards.length){return endSRSReview(score,cards.length)}
+  const card=cards[idx];
+  const modal=document.getElementById('lessonModal');
+  const pct=(idx/cards.length)*100;
+  // Generate a simple quiz from the word
+  const allWords=(S.wordCards||[]).filter(c=>c.lang===S.activeLang&&c.word!==card.word);
+  const wrongs=shuffle(allWords).slice(0,3).map(c=>c.word);
+  while(wrongs.length<3)wrongs.push('---');
+  const opts=shuffle([card.word,...wrongs]);
+  modal.innerHTML=`<div class="lesson-head">
+    <button class="btn-ghost btn" onclick="document.getElementById('lessonModal').classList.remove('active')"><i data-lucide="x"></i></button>
+    <div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div>
+    <div style="font-size:13px;color:var(--text-muted)">Révision ${idx+1}/${cards.length}</div>
+    <div class="xp" style="color:var(--success)">Score: ${score}</div>
+  </div>
+  <div class="lesson-body">
+    <div class="ex-instr">🔁 Révision SRS</div>
+    <div class="ex-prompt" style="font-size:20px">Quel mot correspond à cette carte ?</div>
+    <div style="text-align:center;font-size:48px;margin:16px 0">🃏</div>
+    <div style="text-align:center;font-size:14px;color:var(--text-muted);margin-bottom:24px">Carte apprise il y a ${getDaysSince(card.lastReviewed||card.nextReview)} jours</div>
+    <div class="ex-options">${opts.map((o,i)=>`<button class="ex-opt" data-w="${o}">${o}</button>`).join('')}</div>
+  </div>`;
+  if(window.lucide)lucide.createIcons();
+  modal.querySelectorAll('.ex-opt').forEach(b=>b.addEventListener('click',()=>{
+    modal.querySelectorAll('.ex-opt').forEach(x=>x.disabled=true);
+    const correct=b.dataset.w===card.word;
+    if(correct){b.classList.add('correct');playSound('correct');processSRSAnswer(card,4);renderSRSCard(cards,idx+1,score+1)}
+    else{b.classList.add('incorrect');playSound('incorrect');processSRSAnswer(card,1);
+      modal.querySelectorAll('.ex-opt').forEach(x=>{if(x.dataset.w===card.word)x.classList.add('correct')});
+      setTimeout(()=>renderSRSCard(cards,idx+1,score),1200)}
+  }));
+}
+function processSRSAnswer(card,quality){
+  if(quality>=3){
+    card.repetitions=(card.repetitions||0)+1;
+    if(card.repetitions===1)card.interval=1;
+    else if(card.repetitions===2)card.interval=6;
+    else card.interval=Math.round((card.interval||1)*(card.easeFactor||2.5));
+    card.easeFactor=(card.easeFactor||2.5)+0.1-(5-quality)*(0.08+(5-quality)*0.02);
+    if(card.easeFactor<1.3)card.easeFactor=1.3;
+  }else{
+    card.repetitions=0;card.interval=1;
+  }
+  card.nextReview=Date.now()+card.interval*86400000;
+  card.lastReviewed=new Date().toISOString();
+  saveState();
+}
+function endSRSReview(score,total){
+  const modal=document.getElementById('lessonModal');
+  const xpGained=score*15;
+  addXp(xpGained);
+  S.srsCompleted=(S.srsCompleted||0)+1;
+  if(S.srsCompleted>=10)grantBadge('reviseur','Réviseur');
+  saveState();
+  modal.innerHTML=`<div class="lesson-body"><div class="end-screen">
+    <div style="font-size:64px;margin-bottom:16px">🔁</div>
+    <div class="end-title">Révision terminée !</div>
+    <div class="end-sub">${score}/${total} mots réussis</div>
+    <div class="end-stats" style="grid-template-columns:repeat(2,1fr)">
+      <div class="end-stat"><div class="v">+${xpGained}</div><div class="l">XP gagnés</div></div>
+      <div class="end-stat"><div class="v">${(S.wordCards||[]).filter(c=>c.nextReview<=Date.now()).length}</div><div class="l">Restants</div></div>
+    </div>
+    <div class="lesson-actions"><button class="btn" onclick="document.getElementById('lessonModal').classList.remove('active');showView(location.hash)">Continuer →</button></div>
+  </div></div>`;
+}
+
+/* ============ DAILY CHALLENGE ============ */
+function startDailyChallenge(){
+  const lang=S.activeLang;
+  const completed=S.langs[lang].lessonsCompleted||[];
+  if(completed.length<3){toast('Complète au moins 3 leçons pour débloquer le défi !');return}
+  // Pick 10 random exercises from completed lessons
+  const allEx=[];
+  completed.forEach(id=>{const l=getLessonById(id,lang);if(l){const ex=generateExercises(l,lang);ex.forEach(e=>allEx.push(e))}});
+  if(allEx.length<10){toast('Pas assez d\'exercices disponibles');return}
+  const questions=shuffle(allEx).slice(0,10).filter(q=>q.t==='tr'||q.t==='fill');
+  while(questions.length<10&&allEx.length>0){questions.push(shuffle(allEx)[0])}
+  const qs=questions.slice(0,10);
+  document.getElementById('lessonModal').classList.add('active');
+  let timeLeft=60;let score=0;let idx=0;
+  const timer=setInterval(()=>{
+    timeLeft--;
+    const timerEl=document.getElementById('challengeTimerDisplay');
+    if(timerEl){timerEl.textContent=timeLeft+'s';if(timeLeft<=10)timerEl.className='challenge-countdown low'}
+    const barEl=document.getElementById('challengeTimerBar');
+    if(barEl)barEl.style.width=(timeLeft/60*100)+'%';
+    if(timeLeft<=0){clearInterval(timer);endDailyChallenge(score,qs.length,0)}
+  },1000);
+  renderChallengeQ(qs,idx,score,timeLeft,timer);
+}
+function renderChallengeQ(qs,idx,score,timeLeft,timer){
+  if(idx>=qs.length){clearInterval(timer);endDailyChallenge(score,qs.length,timeLeft);return}
+  const q=qs[idx];const modal=document.getElementById('lessonModal');
+  modal.innerHTML=`<div class="lesson-head">
+    <button class="btn-ghost btn" onclick="clearInterval(${timer});document.getElementById('lessonModal').classList.remove('active')"><i data-lucide="x"></i></button>
+    <div class="bar"><div class="bar-fill" style="width:${(idx/qs.length)*100}%"></div></div>
+    <div style="font:700 14px var(--font-display);color:var(--warning)">⚡ Défi</div>
+  </div>
+  <div class="lesson-body">
+    <div class="challenge-timer"><div class="challenge-timer-fill" id="challengeTimerBar" style="width:${(timeLeft/60*100)}%"></div></div>
+    <div class="challenge-countdown" id="challengeTimerDisplay">${timeLeft}s</div>
+    <div style="text-align:center;font-size:13px;color:var(--text-muted);margin-bottom:16px">Question ${idx+1}/10 · Score: ${score}</div>
+    <div class="ex-prompt" style="font-size:20px">${q.q}</div>
+    ${q.sentence?`<div class="ex-fill-sentence" style="font-size:18px">${q.sentence.replace('___','<span class="ex-blank">___</span>')}</div>`:''}
+    <div class="ex-options">${(q.opts||[]).map((o,i)=>`<button class="ex-opt" data-i="${i}">${o}</button>`).join('')}</div>
+  </div>`;
+  if(window.lucide)lucide.createIcons();
+  modal.querySelectorAll('.ex-opt').forEach(b=>b.addEventListener('click',()=>{
+    modal.querySelectorAll('.ex-opt').forEach(x=>x.disabled=true);
+    const correct=parseInt(b.dataset.i)===q.a;
+    if(correct){b.classList.add('correct');playSound('correct');score++}
+    else{b.classList.add('incorrect');playSound('incorrect');if(q.a!==undefined)modal.querySelectorAll('.ex-opt')[q.a]?.classList.add('correct')}
+    setTimeout(()=>renderChallengeQ(qs,idx+1,score,timeLeft,timer),800);
+  }));
+}
+function endDailyChallenge(score,total,timeLeft){
+  const modal=document.getElementById('lessonModal');
+  const bonus=score===total&&timeLeft>0;
+  const xpGained=bonus?score*20:score*10;
+  addXp(xpGained);saveState();
+  if(bonus)try{confetti({particleCount:200,spread:120,colors:['#ffd700','#ff6b6b','#4ecb71']})}catch(e){}
+  playSound('levelup');
+  modal.innerHTML=`<div class="lesson-body"><div class="end-screen">
+    <div style="font-size:64px;margin-bottom:16px">${bonus?'🏆':'⚡'}</div>
+    <div class="end-title">${bonus?'Défi parfait !':'Défi terminé !'}</div>
+    <div class="end-sub">${score}/${total} correct${bonus?' · XP doublés !':''}</div>
+    <div class="end-stats" style="grid-template-columns:repeat(2,1fr)">
+      <div class="end-stat"><div class="v">+${xpGained}</div><div class="l">XP gagnés</div></div>
+      <div class="end-stat"><div class="v">${timeLeft}s</div><div class="l">Temps restant</div></div>
+    </div>
+    <div class="lesson-actions"><button class="btn" onclick="document.getElementById('lessonModal').classList.remove('active');showView(location.hash)">Continuer →</button></div>
+  </div></div>`;
+}
+
+/* ============ STORY MODE ============ */
+function startStoryMode(storyId){
+  const lang=S.activeLang;
+  const stories=STORIES[lang]||[];
+  const story=storyId?stories.find(s=>s.id===storyId):stories[0];
+  if(!story){toast('Aucune histoire disponible');return}
+  document.getElementById('lessonModal').classList.add('active');
+  renderStoryLine(story,0);
+}
+function renderStoryLine(story,lineIdx){
+  const modal=document.getElementById('lessonModal');
+  const char=CHARACTERS[S.activeLang];
+  if(lineIdx>=story.lines.length){renderStoryQuestion(story,0,0);return}
+  // Build chat so far
+  const lines=story.lines.slice(0,lineIdx+1);
+  const chatHtml=lines.map(l=>{
+    const isChar=l.speaker===char.name.toLowerCase()||l.speaker==='carlos'||l.speaker==='emma'||l.speaker==='sofia';
+    const cls=isChar?'story-bubble--char':'story-bubble--other';
+    const name=l.speaker.charAt(0).toUpperCase()+l.speaker.slice(1);
+    return`<div class="story-bubble ${cls}"><div class="story-speaker">${name}</div>${l.text}</div>`;
+  }).join('');
+  modal.innerHTML=`<div class="lesson-head">
+    <button class="btn-ghost btn" onclick="document.getElementById('lessonModal').classList.remove('active')"><i data-lucide="x"></i></button>
+    <div class="bar"><div class="bar-fill" style="width:${(lineIdx/story.lines.length)*100}%"></div></div>
+    <div style="font-size:13px;color:var(--text-muted)">📖 ${story.title}</div>
+  </div>
+  <div class="lesson-body" style="justify-content:flex-start;padding-top:16px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px"><span style="font-size:28px">${char.emoji}</span><span style="font:600 14px var(--font-display)">${char.name}</span><span class="pill pill-${story.level.toLowerCase()}">${story.level}</span></div>
+    <div class="story-chat">${chatHtml}</div>
+    <div style="text-align:center;margin-top:16px"><button class="btn" id="storyNext">${lineIdx<story.lines.length-1?'Suivant →':'Questions →'}</button></div>
+  </div>`;
+  if(window.lucide)lucide.createIcons();
+  // Auto-speak the latest line
+  const lastLine=story.lines[lineIdx];
+  setTimeout(()=>speak(lastLine.text,S.activeLang),300);
+  document.getElementById('storyNext').addEventListener('click',()=>renderStoryLine(story,lineIdx+1));
+}
+function renderStoryQuestion(story,qIdx,score){
+  if(qIdx>=story.questions.length){endStoryMode(story,score);return}
+  const q=story.questions[qIdx];
+  const modal=document.getElementById('lessonModal');
+  modal.innerHTML=`<div class="lesson-head">
+    <button class="btn-ghost btn" onclick="document.getElementById('lessonModal').classList.remove('active')"><i data-lucide="x"></i></button>
+    <div class="bar"><div class="bar-fill" style="width:${((story.lines.length+qIdx)/(story.lines.length+story.questions.length))*100}%"></div></div>
+    <div style="font-size:13px;color:var(--text-muted)">Question ${qIdx+1}/${story.questions.length}</div>
+  </div>
+  <div class="lesson-body">
+    <div class="ex-instr">Compréhension</div>
+    <div class="ex-prompt" style="font-size:20px">${q.q}</div>
+    <div class="ex-options">${q.opts.map((o,i)=>`<button class="ex-opt" data-i="${i}">${o}</button>`).join('')}</div>
+  </div>`;
+  if(window.lucide)lucide.createIcons();
+  modal.querySelectorAll('.ex-opt').forEach(b=>b.addEventListener('click',()=>{
+    modal.querySelectorAll('.ex-opt').forEach(x=>x.disabled=true);
+    const correct=parseInt(b.dataset.i)===q.a;
+    if(correct){b.classList.add('correct');playSound('correct');score++}
+    else{b.classList.add('incorrect');playSound('incorrect');modal.querySelectorAll('.ex-opt')[q.a]?.classList.add('correct')}
+    setTimeout(()=>renderStoryQuestion(story,qIdx+1,score),1000);
+  }));
+}
+function endStoryMode(story,score){
+  const modal=document.getElementById('lessonModal');
+  const xpGained=score*25;addXp(xpGained);
+  // Add new words to SRS
+  story.newWords.forEach(([w,t])=>{
+    if(!S.wordCards.find(c=>c.word===w)){
+      S.wordCards.push({word:w,lang:S.activeLang,interval:1,repetitions:0,easeFactor:2.5,nextReview:Date.now()+86400000,learned:true});
+    }
+  });
+  saveState();
+  try{confetti({particleCount:80,spread:60,colors:['#7c6fcd','#ffd700']})}catch(e){}
+  modal.innerHTML=`<div class="lesson-body"><div class="end-screen">
+    <div style="font-size:64px;margin-bottom:16px">📖</div>
+    <div class="end-title">Histoire terminée !</div>
+    <div class="end-sub">${story.title} · ${score}/${story.questions.length} réponses correctes</div>
+    <div class="end-stats" style="grid-template-columns:repeat(2,1fr)">
+      <div class="end-stat"><div class="v">+${xpGained}</div><div class="l">XP gagnés</div></div>
+      <div class="end-stat"><div class="v">${story.newWords.length}</div><div class="l">Nouveaux mots</div></div>
+    </div>
+    <h4 style="margin:16px 0 8px;font-size:14px">📝 Mots appris</h4>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:20px">${story.newWords.map(([w,t])=>`<span style="padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:13px"><strong>${w}</strong> = ${t}</span>`).join('')}</div>
+    <div class="lesson-actions"><button class="btn" onclick="document.getElementById('lessonModal').classList.remove('active');showView(location.hash)">Continuer →</button></div>
+  </div></div>`;
+}
+
+/* ============ WORD OF DAY ============ */
+function getWordOfDay(lang){
+  const pool=WORD_OF_DAY[lang]||[];
+  if(pool.length===0)return null;
+  const dayIdx=Math.floor(Date.now()/86400000)%pool.length;
+  return pool[dayIdx];
+}
+function renderWordOfDayCard(lang){
+  const w=getWordOfDay(lang);
+  if(!w)return '';
+  const collected=(S.collectedWords||[]).includes(w.word);
+  return`<div class="wod-card" style="margin-bottom:20px">
+    <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">🌟 Mot du jour</div>
+    <div class="wod-word">${w.word}</div>
+    <div class="wod-meaning">${w.translation}</div>
+    <div class="wod-etym"><span style="font:700 .65rem var(--font-body);color:var(--text-faint);text-transform:uppercase">Étymologie</span><br>${w.etymology}</div>
+    <div class="wod-example">${w.example}</div>
+    <button class="btn btn-sm" onclick="speak('${w.word.replace(/'/g,"\\'")}','${lang}')" style="margin-right:8px">🔊 Écouter</button>
+    ${collected?'<span style="color:var(--success);font-size:13px">✅ Collecté</span>':`<button class="btn btn-sm" onclick="collectWOD('${w.word}','${lang}')">📥 Collecter</button>`}
+  </div>`;
+}
+function collectWOD(word,lang){
+  if(!S.collectedWords)S.collectedWords=[];
+  if(!S.collectedWords.includes(word)){
+    S.collectedWords.push(word);
+    if(!S.wordCards.find(c=>c.word===word)){
+      S.wordCards.push({word:word,lang:lang,interval:1,repetitions:0,easeFactor:2.5,nextReview:Date.now()+86400000,learned:true});
+    }
+    saveState();toast('🌟 Mot collecté !');addXp(10);
+    showView(location.hash);
+  }
+}
+window.collectWOD=collectWOD;
+
+/* ============ FLUENCE MODE ============ */
+function startFluenceMode(){
+  const lang=S.activeLang;
+  const scenarios=FLUENCE_SCENARIOS[lang]||[];
+  if(scenarios.length===0){toast('Mode fluence bientôt disponible');return}
+  document.getElementById('lessonModal').classList.add('active');
+  renderFluenceSelect(scenarios);
+}
+function renderFluenceSelect(scenarios){
+  const modal=document.getElementById('lessonModal');
+  modal.innerHTML=`<div class="lesson-head">
+    <button class="btn-ghost btn" onclick="document.getElementById('lessonModal').classList.remove('active')"><i data-lucide="x"></i></button>
+    <div style="font:600 15px var(--font-display)">🗣️ Mode Fluence</div>
+  </div>
+  <div class="lesson-body" style="justify-content:flex-start">
+    <h3 style="text-align:center;margin-bottom:16px">Choisis un scénario</h3>
+    <div class="fluence-grid">${scenarios.map(s=>{
+      const prevScore=S.fluenceScores?.[s.id];
+      return`<div class="fluence-card" onclick="startFluenceScenario('${s.id}')"><span class="i">${s.emoji}</span><h4>${s.title}</h4><div style="font-size:11px;color:var(--text-muted);margin-top:4px">${s.level}${prevScore?' · '+prevScore+'%':''}</div></div>`
+    }).join('')}</div>
+  </div>`;
+  if(window.lucide)lucide.createIcons();
+}
+function startFluenceScenario(scenarioId){
+  const lang=S.activeLang;
+  const scenario=(FLUENCE_SCENARIOS[lang]||[]).find(s=>s.id===scenarioId);
+  if(!scenario)return;
+  renderFluenceStep(scenario,0,[]);
+}
+function renderFluenceStep(scenario,stepIdx,scores){
+  if(stepIdx>=scenario.steps.length){endFluenceScenario(scenario,scores);return}
+  const step=scenario.steps[stepIdx];
+  const modal=document.getElementById('lessonModal');
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const chatSoFar=scores.map((s,i)=>{
+    const prevStep=scenario.steps[i];
+    return`<div class="story-bubble story-bubble--other"><div class="story-speaker">🤖</div>${prevStep.text}</div><div class="story-bubble story-bubble--user">${s.transcript||'...'}</div>`;
+  }).join('');
+  modal.innerHTML=`<div class="lesson-head">
+    <button class="btn-ghost btn" onclick="document.getElementById('lessonModal').classList.remove('active')"><i data-lucide="x"></i></button>
+    <div class="bar"><div class="bar-fill" style="width:${(stepIdx/scenario.steps.length)*100}%"></div></div>
+    <div style="font-size:13px;color:var(--text-muted)">🗣️ ${scenario.title} · ${stepIdx+1}/${scenario.steps.length}</div>
+  </div>
+  <div class="lesson-body" style="justify-content:flex-start;padding-top:16px">
+    <div class="story-chat">${chatSoFar}<div class="story-bubble story-bubble--other"><div class="story-speaker">🤖</div>${step.text}</div></div>
+    <div style="text-align:center;margin-top:20px">
+      ${SR?`<button class="btn" id="fluenceMic">🎤 Répondre</button>`:`<div style="color:var(--text-muted);font-size:13px">Micro non disponible</div><button class="btn btn-sm" id="fluenceSkip">Passer →</button>`}
+    </div>
+    <div style="text-align:center;margin-top:8px;font-size:12px;color:var(--text-muted)">Mots-clés attendus : ${step.keywords.slice(0,2).join(', ')}...</div>
+    <div class="ex-transcript hide" id="fluenceTrans" style="margin-top:12px"></div>
+  </div>`;
+  if(window.lucide)lucide.createIcons();
+  setTimeout(()=>speak(step.text,S.activeLang),300);
+  if(SR){
+    document.getElementById('fluenceMic').addEventListener('click',()=>{
+      const rec=new SR();rec.lang=S.activeLang==='es'?'es-ES':S.activeLang==='it'?'it-IT':'en-US';
+      const btn=document.getElementById('fluenceMic');btn.textContent='🎙️ J\'écoute…';btn.disabled=true;
+      rec.onresult=e=>{
+        const t=e.results[0][0].transcript.toLowerCase();
+        const matched=step.keywords.filter(k=>t.includes(k)).length;
+        const pct=Math.round(matched/step.keywords.length*100);
+        const tEl=document.getElementById('fluenceTrans');tEl.classList.remove('hide');
+        if(pct>=50){tEl.classList.add('success');tEl.innerHTML=`✅ "${e.results[0][0].transcript}" — Bien joué !`}
+        else{tEl.classList.add('partial');tEl.innerHTML=`🟡 "${e.results[0][0].transcript}" — Essaie d'inclure : ${step.keywords[0]}`}
+        scores.push({transcript:e.results[0][0].transcript,score:pct});
+        setTimeout(()=>renderFluenceStep(scenario,stepIdx+1,scores),1500);
+      };
+      rec.onend=()=>{btn.textContent='🎤 Répondre';btn.disabled=false};
+      rec.onerror=()=>{btn.textContent='🎤 Réessayer';btn.disabled=false};
+      try{rec.start()}catch(e){btn.disabled=false}
+    });
+  }else{
+    document.getElementById('fluenceSkip')?.addEventListener('click',()=>{
+      scores.push({transcript:'(passé)',score:0});
+      renderFluenceStep(scenario,stepIdx+1,scores);
+    });
+  }
+}
+function endFluenceScenario(scenario,scores){
+  const modal=document.getElementById('lessonModal');
+  const avgScore=scores.length>0?Math.round(scores.reduce((a,s)=>a+s.score,0)/scores.length):0;
+  const xpGained=Math.round(avgScore/100*80);
+  addXp(xpGained);
+  if(!S.fluenceScores)S.fluenceScores={};
+  S.fluenceScores[scenario.id]=Math.max(S.fluenceScores[scenario.id]||0,avgScore);
+  saveState();
+  modal.innerHTML=`<div class="lesson-body"><div class="end-screen">
+    <div style="font-size:64px;margin-bottom:16px">🗣️</div>
+    <div class="end-title">Conversation terminée !</div>
+    <div class="end-sub">${scenario.title} · Score moyen : ${avgScore}%</div>
+    <div class="end-stats" style="grid-template-columns:repeat(2,1fr)">
+      <div class="end-stat"><div class="v">+${xpGained}</div><div class="l">XP gagnés</div></div>
+      <div class="end-stat"><div class="v">${avgScore}%</div><div class="l">Fluence</div></div>
+    </div>
+    <div class="lesson-actions"><button class="btn" onclick="document.getElementById('lessonModal').classList.remove('active');showView(location.hash)">Continuer →</button></div>
+  </div></div>`;
+}
+
+/* ============ CONTEXTUAL GREETING ============ */
+function getContextualGreeting(){
+  const hr=new Date().getHours();
+  const char=CHARACTERS[S.activeLang];
+  let greeting,period;
+  if(hr>=6&&hr<12){greeting=`Bonjour, ${S.name} ! On attaque la journée ?`;period='morning'}
+  else if(hr>=12&&hr<18){greeting=`Une leçon rapide cet après-midi, ${S.name} ?`;period='afternoon'}
+  else if(hr>=18&&hr<23){greeting=`Dernière session de la journée, ${S.name} ?`;period='evening'}
+  else{greeting=`Encore debout, ${S.name} ? C'est le meilleur moment pour apprendre.`;period='night'}
+  let sub='';
+  if(S.streak>=3)sub+=`🔥 ${S.streak} jours de suite ! `;
+  const days=getDaysSince(S.lastSeen);
+  if(days>3)sub+=`Content de te revoir ! `;
+  return{greeting,sub,period,charEmoji:char?.emoji||'🌍'};
+}
+
+/* ============ STREAK FREEZE ============ */
+function checkStreakFreeze(){
+  // Called when gap > 1 day in checkDaily
+  if((S.streakFreezes||0)>0){
+    S.streakFreezes--;
+    toast('🛡️ Streak freeze utilisé ! Ta série est protégée.');
+    return true;// streak preserved
+  }
+  return false;
+}
+function earnStreakFreeze(){
+  // Check if user did 2+ lessons today
+  const todayLessons=Object.entries(S.langs[S.activeLang].lessonResults||{}).filter(([id,r])=>r.lastPlayed===today()).length;
+  if(todayLessons>=2&&!S._freezeEarnedToday){
+    S.streakFreezes=(S.streakFreezes||0)+1;
+    S._freezeEarnedToday=true;
+    toast('🛡️ Streak freeze gagné ! (+1 bouclier)');
+    saveState();
+  }
+}
+
+/* ============ CALENDAR HEATMAP ============ */
+function renderCalendarHeatmap(containerId){
+  const el=document.getElementById(containerId);if(!el)return;
+  const days=['L','M','M','J','V','S','D'];
+  let html=`<div class="heatmap-labels">${days.map(d=>`<div>${d}</div>`).join('')}</div><div class="heatmap-grid">`;
+  S.xpHistory.forEach((v,i)=>{
+    const lvl=v===0?'':v<=50?'heatmap-cell--1':v<=150?'heatmap-cell--2':v<=300?'heatmap-cell--3':'heatmap-cell--4';
+    const isToday=i===S.xpHistory.length-1;
+    html+=`<div class="heatmap-cell ${lvl} ${isToday?'today':''}" style="animation-delay:${i*20}ms"><div class="heatmap-tip">${v} XP</div></div>`;
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
+
+/* ============ ADJUSTABLE DAILY GOAL ============ */
+function setDailyGoal(level){
+  const goals={casual:50,regular:100,intense:200};
+  S.dailyGoal=goals[level]||100;
+  S.goalLevel=level;
+  saveState();showView('#home');
+}
+function renderGoalSelector(){
+  const levels=[{id:'casual',emoji:'☕',name:'Casual',desc:'50 XP/jour',xp:50},{id:'regular',emoji:'📚',name:'Régulier',desc:'100 XP/jour',xp:100},{id:'intense',emoji:'🔥',name:'Intense',desc:'200 XP/jour',xp:200}];
+  return`<div class="goal-sel">${levels.map(l=>`<div class="goal-sel-card ${(S.goalLevel||'regular')===l.id?'active':''}" onclick="setDailyGoal('${l.id}')"><span class="i">${l.emoji}</span><h5>${l.name}</h5><p>${l.desc}</p></div>`).join('')}</div>`;
+}
+window.setDailyGoal=setDailyGoal;
+
+/* ============ CHECK ENHANCED BADGES ============ */
+function checkEnhancedBadges(){
+  ENHANCED_BADGES.forEach(b=>{
+    if(!S.badges.includes(b.id)&&b.check(S)){
+      S.badges.push(b.id);
+      toast('🏆 Badge : '+b.n+' !');
+    }
+  });
+  saveState();
 }
 
 /* ============ ROUTER ============ */
@@ -2121,6 +3176,7 @@ function showView(hash){
   if(h==='lessons')renderLessons();
   if(h==='vocal')renderVocal();
   if(h==='streak')renderStreak();
+  if(h==='leagues')renderLeagues();
   if(h==='profile')renderProfile();
   window.scrollTo(0,0);
 }
@@ -2131,7 +3187,7 @@ document.querySelectorAll('.fnav-item').forEach(n=>n.addEventListener('click',()
 function today(){const d=new Date();return d.toISOString().slice(0,10)}
 function xpFloat(x,el){const r=el?el.getBoundingClientRect():{left:window.innerWidth/2,top:window.innerHeight/2,width:0,height:0};const f=document.createElement('div');f.className='xp-float';f.textContent='+'+x+' XP';f.style.left=(r.left+r.width/2)+'px';f.style.top=(r.top)+'px';document.body.appendChild(f);setTimeout(()=>f.remove(),1400)}
 function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),300)},3000)}
-function addXp(x){S.xpTotal+=x;S.xpToday+=x;const d=S.xpHistory;d[d.length-1]=(d[d.length-1]||0)+x;checkLevelBadges();saveState()}
+function addXp(x){S.xpTotal+=x;S.xpToday+=x;if(S.league)S.league.weekXp=(S.league.weekXp||0)+x;const d=S.xpHistory;d[d.length-1]=(d[d.length-1]||0)+x;checkLevelBadges();saveState()}
 function checkLevelBadges(){const lv=S.langs[S.activeLang].level;['a1','a2','b1','b2','c1'].forEach(l=>{if(lv.toLowerCase()===l&&!S.badges.includes(l)){S.badges.push(l);toast('🏆 Badge débloqué : '+l.toUpperCase()+' atteint !')}})}
 function grantBadge(id,name){if(!S.badges.includes(id)){S.badges.push(id);toast('🏆 Badge : '+name);saveState()}}
 function levenshtein(a,b){a=a.toLowerCase().trim();b=b.toLowerCase().trim();const m=[];for(let i=0;i<=b.length;i++)m[i]=[i];for(let j=0;j<=a.length;j++)m[0][j]=j;for(let i=1;i<=b.length;i++)for(let j=1;j<=a.length;j++)m[i][j]=b[i-1]===a[j-1]?m[i-1][j-1]:Math.min(m[i-1][j-1]+1,m[i][j-1]+1,m[i-1][j]+1);return m[b.length][a.length]}
@@ -2185,13 +3241,18 @@ function checkDaily(){
     const last=S.lastSeen?new Date(S.lastSeen):null;const todayDate=new Date(t);
     const diff=last?Math.round((todayDate-last)/86400000):-1;
     if(diff===1){S.streak++;if(S.streak>S.longestStreak)S.longestStreak=S.streak}
-    else if(diff>1||diff<0){if(S.lastSeen)S.streak=1;else S.streak=0}
+    else if(diff>1){
+      if(checkStreakFreeze()){S.streak++;if(S.streak>S.longestStreak)S.longestStreak=S.streak}
+      else{if(S.lastSeen)S.streak=1;else S.streak=0}
+    }else if(diff<0){S.streak=0}
     // shift xp history
     if(S.lastSeen)S.xpHistory.push(0);S.xpHistory=S.xpHistory.slice(-30);
     while(S.xpHistory.length<30)S.xpHistory.unshift(0);
     S.xpToday=0;
     S.lastSeen=t;
     S.dailyTasks={};
+    S._goalCelebrated=false;
+    S._freezeEarnedToday=false;
     // daily challenges
     const shuffled=shuffle(DAILY_CHALLENGES).slice(0,3);
     S.dailyChallenges={date:t,challenges:shuffled.map(c=>({...c,done:false}))};
@@ -2415,11 +3476,14 @@ function getSmartRecommendations(lang){
 
 /* ============ HOME ============ */
 function renderHome(){
-  const m=MOTIV[Math.floor(Math.random()*MOTIV.length)];
-  document.getElementById('motiv').innerHTML=`<p>«&nbsp;${m.q}&nbsp;»</p><span>— ${m.a}</span>`;
-  document.getElementById('helloName').textContent=`Bonjour, ${S.name} 👋`;
+  // Contextual greeting
+  const greet=getContextualGreeting();
+  document.getElementById('motiv').innerHTML=`<div class="greeting-banner greeting-banner--${greet.period}"><div class="greeting-text">${greet.greeting}</div><div class="greeting-sub">${greet.sub}</div><div class="greeting-char">${greet.charEmoji}</div></div>`;
+  // Player level
+  const plvl=getPlayerLevel(S.xpTotal);
+  document.getElementById('helloName').textContent=`${S.name} ${plvl.emoji}`;
   const flag=S.activeLang==='en'?'🇬🇧':S.activeLang==='it'?'🇮🇹':'🇪🇸';
-  document.getElementById('helloMeta').innerHTML=`${flag} Niveau ${S.langs[S.activeLang].level} • Série ${S.streak} jours 🔥`;
+  document.getElementById('helloMeta').innerHTML=`${flag} Niveau ${S.langs[S.activeLang].level} • ${plvl.name} • Série ${S.streak} jours 🔥${(S.streakFreezes||0)>0?' <span class="freeze-badge freeze-badge--glow">🛡️ ×'+S.streakFreezes+'</span>':''}`;
   document.getElementById('avatar').textContent=(S.name||'U')[0].toUpperCase();
 
   // goal
@@ -2429,6 +3493,11 @@ function renderHome(){
   document.getElementById('goalPct').textContent=pct+'%';
   document.getElementById('goalTxt').textContent=`${S.xpToday} / ${S.dailyGoal} XP`;
 
+  // goal selector
+  document.getElementById('goalTasks').insertAdjacentHTML('beforebegin',renderGoalSelector());
+  // Check confetti on goal reached
+  if(S.xpToday>=S.dailyGoal&&!S._goalCelebrated){
+    S._goalCelebrated=true;try{confetti({particleCount:100,spread:80,colors:['#ffd700','#4ecb71']})}catch(e){}toast('🎉 Objectif atteint !');}
   // daily tasks
   const tasks=[
     {id:'vocab',icon:'📚',name:'Vocabulaire — 10 mots',xp:100},
@@ -2486,6 +3555,49 @@ function renderHome(){
   document.getElementById('streakAlertSlot').innerHTML=(!S.dailyTasks||Object.keys(S.dailyTasks).length===0)&&hr>=18&&S.streak>=3?`<div class="streak-alert"><div><strong>⚠️ Ta série de ${S.streak} jours est en danger !</strong><p style="color:var(--text-muted);font-size:13px">Il reste ${24-hr}h pour pratiquer.</p></div><button class="btn btn-sm" onclick="location.hash='#lessons'">Protéger →</button></div>`:'';
 
   drawWeekChart();
+  // Word of day
+  const wodSlot=document.getElementById('reviseSlot');
+  wodSlot.insertAdjacentHTML('afterend',renderWordOfDayCard(S.activeLang));
+  // Stories section
+  const stories=STORIES[S.activeLang]||[];
+  if(stories.length>0){
+    const char=CHARACTERS[S.activeLang];
+    const storyHtml=`<div class="card card-lg" style="margin-bottom:20px">
+      <h3 style="margin-bottom:12px">${char.emoji} Histoires avec ${char.name}</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
+      ${stories.slice(0,3).map(s=>`<div class="post-card" onclick="startStoryMode('${s.id}')"><span class="i">📖</span><h4>${s.title}</h4><p>${s.level} · ${s.lines.length} répliques</p></div>`).join('')}
+      </div>
+    </div>`;
+    document.getElementById('view-home').insertAdjacentHTML('beforeend',storyHtml);
+  }
+  // Activities section
+  const activitiesHtml=`<div class="card card-lg" style="margin-bottom:20px">
+    <h3 style="margin-bottom:12px">🎯 Activités</h3>
+    <div class="post-grid">
+      <div class="post-card" onclick="startSRSReview()"><span class="i">🔁</span><h4>Révision SRS</h4><p>${getSRSDueCards(S.activeLang).length} mots à réviser</p></div>
+      <div class="post-card" onclick="startDailyChallenge()"><span class="i">⚡</span><h4>Défi du jour</h4><p>10 questions · 60 secondes</p></div>
+      <div class="post-card" onclick="startStoryMode()"><span class="i">📖</span><h4>Mode Histoire</h4><p>Compréhension interactive</p></div>
+      <div class="post-card" onclick="startFluenceMode()"><span class="i">🗣️</span><h4>Mode Fluence</h4><p>Conversation simulée</p></div>
+    </div>
+  </div>`;
+  document.getElementById('view-home').insertAdjacentHTML('beforeend',activitiesHtml);
+  // League mini preview
+  initLeague();
+  const leaguePlayers=[...S.league.players,{name:S.name,emoji:'🎯',xp:S.league.weekXp||0,isUser:true}].sort((a,b)=>b.xp-a.xp);
+  const userRank=leaguePlayers.findIndex(p=>p.isUser)+1;
+  const leagueHtml=`<div class="card card-lg" style="margin-bottom:20px;cursor:pointer" onclick="location.hash='#leagues'">
+    <h3 style="margin-bottom:8px">🏆 Ligue de la semaine</h3>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="font-size:13px;color:var(--text-muted)">Position : <strong style="color:var(--accent-2)">#${userRank}</strong></div>
+      <div style="font-size:13px;color:var(--text-muted)">XP semaine : <strong style="color:var(--gold)">${S.league.weekXp||0}</strong></div>
+      ${leaguePlayers.slice(0,3).map((p,i)=>`<span style="font-size:13px">${['🥇','🥈','🥉'][i]} ${p.name}</span>`).join('')}
+    </div>
+  </div>`;
+  document.getElementById('view-home').insertAdjacentHTML('beforeend',leagueHtml);
+  // Check enhanced badges
+  checkEnhancedBadges();
+  // Earn streak freeze
+  earnStreakFreeze();
 }
 function findNextLesson(){
   const all=getAllLessons(S.activeLang);
@@ -2524,6 +3636,7 @@ function renderLessons(){
   const completed=S.langs[S.activeLang].lessonsCompleted||[];
   const mastery=S.langs[S.activeLang].sectionMastery||{};
   const units=CURRICULUM[S.activeLang]||[];
+  const char=CHARACTERS[S.activeLang];
   let html='<div class="lpath">';
   let prevSec='';
   units.forEach(u=>{
@@ -2544,11 +3657,12 @@ function renderLessons(){
       const stars=S.langs[S.activeLang].bestStars[l.id]||0;
       const starsHtml=isDone?'<div class="lnode-stars">'+('⭐'.repeat(stars))+('☆'.repeat(3-stars))+'</div>':'';
       const stateLbl=isDone?'Complété':(isCurrent?'🔥 Disponible':(isLocked?'🔒 Verrouillé':''));
-      html+=`<div class="lnode ${cls}" ${!isLocked?`onclick="startLesson('${l.id}')"`:''}>
-        <div class="lnode-circle">${u.emoji}</div>
+      const charFloat=isCurrent?`<span style="position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-size:22px;animation:charFloat 3s ease-in-out infinite">${char.emoji}</span>`:'';
+      html+=`<div class="lnode ${cls}" ${!isLocked?`onclick="startLesson('${l.id}')"`:`onclick="toast('🔒 Complète la leçon précédente pour débloquer')"`}>
+        <div class="lnode-circle" style="position:relative">${charFloat}${u.emoji}</div>
         <div class="lnode-info">
           <div class="lnode-title">${l.t}</div>
-          <div class="lnode-meta"><span class="pill pill-${u.sec.toLowerCase()}">${u.sec}</span><span>${stateLbl}</span></div>
+          <div class="lnode-meta"><span class="pill pill-${u.sec.toLowerCase()}">${u.sec}</span><span>${stateLbl}</span><span>+${l.xp||50} XP</span></div>
           ${starsHtml}
         </div>
       </div>`;
@@ -2572,7 +3686,7 @@ function startLesson(id){
   const exercises=generateExercises(l,S.activeLang);
   if(!exercises||exercises.length===0){toast('Leçon non disponible');return}
   const data={...l,q:exercises,title:l.t,emoji:l.emoji||'📖',type:l.tp};
-  lesson={data:data,idx:0,hearts:3,xp:0,correct:0,total:exercises.length,combo:0,comboMulti:1,errors:0};
+  lesson={data:data,idx:0,hearts:5,xp:0,correct:0,total:exercises.length,combo:0,comboMulti:1,errors:0};
   document.getElementById('lessonModal').classList.add('active');
   renderLesson();
 }
@@ -2593,7 +3707,8 @@ function renderLesson(){
     <div class="lesson-head">
       <button class="btn-ghost btn" onclick="quitLesson()"><i data-lucide="x"></i></button>
       <div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div>
-      <div class="hearts">${'❤️'.repeat(lesson.hearts)}${'🖤'.repeat(3-lesson.hearts)}</div>
+      <div class="hearts">${'❤️'.repeat(lesson.hearts)}${'🖤'.repeat(5-lesson.hearts)}</div>
+      <div style="font-size:12px;color:var(--text-muted)">Q${lesson.idx+1}/${lesson.total}</div>
       <div class="xp">+${lesson.xp} XP</div>
     </div>
     <div class="lesson-body" id="lessonBody"></div>`;
@@ -2610,15 +3725,23 @@ function answerResult(correct,btn,q,opts){
   if(correct){
     playSound('correct');
     lesson.correct++;lesson.combo++;
-    if(lesson.combo===3){toast(MOTIV_MSG.combo);lesson.comboMulti=1.5}
+    if(lesson.combo===3){toast('🔥 COMBO x1.5 !');lesson.comboMulti=1.5;showCombo(1.5)}
+    if(lesson.combo===5){toast('🔥🔥 COMBO x2 !');lesson.comboMulti=2;showCombo(2);playSound('levelup')}
     const gain=Math.round(10*lesson.comboMulti);lesson.xp+=gain;
-    if(btn)xpFloat(gain,btn);
+    if(btn){const f=document.createElement('div');f.className='xp-float'+(lesson.comboMulti>=2?' combo':'');f.textContent='+'+gain+' XP';const r=btn.getBoundingClientRect();f.style.left=(r.left+r.width/2)+'px';f.style.top=r.top+'px';document.body.appendChild(f);setTimeout(()=>f.remove(),1400)}
   }else{
     playSound('incorrect');
-    lesson.hearts--;lesson.combo=0;lesson.comboMulti=1;
+    lesson.hearts--;lesson.combo=0;lesson.comboMulti=1;hideCombo();
+    lesson.errors++;
   }
   setTimeout(()=>{lesson.idx++;renderLesson()},1200);
 }
+function showCombo(multi){
+  let el=document.getElementById('comboBadge');
+  if(!el){el=document.createElement('div');el.id='comboBadge';el.className='combo-badge';document.body.appendChild(el)}
+  el.textContent='x'+multi;el.className='combo-badge'+(multi>=2?' combo-badge--gold':'');
+}
+function hideCombo(){const el=document.getElementById('comboBadge');if(el)el.remove()}
 function renderTr(body,q){
   body.innerHTML=`<div class="ex-instr">Choisissez la bonne traduction</div><div class="ex-prompt">${q.q}</div><div class="ex-options" id="opts">${q.opts.map((o,i)=>`<button class="ex-opt" data-i="${i}">${o}</button>`).join('')}</div>`;
   body.querySelectorAll('.ex-opt').forEach(b=>b.addEventListener('click',()=>{
@@ -2753,22 +3876,25 @@ function renderSpeech(body,q){
 }
 
 function renderLessonEnd(success){
-  const stars=success?(lesson.hearts===3?3:lesson.hearts===2?2:1):0;
+  hideCombo();
   const accuracy=Math.round(lesson.correct/lesson.total*100);
+  const stars=success?(accuracy===100?3:accuracy>=75?2:accuracy>=50?1:0):0;
+  const xpByStars={3:50,2:30,1:15,0:5};
+  const masteryByStars={3:12,2:7,1:3,0:0};
   const modal=document.getElementById('lessonModal');
   modal.innerHTML=`<div class="lesson-body"><div class="end-screen">
     ${success?`<div class="end-stars">${[1,2,3].map(i=>`<span class="star ${i<=stars?'e':''}">${i<=stars?'⭐':'☆'}</span>`).join('')}</div>`:'<div style="font-size:64px">💔</div>'}
-    <div class="end-title">${success?'Leçon terminée !':'Pas cette fois'}</div>
-    <div class="end-sub">${lesson.data.title}</div>
+    <div class="end-title">${success?(stars===3?'Parfait ! 💯':'Leçon terminée !'):'Pas cette fois'}</div>
+    <div class="end-sub">${lesson.data.title}${success&&stars>=(S.langs[S.activeLang].bestStars[lesson.data.id]||0)&&stars>1?' · ⬆️ Amélioration !':''}</div>
     <div class="end-stats">
-      <div class="end-stat"><div class="v">+${lesson.xp}</div><div class="l">XP gagnés</div></div>
-      <div class="end-stat"><div class="v">${lesson.hearts}/3</div><div class="l">Vies restantes</div></div>
+      <div class="end-stat"><div class="v" style="color:var(--gold)">+${lesson.xp+(xpByStars[stars]||0)}</div><div class="l">XP gagnés</div></div>
+      <div class="end-stat"><div class="v">${lesson.hearts}/5</div><div class="l">Vies</div></div>
       <div class="end-stat"><div class="v">${accuracy}%</div><div class="l">Précision</div></div>
       <div class="end-stat"><div class="v">${S.streak}🔥</div><div class="l">Série</div></div>
     </div>
     <div class="lesson-actions">
-      <button class="btn btn-secondary" onclick="restartLesson()">Refaire</button>
-      <button class="btn" onclick="endLessonNext()">Continuer →</button>
+      <button class="btn btn-secondary" onclick="restartLesson()">🔄 Refaire${stars<3?' pour améliorer':''}</button>
+      <button class="btn" onclick="endLessonNext()">Leçon suivante →</button>
     </div>
   </div></div>`;
   if(success){
@@ -2817,7 +3943,7 @@ function renderLessonEnd(success){
 }
 function endLessonNext(){document.getElementById('lessonModal').classList.remove('active');lesson=null;location.hash='#lessons';renderLessons()}
 function restartLesson(){const id=lesson.data.id;document.getElementById('lessonModal').classList.remove('active');setTimeout(function(){startLesson(id)},100)}
-function startReview(){toast('Mode révision — à venir. Pour l\'instant, utilise les leçons SRS.')}
+function startReview(){startSRSReview()}
 
 /* ============ VOCAL ============ */
 let vocal={mode:'words',idx:0};
@@ -2931,15 +4057,8 @@ function vocalListenConv(step){
 function renderStreak(){
   document.getElementById('streakBig').textContent=S.streak;
   drawMonthChart();
-  // calendar
-  const cal=document.getElementById('calendar');cal.innerHTML='';
-  S.xpHistory.forEach((v,i)=>{
-    const d=document.createElement('div');d.className='cal-day';
-    if(i===S.xpHistory.length-1)d.classList.add('today');
-    if(v>0)d.classList.add('done');else d.classList.add('miss');
-    d.style.animationDelay=(i*30)+'ms';
-    cal.appendChild(d);
-  });
+  // calendar heatmap
+  renderCalendarHeatmap('calendar');
   // CECR
   const lv=S.langs[S.activeLang].level;
   const xp=S.langs[S.activeLang].xp;
@@ -3006,11 +4125,11 @@ function renderChallenges(){
 function renderProfile(){
   document.getElementById('profName').textContent=S.name||'Apprenant';
   document.getElementById('profAvatar').textContent=(S.name||'U')[0].toUpperCase();
-  const title=S.xpTotal>=3000?'Polyglotte Avancé ✦':S.xpTotal>=1000?'Polyglotte Intermédiaire ✦':'Polyglotte Débutant ✦';
-  document.getElementById('profTitle').textContent=title+(currentUser?' • '+currentUser.email:'');
-  const nextLvl=Math.ceil((S.xpTotal+1)/1000)*1000;
-  document.getElementById('profXpLabel').textContent=`${S.xpTotal} XP — Prochain niveau : ${nextLvl} XP`;
-  document.getElementById('profXpFill').style.width=((S.xpTotal%1000)/1000*100)+'%';
+  const plvl=getPlayerLevel(S.xpTotal);
+  document.getElementById('profTitle').textContent=`${plvl.emoji} ${plvl.name}`+(currentUser?' • '+currentUser.email:'');
+  document.getElementById('profXpLabel').textContent=`${S.xpTotal} XP${plvl.nextName?' — Prochain : '+plvl.nextName+' ('+plvl.nextXp+' XP)':' — Niveau max !'}`;
+  document.getElementById('profXpFill').style.width=plvl.progress+'%';
+  document.getElementById('profXpFill').style.background=plvl.color;
   // stats
   const totalLessons=Object.values(S.langs).reduce((a,b)=>a+b.lessonsCompleted.length,0);
   const totalMinutes=Math.round(totalLessons*7);
@@ -3034,10 +4153,11 @@ function renderProfile(){
   }).join('');
   // Ma progression
   renderMyProgress();
-  // badges
-  document.getElementById('allBadges').innerHTML=BADGES.map(b=>{
+  // badges — combine original + enhanced
+  const allBadgesList=[...BADGES,...ENHANCED_BADGES.map(b=>({id:b.id,i:b.i,n:b.n,d:b.d}))];
+  document.getElementById('allBadges').innerHTML=allBadgesList.map(b=>{
     const ok=S.badges.includes(b.id);
-    return `<div class="badge-card ${ok?'':'locked'}" title="${b.d}"><span class="i">${b.i}</span><h5>${b.n}</h5><p>${b.d}</p></div>`;
+    return `<div class="badge-card ${ok?'':'locked'}" title="${b.d}"><span class="i">${b.i}</span><h5>${b.n}</h5><p>${ok?'✅ Obtenu':b.d}</p></div>`;
   }).join('');
   // words
   const wc=S.wordCards||[];
@@ -3064,7 +4184,7 @@ async function init(){
 init();
 function resetAll(){if(confirm('Es-tu sûr de vouloir tout effacer ? Ta progression sera remise à zéro.')){localStorage.removeItem('lingua');S=loadState();location.reload()}}
 async function deleteAccount(){if(confirm('⚠️ Supprimer définitivement ton compte et toutes tes données ?\n\nCette action est IRRÉVERSIBLE.')&&confirm('Dernière chance : es-tu vraiment sûr ?')){localStorage.removeItem('lingua');if(sb)await sb.auth.signOut();alert('Compte déconnecté. Pour la suppression définitive des données serveur, contacte contact@lingua-app.fr.\n\n(Conformément au RGPD, ta demande sera traitée sous 30 jours.)');location.reload()}}
-window.startLesson=startLesson;window.quitLesson=quitLesson;window.endLessonNext=endLessonNext;window.restartLesson=restartLesson;window.startReview=startReview;window.vocalPrev=vocalPrev;window.vocalNext=vocalNext;window.speak=speak;window.resetAll=resetAll;window.logout=logout;window.deleteAccount=deleteAccount;window.showPrivacy=showPrivacy;
+window.startLesson=startLesson;window.quitLesson=quitLesson;window.endLessonNext=endLessonNext;window.restartLesson=restartLesson;window.startReview=startReview;window.vocalPrev=vocalPrev;window.vocalNext=vocalNext;window.speak=speak;window.resetAll=resetAll;window.logout=logout;window.deleteAccount=deleteAccount;window.showPrivacy=showPrivacy;window.startSRSReview=startSRSReview;window.startDailyChallenge=startDailyChallenge;window.startStoryMode=startStoryMode;window.startFluenceMode=startFluenceMode;window.startFluenceScenario=startFluenceScenario;
 </script>
 </body>
 </html>

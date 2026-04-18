@@ -679,6 +679,7 @@ a{color:inherit;text-decoration:none}
         </svg>
         <div class="center"><div class="pct" id="goalPct">0%</div><div class="lbl" id="goalTxt">0 / 500 XP</div></div>
       </div>
+      <div id="goalSelSlot"></div>
       <div class="goal-tasks" id="goalTasks"></div>
     </div>
     <div>
@@ -696,6 +697,7 @@ a{color:inherit;text-decoration:none}
     <h3>Ta progression cette semaine</h3>
     <canvas id="weekChart" width="800" height="180"></canvas>
   </div>
+  <div id="homeDynamic"></div>
 </div>
 
 <!-- LESSONS -->
@@ -3494,7 +3496,7 @@ function renderHome(){
   document.getElementById('goalTxt').textContent=`${S.xpToday} / ${S.dailyGoal} XP`;
 
   // goal selector
-  document.getElementById('goalTasks').insertAdjacentHTML('beforebegin',renderGoalSelector());
+  document.getElementById('goalSelSlot').innerHTML=renderGoalSelector();
   // Check confetti on goal reached
   if(S.xpToday>=S.dailyGoal&&!S._goalCelebrated){
     S._goalCelebrated=true;try{confetti({particleCount:100,spread:80,colors:['#ffd700','#4ecb71']})}catch(e){}toast('🎉 Objectif atteint !');}
@@ -3555,23 +3557,21 @@ function renderHome(){
   document.getElementById('streakAlertSlot').innerHTML=(!S.dailyTasks||Object.keys(S.dailyTasks).length===0)&&hr>=18&&S.streak>=3?`<div class="streak-alert"><div><strong>⚠️ Ta série de ${S.streak} jours est en danger !</strong><p style="color:var(--text-muted);font-size:13px">Il reste ${24-hr}h pour pratiquer.</p></div><button class="btn btn-sm" onclick="location.hash='#lessons'">Protéger →</button></div>`:'';
 
   drawWeekChart();
-  // Word of day
-  const wodSlot=document.getElementById('reviseSlot');
-  wodSlot.insertAdjacentHTML('afterend',renderWordOfDayCard(S.activeLang));
+  // Dynamic home sections (word of day + stories + activities + league)
+  let dynHtml=renderWordOfDayCard(S.activeLang);
   // Stories section
   const stories=STORIES[S.activeLang]||[];
   if(stories.length>0){
     const char=CHARACTERS[S.activeLang];
-    const storyHtml=`<div class="card card-lg" style="margin-bottom:20px">
+    dynHtml+=`<div class="card card-lg" style="margin-bottom:20px">
       <h3 style="margin-bottom:12px">${char.emoji} Histoires avec ${char.name}</h3>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
       ${stories.slice(0,3).map(s=>`<div class="post-card" onclick="startStoryMode('${s.id}')"><span class="i">📖</span><h4>${s.title}</h4><p>${s.level} · ${s.lines.length} répliques</p></div>`).join('')}
       </div>
     </div>`;
-    document.getElementById('view-home').insertAdjacentHTML('beforeend',storyHtml);
   }
   // Activities section
-  const activitiesHtml=`<div class="card card-lg" style="margin-bottom:20px">
+  dynHtml+=`<div class="card card-lg" style="margin-bottom:20px">
     <h3 style="margin-bottom:12px">🎯 Activités</h3>
     <div class="post-grid">
       <div class="post-card" onclick="startSRSReview()"><span class="i">🔁</span><h4>Révision SRS</h4><p>${getSRSDueCards(S.activeLang).length} mots à réviser</p></div>
@@ -3580,20 +3580,19 @@ function renderHome(){
       <div class="post-card" onclick="startFluenceMode()"><span class="i">🗣️</span><h4>Mode Fluence</h4><p>Conversation simulée</p></div>
     </div>
   </div>`;
-  document.getElementById('view-home').insertAdjacentHTML('beforeend',activitiesHtml);
   // League mini preview
   initLeague();
   const leaguePlayers=[...S.league.players,{name:S.name,emoji:'🎯',xp:S.league.weekXp||0,isUser:true}].sort((a,b)=>b.xp-a.xp);
   const userRank=leaguePlayers.findIndex(p=>p.isUser)+1;
-  const leagueHtml=`<div class="card card-lg" style="margin-bottom:20px;cursor:pointer" onclick="location.hash='#leagues'">
+  dynHtml+=`<div class="card card-lg" style="margin-bottom:20px;cursor:pointer" onclick="location.hash='#leagues'">
     <h3 style="margin-bottom:8px">🏆 Ligue de la semaine</h3>
-    <div style="display:flex;align-items:center;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div style="font-size:13px;color:var(--text-muted)">Position : <strong style="color:var(--accent-2)">#${userRank}</strong></div>
       <div style="font-size:13px;color:var(--text-muted)">XP semaine : <strong style="color:var(--gold)">${S.league.weekXp||0}</strong></div>
       ${leaguePlayers.slice(0,3).map((p,i)=>`<span style="font-size:13px">${['🥇','🥈','🥉'][i]} ${p.name}</span>`).join('')}
     </div>
   </div>`;
-  document.getElementById('view-home').insertAdjacentHTML('beforeend',leagueHtml);
+  document.getElementById('homeDynamic').innerHTML=dynHtml;
   // Check enhanced badges
   checkEnhancedBadges();
   // Earn streak freeze

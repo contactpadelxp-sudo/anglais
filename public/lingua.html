@@ -2352,6 +2352,7 @@ function onAuthSuccess(user,nameOverride){
   if(window.lucide)lucide.createIcons();
   showView(location.hash||'#home');
   setInterval(updateChallengeTimer,60000);
+  startTimeTracking();
 }
 
 // Logout
@@ -2388,7 +2389,8 @@ const DEFAULT_STATE=()=>({
   xpHistory:new Array(30).fill(0),
   dailyChallenges:null,
   dailyTasks:{},
-  fluenceScores:{}
+  fluenceScores:{},
+  timeSpent:0
 });
 
 /* ============ MASTERY SYSTEM ============ */
@@ -4131,12 +4133,14 @@ function renderProfile(){
   document.getElementById('profXpFill').style.background=plvl.color;
   // stats
   const totalLessons=Object.values(S.langs).reduce((a,b)=>a+b.lessonsCompleted.length,0);
-  const totalMinutes=Math.round(totalLessons*7);
+  flushTimeTracking();
+  const totalSec=S.timeSpent||0;
+  const tH=Math.floor(totalSec/3600);const tM=Math.floor((totalSec%3600)/60);
   document.getElementById('profStats').innerHTML=`
     <div class="stat"><span class="i">⚡</span><div class="v">${S.xpTotal.toLocaleString('fr')}</div><div class="l">XP Total</div></div>
     <div class="stat"><span class="i">🔥</span><div class="v">${S.streak}</div><div class="l">Streak</div></div>
     <div class="stat"><span class="i">📚</span><div class="v">${totalLessons}</div><div class="l">Leçons</div></div>
-    <div class="stat"><span class="i">🕐</span><div class="v">${Math.floor(totalMinutes/60)}h ${totalMinutes%60}min</div><div class="l">Temps</div></div>
+    <div class="stat"><span class="i">🕐</span><div class="v">${tH}h ${tM}min</div><div class="l">Temps réel</div></div>
     <div class="stat"><span class="i">🌍</span><div class="v">${Object.values(S.langs).filter(l=>l.lessonsCompleted.length>0).length}</div><div class="l">Langues</div></div>
     <div class="stat"><span class="i">🎤</span><div class="v">${S.sessionsVoice}</div><div class="l">Vocal</div></div>`;
   // lang progress
@@ -4163,6 +4167,23 @@ function renderProfile(){
   document.getElementById('wordCountPill').textContent=wc.length;
   document.getElementById('wcloud').innerHTML=wc.slice(-30).map(c=>`<span>${c.word}</span>`).join('')||'<span style="color:var(--text-faint)">Aucun mot encore. Complète des leçons !</span>';
 }
+
+/* ============ TIME TRACKING ============ */
+let _timeTrackStart=null;
+function startTimeTracking(){_timeTrackStart=Date.now()}
+function flushTimeTracking(){
+  if(_timeTrackStart){
+    const elapsed=Math.round((Date.now()-_timeTrackStart)/1000);
+    if(elapsed>0&&elapsed<3600){S.timeSpent=(S.timeSpent||0)+elapsed;saveState()}
+    _timeTrackStart=Date.now();
+  }
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){flushTimeTracking();_timeTrackStart=null}
+  else{_timeTrackStart=Date.now()}
+});
+window.addEventListener('beforeunload',flushTimeTracking);
+setInterval(flushTimeTracking,60000);
 
 /* ============ INIT ============ */
 async function init(){

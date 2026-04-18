@@ -4,6 +4,17 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
 <title>Lingua — Apprentissage Adaptatif</title>
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#7c6fcd">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lingua">
+<link rel="apple-touch-icon" href="/icon-192.svg">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="Lingua">
+<meta name="msapplication-TileColor" content="#7c6fcd">
+<meta name="description" content="Apprends l'anglais, l'italien et l'espagnol">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4274,6 +4285,20 @@ init();
 function resetAll(){if(confirm('Es-tu sûr de vouloir tout effacer ? Ta progression sera remise à zéro.')){localStorage.removeItem('lingua');S=loadState();location.reload()}}
 async function deleteAccount(){if(confirm('⚠️ Supprimer définitivement ton compte et toutes tes données ?\n\nCette action est IRRÉVERSIBLE.')&&confirm('Dernière chance : es-tu vraiment sûr ?')){localStorage.removeItem('lingua');if(sb)await sb.auth.signOut();alert('Compte déconnecté. Pour la suppression définitive des données serveur, contacte contact@lingua-app.fr.\n\n(Conformément au RGPD, ta demande sera traitée sous 30 jours.)');location.reload()}}
 window.startLesson=startLesson;window.quitLesson=quitLesson;window.endLessonNext=endLessonNext;window.restartLesson=restartLesson;window.startReview=startReview;window.vocalPrev=vocalPrev;window.vocalNext=vocalNext;window.speak=speak;window.resetAll=resetAll;window.logout=logout;window.deleteAccount=deleteAccount;window.showPrivacy=showPrivacy;window.startSRSReview=startSRSReview;window.startDailyChallenge=startDailyChallenge;window.startStoryMode=startStoryMode;window.startFluenceMode=startFluenceMode;window.startFluenceScenario=startFluenceScenario;
+
+/* ============ SERVICE WORKER ============ */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js').then(reg=>{
+      reg.addEventListener('updatefound',()=>{
+        const w=reg.installing;
+        if(w)w.addEventListener('statechange',()=>{
+          if(w.state==='activated'&&navigator.serviceWorker.controller)toast('Mise à jour disponible !');
+        });
+      });
+    }).catch(e=>console.warn('SW registration failed:',e));
+  });
+}
 </script>
 </body>
 </html>

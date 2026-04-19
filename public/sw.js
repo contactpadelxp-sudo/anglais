@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lingua-v1';
+const CACHE_NAME = 'lingua-v2';
 const PRECACHE = [
   '/lingua.html',
   '/manifest.json',
@@ -29,6 +29,20 @@ self.addEventListener('fetch', e => {
   // Skip non-GET and cross-origin auth/API calls
   if (e.request.method !== 'GET') return;
   if (url.hostname.includes('supabase')) return;
+
+  // Navigation requests to same origin — always serve the app shell
+  if (e.request.mode === 'navigate' && url.hostname === location.hostname) {
+    e.respondWith(
+      fetch('/lingua.html').then(resp => {
+        if (resp.ok) {
+          const clone = resp.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put('/lingua.html', clone));
+        }
+        return resp;
+      }).catch(() => caches.match('/lingua.html'))
+    );
+    return;
+  }
 
   // CDN assets (fonts, scripts) — cache-first
   if (url.hostname !== location.hostname) {

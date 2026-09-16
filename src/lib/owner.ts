@@ -3,8 +3,9 @@
  * autorisée à ouvrir une session — vérifiée avant l'envoi du lien de
  * connexion, puis à chaque requête dans le proxy.
  *
- * Cette variable n'est jamais exposée au navigateur : sans préfixe
- * NEXT_PUBLIC_, elle reste côté serveur.
+ * Comme toutes les variables de cette application, elle reste côté
+ * serveur : aucune n'a de préfixe NEXT_PUBLIC_, donc aucune n'est
+ * embarquée dans le bundle JavaScript.
  */
 export function ownerEmail(): string | null {
   const raw = process.env.OWNER_EMAIL?.trim().toLowerCase();

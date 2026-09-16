@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isOwner } from "@/lib/owner";
+import { supabaseConfig } from "./config";
 
 const PUBLIC_PATHS = ["/connexion", "/auth", "/manifest.webmanifest", "/sw.js", "/offline"];
 
@@ -17,15 +18,14 @@ function isPublic(pathname: string) {
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const config = supabaseConfig();
   const { pathname } = request.nextUrl;
 
   // Sans configuration Supabase, on laisse passer : la page d'accueil
   // affiche alors les instructions de mise en route.
-  if (!url || !key) return response;
+  if (!config) return response;
 
-  const supabase = createServerClient(url, key, {
+  const supabase = createServerClient(config.url, config.key, {
     cookies: {
       getAll() {
         return request.cookies.getAll();

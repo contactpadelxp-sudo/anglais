@@ -96,10 +96,22 @@ préférences par défaut : l'application n'est jamais vide au premier écran.
 
 | Variable | Rôle |
 |---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | URL du projet |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | clé publique |
+| `SUPABASE_URL` | URL du projet |
+| `SUPABASE_ANON_KEY` | clé publiable |
 | `OWNER_EMAIL` | seule adresse autorisée à ouvrir une session |
-| `NEXT_PUBLIC_SITE_URL` | facultatif — origine utilisée par le lien de connexion |
+| `SITE_URL` | facultatif — origine utilisée par le lien de connexion |
+
+Aucune n'a de préfixe `NEXT_PUBLIC_`, et c'est voulu : l'application ne
+contacte Supabase que depuis le serveur — composants serveur pour la
+lecture, Server Actions pour l'écriture, proxy pour le rafraîchissement
+de session. Le navigateur ne parle qu'à ce serveur. Rien de tout cela
+n'est donc embarqué dans le bundle JavaScript.
+
+Ce n'est pas ce qui protège les données : la clé publiable est conçue
+pour être exposable, et c'est la RLS qui fait barrage. Mais tant que le
+navigateur n'en a pas besoin, autant ne pas l'y envoyer. (Les noms
+préfixés restent acceptés en repli, pour qu'un déploiement déjà
+configuré ainsi continue de fonctionner.)
 
 ## Graphiques
 

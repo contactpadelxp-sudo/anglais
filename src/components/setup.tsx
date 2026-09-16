@@ -11,7 +11,7 @@ export function Setup() {
     },
     {
       title: "Renseigner les variables d'environnement",
-      body: "NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY et OWNER_EMAIL — cette dernière étant la seule adresse autorisée à ouvrir une session.",
+      body: "SUPABASE_URL, SUPABASE_ANON_KEY et OWNER_EMAIL. Aucune n'a de préfixe NEXT_PUBLIC_ : l'application ne contacte Supabase que depuis le serveur, donc rien de tout cela n'atteint le navigateur.",
     },
     {
       title: "Se connecter",

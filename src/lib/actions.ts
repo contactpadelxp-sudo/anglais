@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isOwner, ownerEmail } from "@/lib/owner";
+import { siteUrl } from "@/lib/supabase/config";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Entry, EntryDraft, Goal, Settings, Stream } from "@/lib/types";
 
@@ -48,7 +49,7 @@ export async function requestMagicLink(
   const supabase = await createClient();
   if (!supabase) return { status: "error", message: "Supabase n'est pas configuré." };
 
-  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const site = siteUrl();
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {

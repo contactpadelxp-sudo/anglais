@@ -1,5 +1,6 @@
 import { LoginForm } from "@/components/login-form";
 import { ownerEmail } from "@/lib/owner";
+import { supabaseConfig } from "@/lib/supabase/config";
 
 export const metadata = { title: "Connexion — Revenus" };
 export const dynamic = "force-dynamic";
@@ -10,7 +11,7 @@ export default async function LoginPage({
   searchParams: Promise<{ erreur?: string; suite?: string }>;
 }) {
   const params = await searchParams;
-  const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const configured = supabaseConfig() !== null;
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[400px] flex-col justify-center gap-6 px-6 py-12">
@@ -47,8 +48,8 @@ export default async function LoginPage({
           className="rounded-[var(--radius-sm)] px-3 py-2.5 text-[12.5px]"
           style={{ background: "var(--surface-2)", color: "var(--text-secondary)" }}
         >
-          Supabase n&apos;est pas encore configuré. Renseigne NEXT_PUBLIC_SUPABASE_URL et
-          NEXT_PUBLIC_SUPABASE_ANON_KEY.
+          Supabase n&apos;est pas encore configuré. Renseigne SUPABASE_URL et
+          SUPABASE_ANON_KEY.
         </p>
       )}
     </main>

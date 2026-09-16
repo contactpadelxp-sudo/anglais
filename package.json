@@ -1,12 +1,15 @@
 {
-  "name": "anglais",
-  "version": "0.1.0",
+  "name": "revenus",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/generate-icons.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/generate-icons.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint .",
+    "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",

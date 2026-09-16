@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# icônes PWA — binaires dérivés, régénérés par scripts/generate-icons.mjs
+/public/icons/*.png

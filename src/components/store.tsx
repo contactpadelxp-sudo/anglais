@@ -1,0 +1,488 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  useState,
+  useTransition,
+} from "react";
+import type { Basis, Entry, EntryDraft, Goal, Settings, Snapshot, Stream } from "@/lib/types";
+import {
+  type MonthBucket,
+  type MonthOverview,
+  type PendingReport,
+  autoSettlable,
+  bucketByMonth,
+  bucketFor,
+  buildInsights,
+  coveredMonths,
+  delayChecks,
+  goalProgress,
+  indexStreams,
+  monthOverview,
+  pendingReport,
+  series,
+  sortStreams,
+} from "@/lib/analytics";
+import { type MonthKey, currentMonth, monthOf, monthRange, today } from "@/lib/dates";
+import { money, percent } from "@/lib/format";
+import * as api from "@/lib/actions";
+
+/* ===================================================================
+   État
+   =================================================================== */
+
+type State = {
+  streams: Stream[];
+  entries: Entry[];
+  goals: Goal[];
+  settings: Settings;
+};
+
+type Action =
+  | { type: "entry:put"; entry: Entry }
+  | { type: "entry:putMany"; entries: Entry[] }
+  | { type: "entry:remove"; id: string }
+  | { type: "goal:put"; goal: Goal }
+  | { type: "goal:remove"; month: string; streamId: string | null }
+  | { type: "stream:put"; stream: Stream }
+  | { type: "stream:remove"; id: string }
+  | { type: "settings:put"; settings: Settings }
+  | { type: "reset"; snapshot: Snapshot };
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case "entry:put": {
+      const rest = state.entries.filter((e) => e.id !== action.entry.id);
+      return { ...state, entries: [action.entry, ...rest] };
+    }
+    case "entry:putMany": {
+      const ids = new Set(action.entries.map((e) => e.id));
+      return {
+        ...state,
+        entries: [...action.entries, ...state.entries.filter((e) => !ids.has(e.id))],
+      };
+    }
+    case "entry:remove":
+      return { ...state, entries: state.entries.filter((e) => e.id !== action.id) };
+    case "goal:put": {
+      const rest = state.goals.filter(
+        (g) => !(g.month === action.goal.month && g.stream_id === action.goal.stream_id),
+      );
+      return { ...state, goals: [...rest, action.goal] };
+    }
+    case "goal:remove":
+      return {
+        ...state,
+        goals: state.goals.filter(
+          (g) => !(g.month.slice(0, 7) === action.month && g.stream_id === action.streamId),
+        ),
+      };
+    case "stream:put": {
+      const rest = state.streams.filter((s) => s.id !== action.stream.id);
+      return { ...state, streams: sortStreams([...rest, action.stream]) };
+    }
+    case "stream:remove":
+      return {
+        ...state,
+        streams: state.streams.filter((s) => s.id !== action.id),
+        entries: state.entries.filter((e) => e.stream_id !== action.id),
+      };
+    case "settings:put":
+      return { ...state, settings: action.settings };
+    case "reset":
+      return { ...action.snapshot };
+  }
+}
+
+/* ===================================================================
+   Notifications
+   =================================================================== */
+
+export type Toast = {
+  id: number;
+  tone: "info" | "good" | "error";
+  message: string;
+  undo?: () => void;
+};
+
+/* ===================================================================
+   Contexte
+   =================================================================== */
+
+type Store = {
+  // données
+  streams: Stream[];
+  activeStreams: Stream[];
+  streamById: Record<string, Stream | undefined>;
+  entries: Entry[];
+  goals: Goal[];
+  settings: Settings;
+
+  // réglages de lecture
+  basis: Basis;
+  setBasis: (b: Basis) => void;
+  month: MonthKey;
+  setMonth: (m: MonthKey) => void;
+  availableMonths: MonthKey[];
+
+  // valeurs dérivées
+  buckets: Map<MonthKey, MonthBucket>;
+  bucket: MonthBucket;
+  overview: MonthOverview;
+  last12: MonthBucket[];
+  pending: PendingReport;
+  insights: ReturnType<typeof buildInsights>;
+  goal: ReturnType<typeof goalProgress>;
+  /**
+   * Vrai dès qu'au moins une écriture a été encaissée un autre mois que
+   * celui de la vente, ou attend encore son versement. Tant que c'est
+   * faux, la distinction encaissé / comptabilisé ne change aucun
+   * chiffre : l'interface la garde pour elle plutôt que d'afficher un
+   * réglage sans effet.
+   */
+  hasTimingGap: boolean;
+
+  // mutations
+  saveEntry: (draft: EntryDraft) => Promise<boolean>;
+  removeEntry: (entry: Entry) => Promise<void>;
+  settle: (ids: string[], on: string) => Promise<void>;
+  unsettle: (ids: string[]) => Promise<void>;
+  setGoal: (month: MonthKey, streamId: string | null, cents: number) => Promise<void>;
+  updateStream: (id: string, patch: Parameters<typeof api.saveStream>[1]) => Promise<void>;
+  addStream: (...args: Parameters<typeof api.createStream>) => Promise<void>;
+  removeStream: (id: string) => Promise<void>;
+  updateSettings: (patch: Parameters<typeof api.saveSettings>[0]) => Promise<void>;
+
+  // interface
+  busy: boolean;
+  toasts: Toast[];
+  notify: (t: Omit<Toast, "id">) => void;
+  dismiss: (id: number) => void;
+  composer: EntryDraft | null;
+  /** Change à chaque ouverture : sert de clé de remontage au formulaire. */
+  composerKey: number;
+  openComposer: (draft?: Partial<EntryDraft>) => void;
+  closeComposer: () => void;
+};
+
+const Ctx = createContext<Store | null>(null);
+
+export function useStore() {
+  const ctx = useContext(Ctx);
+  if (!ctx) throw new Error("useStore doit être appelé dans <StoreProvider>");
+  return ctx;
+}
+
+export function blankDraft(streamId: string | null): EntryDraft {
+  return {
+    stream_id: streamId,
+    direction: "in",
+    label: "",
+    gross_cents: 0,
+    fee_cents: 0,
+    cost_cents: 0,
+    occurred_on: today(),
+    expected_on: today(),
+    received_on: today(),
+    // Par défaut l'argent est déjà là : on saisit un encaissement qu'on
+    // vient de recevoir, pas une promesse.
+    status: "received",
+    quantity: 1,
+    counterparty: null,
+    notes: null,
+  };
+}
+
+export function StoreProvider({
+  snapshot,
+  children,
+}: {
+  snapshot: Snapshot;
+  children: React.ReactNode;
+}) {
+  const [state, dispatch] = useReducer(reducer, snapshot);
+  const [basis, setBasisState] = useState<Basis>(snapshot.settings.default_basis);
+  const [month, setMonth] = useState<MonthKey>(currentMonth());
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [composer, setComposer] = useState<EntryDraft | null>(null);
+  const [composerKey, setComposerKey] = useState(0);
+  const [busy, startTransition] = useTransition();
+
+  const notify = useCallback((t: Omit<Toast, "id">) => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { ...t, id }]);
+    setTimeout(() => setToasts((prev) => prev.filter((x) => x.id !== id)), 6000);
+  }, []);
+
+  const dismiss = useCallback((id: number) => {
+    setToasts((prev) => prev.filter((x) => x.id !== id));
+  }, []);
+
+  /* --- valeurs dérivées : tout est recalculé en mémoire --------------- */
+
+  const activeStreams = useMemo(
+    () => sortStreams(state.streams.filter((s) => !s.archived)),
+    [state.streams],
+  );
+  const streamById = useMemo(() => indexStreams(state.streams), [state.streams]);
+  const buckets = useMemo(() => bucketByMonth(state.entries, basis), [state.entries, basis]);
+  const bucket = useMemo(() => bucketFor(buckets, month), [buckets, month]);
+  const overview = useMemo(() => monthOverview(buckets, month), [buckets, month]);
+  const last12 = useMemo(() => series(buckets, monthRange(month, 12)), [buckets, month]);
+  const pending = useMemo(
+    () => pendingReport(state.entries, state.streams),
+    [state.entries, state.streams],
+  );
+  const availableMonths = useMemo(() => coveredMonths(state.entries), [state.entries]);
+
+  const hasTimingGap = useMemo(
+    () =>
+      state.entries.some(
+        (e) =>
+          e.status === "pending" ||
+          (e.received_on !== null && monthOf(e.received_on) !== monthOf(e.occurred_on)),
+      ),
+    [state.entries],
+  );
+
+  const goal = useMemo(
+    () => goalProgress(state.goals, month, bucket.net, null),
+    [state.goals, month, bucket.net],
+  );
+
+  const insights = useMemo(
+    () =>
+      buildInsights({
+        basis,
+        month,
+        overview,
+        pending,
+        streams: state.streams,
+        goal,
+        entries: state.entries,
+        delays: delayChecks(state.entries, state.streams),
+        fmt: (c) => money(c),
+        pct: (r) => percent(r),
+      }),
+    [basis, month, overview, pending, state.streams, goal, state.entries],
+  );
+
+  /* --- mutations : optimistes, avec retour en arrière sur échec ------ */
+
+  const run = useCallback(
+    async <T,>(
+      fn: () => Promise<api.ActionResult<T>>,
+      onOk: (data: T) => void,
+      okMessage?: string,
+    ): Promise<boolean> => {
+      const result = await fn();
+      if (!result.ok) {
+        notify({ tone: "error", message: result.error });
+        return false;
+      }
+      startTransition(() => onOk(result.data));
+      if (okMessage) notify({ tone: "good", message: okMessage });
+      return true;
+    },
+    [notify],
+  );
+
+  const saveEntry = useCallback(
+    (draft: EntryDraft) =>
+      run(
+        () => api.saveEntry(draft),
+        (entry) => dispatch({ type: "entry:put", entry }),
+        draft.id ? "Écriture mise à jour." : "Revenu ajouté.",
+      ),
+    [run],
+  );
+
+  const removeEntry = useCallback(
+    async (entry: Entry) => {
+      const result = await api.deleteEntry(entry.id);
+      if (!result.ok) {
+        notify({ tone: "error", message: result.error });
+        return;
+      }
+      dispatch({ type: "entry:remove", id: entry.id });
+      notify({
+        tone: "info",
+        message: "Écriture supprimée.",
+        // Le rétablissement recrée la ligne à l'identique, sauf son
+        // identifiant : c'est une nouvelle ligne au même contenu.
+        undo: () => {
+          void api.saveEntry({ ...entry, id: undefined }).then((r) => {
+            if (r.ok) dispatch({ type: "entry:put", entry: r.data });
+          });
+        },
+      });
+    },
+    [notify],
+  );
+
+  const settle = useCallback(
+    async (ids: string[], on: string) => {
+      await run(
+        () => api.settleEntries(ids, on),
+        (entries) => dispatch({ type: "entry:putMany", entries }),
+        `${ids.length} encaissement${ids.length > 1 ? "s confirmés" : " confirmé"}.`,
+      );
+    },
+    [run],
+  );
+
+  const unsettle = useCallback(
+    async (ids: string[]) => {
+      await run(
+        () => api.unsettleEntries(ids),
+        (entries) => dispatch({ type: "entry:putMany", entries }),
+        "Remis en attente.",
+      );
+    },
+    [run],
+  );
+
+  const setGoal = useCallback(
+    async (m: MonthKey, streamId: string | null, cents: number) => {
+      const result = await api.saveGoal(m, streamId, cents);
+      if (!result.ok) {
+        notify({ tone: "error", message: result.error });
+        return;
+      }
+      if (result.data) dispatch({ type: "goal:put", goal: result.data });
+      else dispatch({ type: "goal:remove", month: m, streamId });
+    },
+    [notify],
+  );
+
+  const updateStream = useCallback(
+    async (id: string, patch: Parameters<typeof api.saveStream>[1]) => {
+      await run(
+        () => api.saveStream(id, patch),
+        (stream) => dispatch({ type: "stream:put", stream }),
+      );
+    },
+    [run],
+  );
+
+  const addStream = useCallback(
+    async (...args: Parameters<typeof api.createStream>) => {
+      await run(
+        () => api.createStream(...args),
+        (stream) => dispatch({ type: "stream:put", stream }),
+        "Activité créée.",
+      );
+    },
+    [run],
+  );
+
+  const removeStream = useCallback(
+    async (id: string) => {
+      await run(
+        () => api.deleteStream(id),
+        () => dispatch({ type: "stream:remove", id }),
+        "Activité supprimée.",
+      );
+    },
+    [run],
+  );
+
+  const updateSettings = useCallback(
+    async (patch: Parameters<typeof api.saveSettings>[0]) => {
+      await run(
+        () => api.saveSettings(patch),
+        (settings) => dispatch({ type: "settings:put", settings }),
+      );
+    },
+    [run],
+  );
+
+  const setBasis = useCallback(
+    (b: Basis) => {
+      setBasisState(b);
+      void api.saveSettings({ default_basis: b });
+    },
+    [],
+  );
+
+  /* --- confirmation automatique des encaissements fiables ------------ */
+
+  useEffect(() => {
+    const due = autoSettlable(state.entries, state.streams);
+    if (due.length === 0) return;
+    const ids = due.map((d) => d.entry.id);
+    void api.settleEntriesOnOwnDates(due.map((d) => ({ id: d.entry.id, on: d.on }))).then((r) => {
+      if (!r.ok) return;
+      dispatch({ type: "entry:putMany", entries: r.data });
+      notify({
+        tone: "info",
+        message: `${due.length} encaissement${due.length > 1 ? "s confirmés" : " confirmé"} automatiquement.`,
+        undo: () => {
+          void api.unsettleEntries(ids).then((u) => {
+            if (u.ok) dispatch({ type: "entry:putMany", entries: u.data });
+          });
+        },
+      });
+    });
+    // Un seul passage au montage : les écritures créées ensuite sont
+    // déjà encaissées à la saisie.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const openComposer = useCallback(
+    (draft?: Partial<EntryDraft>) => {
+      const base = blankDraft(activeStreams[0]?.id ?? null);
+      setComposer({ ...base, ...draft });
+      setComposerKey((k) => k + 1);
+    },
+    [activeStreams],
+  );
+
+  const closeComposer = useCallback(() => setComposer(null), []);
+
+  const value: Store = {
+    streams: state.streams,
+    activeStreams,
+    streamById,
+    entries: state.entries,
+    goals: state.goals,
+    settings: state.settings,
+    basis,
+    setBasis,
+    month,
+    setMonth,
+    availableMonths,
+    buckets,
+    bucket,
+    overview,
+    last12,
+    pending,
+    insights,
+    goal,
+    hasTimingGap,
+    saveEntry,
+    removeEntry,
+    settle,
+    unsettle,
+    setGoal,
+    updateStream,
+    addStream,
+    removeStream,
+    updateSettings,
+    busy,
+    toasts,
+    notify,
+    dismiss,
+    composer,
+    composerKey,
+    openComposer,
+    closeComposer,
+  };
+
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+}

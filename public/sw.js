@@ -1,74 +1,65 @@
-const CACHE_NAME = 'lingua-v2';
-const PRECACHE = [
-  '/lingua.html',
-  '/manifest.json',
-  '/icon-192.svg',
-  '/icon-512.svg'
-];
+/**
+ * Service worker.
+ *
+ * Réseau d'abord pour tout ce qui touche aux données : un montant
+ * périmé servi depuis le cache serait pire que pas de montant du tout.
+ * Le cache ne sert que de filet quand la connexion tombe, et la coquille
+ * de l'app (polices, icônes, JS) est servie depuis le cache pour un
+ * démarrage instantané depuis l'écran d'accueil.
+ */
 
-// Install — precache shell
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE)).then(() => self.skipWaiting())
+const VERSION = "revenus-v1";
+const SHELL = `${VERSION}-shell`;
+const OFFLINE_URL = "/hors-ligne";
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(SHELL).then((cache) => cache.addAll([OFFLINE_URL, "/icons/icon.svg"])),
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => !k.startsWith(VERSION)).map((k) => caches.delete(k))),
+      )
+      .then(() => self.clients.claim()),
   );
 });
 
-// Activate — clean old caches
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
-  );
-});
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+  if (request.method !== "GET") return;
 
-// Fetch — network-first for HTML/API, cache-first for assets
-self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
 
-  // Skip non-GET and cross-origin auth/API calls
-  if (e.request.method !== 'GET') return;
-  if (url.hostname.includes('supabase')) return;
-
-  // Navigation requests to same origin — always serve the app shell
-  if (e.request.mode === 'navigate' && url.hostname === location.hostname) {
-    e.respondWith(
-      fetch('/lingua.html').then(resp => {
-        if (resp.ok) {
-          const clone = resp.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put('/lingua.html', clone));
-        }
-        return resp;
-      }).catch(() => caches.match('/lingua.html'))
+  // Navigation : réseau d'abord, page hors-ligne en dernier recours.
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request).catch(async () => {
+        const cache = await caches.open(SHELL);
+        return (await cache.match(OFFLINE_URL)) ?? Response.error();
+      }),
     );
     return;
   }
 
-  // CDN assets (fonts, scripts) — cache-first
-  if (url.hostname !== location.hostname) {
-    e.respondWith(
-      caches.match(e.request).then(cached => {
-        if (cached) return cached;
-        return fetch(e.request).then(resp => {
-          if (resp.ok) {
-            const clone = resp.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-          }
-          return resp;
-        });
-      }).catch(() => caches.match(e.request))
+  // Ressources immuables de build : cache d'abord.
+  if (url.pathname.startsWith("/_next/static") || url.pathname.startsWith("/icons/")) {
+    event.respondWith(
+      caches.match(request).then(
+        (hit) =>
+          hit ??
+          fetch(request).then((response) => {
+            const copy = response.clone();
+            caches.open(SHELL).then((cache) => cache.put(request, copy));
+            return response;
+          }),
+      ),
     );
-    return;
   }
-
-  // App shell — network-first with cache fallback
-  e.respondWith(
-    fetch(e.request).then(resp => {
-      if (resp.ok) {
-        const clone = resp.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-      }
-      return resp;
-    }).catch(() => caches.match(e.request))
-  );
 });

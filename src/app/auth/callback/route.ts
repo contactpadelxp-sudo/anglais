@@ -4,27 +4,30 @@ import { isOwner } from "@/lib/owner";
 
 /**
  * Point d'atterrissage du lien de connexion envoyé par email.
- * Le code de session est échangé ici, puis on vérifie une dernière fois
- * que l'utilisateur est bien le propriétaire avant de le laisser entrer.
+ *
+ * En cas d'échec, la raison est transmise à la page de connexion plutôt
+ * qu'avalée. Un lien qui ramène au formulaire sans rien dire est
+ * indiscernable d'un lien périmé, d'un lien déjà utilisé, ou d'une
+ * session ouverte depuis un autre navigateur — trois causes, trois
+ * gestes différents.
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/";
 
-  if (!code) {
-    return NextResponse.redirect(`${origin}/connexion?erreur=lien`);
-  }
+  const fail = (reason: string) =>
+    NextResponse.redirect(
+      `${origin}/connexion?erreur=lien&detail=${encodeURIComponent(reason.slice(0, 200))}`,
+    );
+
+  if (!code) return fail("Le lien ne contenait aucun code de connexion.");
 
   const supabase = await createClient();
-  if (!supabase) {
-    return NextResponse.redirect(`${origin}/connexion`);
-  }
+  if (!supabase) return NextResponse.redirect(`${origin}/connexion`);
 
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error) {
-    return NextResponse.redirect(`${origin}/connexion?erreur=lien`);
-  }
+  if (error) return fail(error.message);
 
   if (!isOwner(data.user?.email)) {
     await supabase.auth.signOut();

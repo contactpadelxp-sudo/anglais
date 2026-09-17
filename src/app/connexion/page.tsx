@@ -5,10 +5,40 @@ import { supabaseConfig } from "@/lib/supabase/config";
 export const metadata = { title: "Connexion — Revenus" };
 export const dynamic = "force-dynamic";
 
+/**
+ * Traduit l'échec d'un lien de connexion.
+ *
+ * Trois causes donnent le même symptôme — retour au formulaire — mais
+ * appellent trois gestes différents. Le message brut de Supabase est
+ * conservé en dessous : il a servi à identifier chacune des pannes
+ * précédentes.
+ */
+function explainLink(detail?: string): string {
+  const message = (detail ?? "").toLowerCase();
+
+  if (message.includes("code verifier") || message.includes("code_verifier")) {
+    return (
+      "Ce lien a été demandé depuis un autre navigateur, ou en navigation privée. " +
+      "La connexion doit se terminer là où elle a commencé : redemande un lien depuis " +
+      "ce navigateur-ci, puis ouvre-le sans changer de fenêtre."
+    );
+  }
+  if (message.includes("expired") || message.includes("invalid") || message.includes("already")) {
+    return (
+      "Ce lien n'est plus valable — ils expirent vite et ne servent qu'une fois. " +
+      "Demandes-en un nouveau, et ouvre le plus récent."
+    );
+  }
+  if (message.includes("rate") || message.includes("too many")) {
+    return "Trop de demandes d'affilée. Attends un moment avant de réessayer.";
+  }
+  return "La connexion par ce lien a échoué. Demandes-en un nouveau.";
+}
+
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ erreur?: string; suite?: string }>;
+  searchParams: Promise<{ erreur?: string; suite?: string; detail?: string }>;
 }) {
   const params = await searchParams;
   const configured = supabaseConfig() !== null;
@@ -33,13 +63,17 @@ export default async function LoginPage({
       </div>
 
       {params.erreur === "lien" ? (
-        <p
-          className="rounded-[var(--radius-sm)] px-3 py-2.5 text-[12.5px]"
+        <div
+          className="flex flex-col gap-1.5 rounded-[var(--radius-sm)] px-3 py-2.5 text-[12.5px]"
           style={{ background: "var(--surface-2)", color: "var(--text-secondary)" }}
         >
-          Ce lien de connexion n&apos;est plus valable — ils expirent vite et ne servent
-          qu&apos;une fois. Demandes-en un nouveau.
-        </p>
+          <p>{explainLink(params.detail)}</p>
+          {params.detail ? (
+            <p className="font-mono text-[11px]" style={{ color: "var(--text-muted)" }}>
+              {params.detail}
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       {params.erreur === "refuse" ? (

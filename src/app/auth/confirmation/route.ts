@@ -17,15 +17,18 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get("type") as EmailOtpType | null;
   const next = searchParams.get("next") ?? "/";
 
-  if (!tokenHash || !type) {
-    return NextResponse.redirect(`${origin}/connexion?erreur=lien`);
-  }
+  const fail = (reason: string) =>
+    NextResponse.redirect(
+      `${origin}/connexion?erreur=lien&detail=${encodeURIComponent(reason.slice(0, 200))}`,
+    );
+
+  if (!tokenHash || !type) return fail("Le lien ne contenait pas de jeton exploitable.");
 
   const supabase = await createClient();
   if (!supabase) return NextResponse.redirect(`${origin}/connexion`);
 
   const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
-  if (error) return NextResponse.redirect(`${origin}/connexion?erreur=lien`);
+  if (error) return fail(error.message);
 
   if (!isOwner(data.user?.email)) {
     await supabase.auth.signOut();

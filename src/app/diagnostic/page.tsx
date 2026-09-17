@@ -2,6 +2,9 @@ import "server-only";
 import { supabaseConfig } from "@/lib/supabase/config";
 
 export const dynamic = "force-dynamic";
+// Explicite : cette page lit process.env et fait un appel réseau
+// sortant. On ne laisse pas le choix du runtime à l'inférence.
+export const runtime = "nodejs";
 export const metadata = { title: "Diagnostic — Revenus", robots: { index: false } };
 
 /**
@@ -14,20 +17,35 @@ export const metadata = { title: "Diagnostic — Revenus", robots: { index: fals
  * celui de la production — et rapporte la réponse brute.
  *
  * Elle n'affiche JAMAIS la clé : seulement sa forme (préfixe, longueur,
- * projet revendiqué). La clé publiable est conçue pour être exposable,
- * mais l'exposer ici n'apporterait rien.
+ * projet revendiqué).
+ *
+ * Contrainte de conception : cette page ne doit JAMAIS renvoyer une
+ * erreur 500. Une page de diagnostic qui plante ne diagnostique rien —
+ * elle remplace un symptôme lisible par un symptôme opaque. Tout est
+ * donc enveloppé, et une erreur inattendue s'affiche à l'écran.
  */
 
 type Row = { label: string; value: string; tone: "ok" | "ko" | "info" };
 
-/** Le projet revendiqué par une clé JWT, lu dans sa charge utile. */
+/**
+ * Le projet revendiqué par une clé JWT, lu dans sa charge utile.
+ * Décodé avec atob plutôt que Buffer : cette page doit fonctionner quel
+ * que soit le runtime qui l'exécute — Buffer n'existe pas partout.
+ */
 function refFromJwt(key: string): string | null {
   const parts = key.split(".");
   if (parts.length !== 3) return null;
   try {
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
     const payload = JSON.parse(
-      Buffer.from(parts[1].replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8"),
-    );
+      decodeURIComponent(
+        atob(padded)
+          .split("")
+          .map((c) => `%${c.charCodeAt(0).toString(16).padStart(2, "0")}`)
+          .join(""),
+      ),
+    ) as Record<string, unknown>;
     return typeof payload.ref === "string" ? payload.ref : null;
   } catch {
     return null;
@@ -43,8 +61,8 @@ function shape(key: string) {
 
 /** Masque : assez pour comparer, pas assez pour s'en servir. */
 function masked(key: string) {
-  if (key.length <= 12) return "trop courte";
-  return `${key.slice(0, 8)}…${key.slice(-4)} (${key.length} caractères)`;
+  if (key.length <= 12) return `trop courte (${key.length} caractères)`;
+  return `${key.slice(0, 8)}…${key.slice(-4)} · ${key.length} caractères`;
 }
 
 async function probe(url: string, key: string) {
@@ -52,18 +70,23 @@ async function probe(url: string, key: string) {
     const response = await fetch(`${url}/auth/v1/health`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` },
       cache: "no-store",
+      // Sans limite, un projet injoignable ferait expirer la fonction
+      // entière et rendrait une 500 sans explication.
+      signal: AbortSignal.timeout(8000),
     });
-    const body = (await response.text()).slice(0, 300);
-    return { status: response.status, body };
+    return { status: response.status, body: (await response.text()).slice(0, 300) };
   } catch (error) {
-    return { status: 0, body: error instanceof Error ? error.message : String(error) };
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      status: 0,
+      body: /timeout|abort/i.test(message) ? "délai dépassé (8 s)" : message,
+    };
   }
 }
 
-export default async function DiagnosticPage() {
+function readConfig() {
   const config = supabaseConfig();
   const rows: Row[] = [];
-
   const urlRef = config?.url.match(/https?:\/\/([a-z0-9]+)\.supabase\./i)?.[1] ?? null;
 
   rows.push(
@@ -73,15 +96,15 @@ export default async function DiagnosticPage() {
   );
   rows.push({
     label: "Projet visé par l'adresse",
-    value: urlRef ?? "illisible — l'adresse n'a pas la forme https://<projet>.supabase.co",
+    value: urlRef ?? "illisible — attendu https://<projet>.supabase.co",
     tone: urlRef ? "ok" : "ko",
   });
 
   if (config) {
-    const keyRef = refFromJwt(config.key);
     rows.push({ label: "Format de la clé", value: shape(config.key), tone: "info" });
     rows.push({ label: "Empreinte de la clé", value: masked(config.key), tone: "info" });
 
+    const keyRef = refFromJwt(config.key);
     if (keyRef) {
       const same = keyRef === urlRef;
       rows.push({
@@ -106,7 +129,36 @@ export default async function DiagnosticPage() {
     tone: process.env.OWNER_EMAIL ? "ok" : "ko",
   });
 
-  const test = config ? await probe(config.url, config.key) : null;
+  return { config, rows };
+}
+
+function verdict(status: number) {
+  if (status === 200) {
+    return "La clé est acceptée par ce projet. Si la connexion échoue malgré tout, le problème est ailleurs — envoi d'email ou réglages d'authentification.";
+  }
+  if (status === 401) {
+    return "La clé est refusée par ce projet. Reprends l'adresse ET la clé dans le même projet Supabase, onglet API.";
+  }
+  if (status === 0) {
+    return "Le projet n'a pas répondu : adresse erronée, projet en pause, ou réseau bloqué.";
+  }
+  return "Réponse inattendue — c'est peut-être un intermédiaire qui a répondu à la place de Supabase.";
+}
+
+export default async function DiagnosticPage() {
+  let rows: Row[] = [];
+  let test: { status: number; body: string } | null = null;
+  let crash: string | null = null;
+
+  try {
+    const read = readConfig();
+    rows = read.rows;
+    if (read.config) test = await probe(read.config.url, read.config.key);
+  } catch (error) {
+    // Le diagnostic lui-même a échoué : on le dit, plutôt que de
+    // laisser Next rendre une page d'erreur muette.
+    crash = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+  }
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-[680px] flex-col justify-center gap-5 px-5 py-12">
@@ -117,34 +169,51 @@ export default async function DiagnosticPage() {
         </p>
       </div>
 
-      <section className="card overflow-hidden">
-        <ul>
-          {rows.map((row, i) => (
-            <li
-              key={row.label}
-              className="px-4 py-3"
-              style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
-            >
-              <p className="text-[11px] font-medium uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
-                {row.label}
-              </p>
-              <p
-                className="mt-0.5 break-all font-mono text-[12.5px]"
-                style={{
-                  color:
-                    row.tone === "ko"
-                      ? "var(--critical)"
-                      : row.tone === "ok"
-                        ? "var(--text-primary)"
-                        : "var(--text-secondary)",
-                }}
+      {crash ? (
+        <section className="card overflow-hidden">
+          <h2
+            className="border-b px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide"
+            style={{ borderColor: "var(--border)", color: "var(--critical)" }}
+          >
+            Le diagnostic lui-même a échoué
+          </h2>
+          <p className="break-all px-4 py-3 font-mono text-[12.5px]">{crash}</p>
+        </section>
+      ) : null}
+
+      {rows.length > 0 ? (
+        <section className="card overflow-hidden">
+          <ul>
+            {rows.map((row, i) => (
+              <li
+                key={row.label}
+                className="px-4 py-3"
+                style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
               >
-                {row.value}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </section>
+                <p
+                  className="text-[11px] font-medium uppercase tracking-wide"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  {row.label}
+                </p>
+                <p
+                  className="mt-0.5 break-all font-mono text-[12.5px]"
+                  style={{
+                    color:
+                      row.tone === "ko"
+                        ? "var(--critical)"
+                        : row.tone === "ok"
+                          ? "var(--text-primary)"
+                          : "var(--text-secondary)",
+                  }}
+                >
+                  {row.value}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {test ? (
         <section className="card overflow-hidden">
@@ -158,17 +227,14 @@ export default async function DiagnosticPage() {
             <p className="font-mono text-[13px] font-semibold">
               {test.status === 0 ? "aucune réponse" : `HTTP ${test.status}`}
             </p>
-            <p className="mt-1 break-all font-mono text-[12px]" style={{ color: "var(--text-secondary)" }}>
+            <p
+              className="mt-1 break-all font-mono text-[12px]"
+              style={{ color: "var(--text-secondary)" }}
+            >
               {test.body || "(corps vide)"}
             </p>
             <p className="mt-3 text-[12.5px]" style={{ color: "var(--text-secondary)" }}>
-              {test.status === 200
-                ? "La clé est acceptée par ce projet. Si la connexion échoue malgré tout, le problème est ailleurs — envoi d'email ou réglages d'authentification."
-                : test.status === 401
-                  ? "La clé est refusée par ce projet. Reprends l'adresse ET la clé dans le même projet Supabase, onglet API."
-                  : test.status === 0
-                    ? "Le projet n'a pas répondu du tout : adresse erronée, projet en pause, ou réseau bloqué."
-                    : "Réponse inattendue — c'est peut-être un intermédiaire qui a répondu à la place de Supabase."}
+              {verdict(test.status)}
             </p>
           </div>
         </section>

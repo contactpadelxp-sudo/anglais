@@ -1,7 +1,13 @@
-import "server-only";
-
 /**
  * Lecture de la configuration Supabase.
+ *
+ * NE PAS ajouter `import "server-only"` ici. Ce module est importé par
+ * src/lib/supabase/proxy.ts, qui s'exécute dans le runtime Edge : le
+ * paquet server-only y est résolu comme dans un bundle navigateur et
+ * lève une erreur, ce qui fait échouer TOUTES les requêtes avec une 500,
+ * pages comprises. Le garde-fou est donc porté par les modules qui, eux,
+ * ne tournent jamais en Edge (data.ts, setup.tsx, diagnostic/page.tsx),
+ * et par le fait qu'aucun composant client n'importe ce fichier.
  *
  * Cette application ne parle à Supabase que depuis le serveur : les
  * composants serveur lisent, les Server Actions écrivent, le proxy

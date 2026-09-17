@@ -134,6 +134,18 @@ export default function ComptabilitePage() {
               l&apos;impôt. Elle est donc comptée ici dans le revenu imposable, et exclue de
               l&apos;assiette des cotisations.
             </p>
+            <p
+              className="max-w-[72ch] rounded-[var(--radius-sm)] px-3 py-2.5 text-[12px]"
+              style={{ background: "var(--surface-2)", color: "var(--text-secondary)" }}
+            >
+              <strong>Une nuance sur le montant.</strong>{" "}Le chiffre repris ici est celui que
+              tu as saisi, c&apos;est-à-dire ce qui est arrivé sur ton compte. La déclaration de
+              revenus, elle, retient le <em>net imposable</em> — l&apos;allocation brute
+              diminuée de la seule CSG déductible — qui est un peu plus élevé. France Travail
+              préremplit ce montant sur ta déclaration et l&apos;indique sur son attestation
+              fiscale annuelle : c&apos;est celui-là qui fait foi. L&apos;estimation
+              d&apos;impôt ci-dessus est donc légèrement optimiste sur cette part.
+            </p>
           </div>
         </Card>
       ) : null}

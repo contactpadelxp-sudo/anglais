@@ -3,7 +3,16 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isOwner } from "@/lib/owner";
 import { supabaseConfig } from "./config";
 
-const PUBLIC_PATHS = ["/connexion", "/auth", "/manifest.webmanifest", "/sw.js", "/offline"];
+// /diagnostic doit rester accessible sans session : il sert précisément
+// quand la connexion est impossible.
+const PUBLIC_PATHS = [
+  "/connexion",
+  "/auth",
+  "/diagnostic",
+  "/manifest.webmanifest",
+  "/sw.js",
+  "/hors-ligne",
+];
 
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));

@@ -512,3 +512,84 @@ export function thresholds(report: FiscalReport): Threshold[] {
 
   return out.sort((a, b) => b.ratio - a.ratio);
 }
+
+
+/* ===================================================================
+   Décomposition mensuelle
+   =================================================================== */
+
+export type MonthlyFiscalRow = {
+  month: MonthKey;
+  byCategory: { category: FiscalCategory; caCents: number; dueCents: number }[];
+  caCents: number;
+  dueCents: number;
+  /** Le mois est-il couvert par l'ACRE ? */
+  underAcre: boolean;
+};
+
+/**
+ * Cotisations dues mois par mois.
+ *
+ * Chaque mois est agrégé avant d'appliquer le taux, comme pour la
+ * période entière : c'est ainsi que l'URSSAF calcule, et cela évite
+ * d'accumuler des arrondis ligne à ligne.
+ */
+export function monthlyBreakdown(
+  entries: Entry[],
+  streamList: Stream[],
+  settings: FiscalSettings,
+  months: MonthKey[],
+): MonthlyFiscalRow[] {
+  const streams = new Map(streamList.map((s) => [s.id, s]));
+  const acre = acreRegime(settings.activityStart, settings.acreEnabled);
+
+  const perMonth = new Map<MonthKey, Map<FiscalCategory, number>>();
+  for (const m of months) perMonth.set(m, new Map());
+
+  for (const entry of entries) {
+    if (entry.status !== "received" || !entry.received_on) continue;
+    if (entry.direction !== "in") continue;
+    const month = monthOf(entry.received_on);
+    const bucket = perMonth.get(month);
+    if (!bucket) continue;
+    const category = categoryOf(entry, streams);
+    if (category === "hors") continue;
+    bucket.set(category, (bucket.get(category) ?? 0) + caOf(entry));
+  }
+
+  return months.map((month) => {
+    const bucket = perMonth.get(month) ?? new Map();
+    // Le mois est couvert si son premier jour l'est : l'ACRE se terminant
+    // sur une frontière de trimestre, un mois n'est jamais à cheval.
+    const underAcre = Boolean(acre && `${month}-01` <= acre.endsOn);
+
+    const byCategory = CATEGORY_ORDER.filter((c) => (bucket.get(c) ?? 0) > 0).map((category) => {
+      const spec = CATEGORIES[category];
+      const ca = bucket.get(category) ?? 0;
+      if (!spec.cotise) return { category, caCents: ca, dueCents: 0 };
+      const bps =
+        acre && underAcre ? Math.round(spec.cotisationBps * acre.coefficient) : spec.cotisationBps;
+      const due =
+        Math.round((ca * bps) / 10_000) + Math.round((ca * spec.cfpBps) / 10_000);
+      return { category, caCents: ca, dueCents: due };
+    });
+
+    return {
+      month,
+      byCategory,
+      caCents: byCategory.reduce((a, r) => a + r.caCents, 0),
+      dueCents: byCategory.reduce((a, r) => a + r.dueCents, 0),
+      underAcre,
+    };
+  });
+}
+
+/** Couleur d'affichage d'une catégorie, alignée sur la palette validée. */
+export const CATEGORY_COLOR: Record<FiscalCategory, string> = {
+  bic_vente: "var(--series-1)",
+  bic_service: "var(--series-2)",
+  bnc: "var(--series-3)",
+  bnc_cipav: "var(--series-4)",
+  remplacement: "var(--series-5)",
+  hors: "var(--axis)",
+};

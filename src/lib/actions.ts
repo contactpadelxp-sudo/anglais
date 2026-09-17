@@ -414,6 +414,7 @@ export async function saveStream(
       | "position"
       | "kind"
       | "fiscal_category"
+      | "fiscal_confirmed"
     >
   >,
 ): Promise<ActionResult<Stream>> {

@@ -4,12 +4,16 @@ import { useMemo, useState } from "react";
 import { useStore } from "@/components/store";
 import { Card, Empty, Segmented, StatTile } from "@/components/ui/kit";
 import { Icon } from "@/components/ui/icons";
-import { RankedBars } from "@/components/charts/small";
+import { Meter } from "@/components/charts/small";
+import { Waterfall } from "@/components/charts/waterfall";
+import { MonthlyUrssaf } from "@/components/charts/monthly-urssaf";
 import {
   CATEGORIES,
+  CATEGORY_COLOR,
   type FiscalCategory,
   buildReport,
   cotisationBpsOn,
+  monthlyBreakdown,
   thresholds,
 } from "@/lib/fiscal";
 import { money, percent } from "@/lib/format";
@@ -34,6 +38,53 @@ export default function ComptabilitePage() {
 
   const alerts = useMemo(() => thresholds(report), [report]);
   const acre = report.acre;
+
+  const monthly = useMemo(
+    () => monthlyBreakdown(entries, streams, fiscal, months),
+    [entries, streams, fiscal, months],
+  );
+
+  const monthlyRows = useMemo(
+    () =>
+      monthly.map((m) => ({
+        month: m.month,
+        totalCents: m.dueCents,
+        underAcre: m.underAcre,
+        segments: m.byCategory
+          .filter((c) => c.dueCents > 0)
+          .map((c) => ({
+            id: c.category,
+            label: CATEGORIES[c.category].short,
+            color: CATEGORY_COLOR[c.category],
+            cents: c.dueCents,
+          })),
+      })),
+    [monthly],
+  );
+
+  /** Les activités dont la catégorie repose encore sur une déduction. */
+  const aConfirmer = useMemo(
+    () =>
+      streams.filter(
+        (st) =>
+          !st.fiscal_confirmed &&
+          CATEGORIES[(st.fiscal_category as FiscalCategory) ?? "hors"]?.cotise,
+      ),
+    [streams],
+  );
+
+  /** Part de l'année déjà écoulée sous ACRE, pour la jauge. */
+  const acreProgress = useMemo(() => {
+    if (!acre || !fiscal.activityStart) return null;
+    const debut = Date.parse(`${fiscal.activityStart}T00:00:00`);
+    const fin = Date.parse(`${acre.endsOn}T00:00:00`);
+    const now = Date.parse(`${new Date().toISOString().slice(0, 10)}T00:00:00`);
+    if (fin <= debut) return null;
+    return {
+      ratio: Math.max(0, Math.min(1, (now - debut) / (fin - debut))),
+      joursRestants: Math.max(0, Math.round((fin - now) / 86_400_000)),
+    };
+  }, [acre, fiscal.activityStart]);
 
   const years = useMemo(() => {
     const set = new Set<string>([String(yearOf(currentMonth()))]);
@@ -69,6 +120,46 @@ export default function ComptabilitePage() {
           ) : null}
         </div>
       </div>
+
+      {aConfirmer.length > 0 ? (
+        <section
+          className="card anim-rise flex flex-col gap-2 p-4"
+          style={{ borderColor: "color-mix(in oklab, var(--warning) 45%, var(--border))" }}
+        >
+          <p className="flex items-center gap-1.5 text-[13px] font-semibold">
+            <span style={{ color: "var(--warning)" }}>
+              <Icon.alert size={15} />
+            </span>
+            Catégorie fiscale à confirmer
+          </p>
+          <p className="max-w-[72ch] text-[12.5px]" style={{ color: "var(--text-secondary)" }}>
+            Le taux appliqué à{" "}
+            {aConfirmer.map((st, i) => (
+              <span key={st.id}>
+                {i > 0 ? (i === aConfirmer.length - 1 ? " et " : ", ") : ""}
+                <strong>{st.name}</strong>{" "}(
+                {CATEGORIES[st.fiscal_category as FiscalCategory].short})
+              </span>
+            ))}{" "}
+            repose sur une déduction, pas sur un document. Vérifie-le sur ton attestation URSSAF
+            ou ton avis de situation SIRENE : un taux trop bas se solde par un rappel de
+            cotisations, un taux trop haut te fait payer pour rien.
+          </p>
+          <div className="flex flex-wrap gap-2 pt-1">
+            {aConfirmer.map((st) => (
+              <button
+                key={st.id}
+                type="button"
+                onClick={() => void store.updateStream(st.id, { fiscal_confirmed: true })}
+                className="rounded-full px-3 py-1.5 text-[12px] font-medium"
+                style={{ background: "var(--surface-2)", color: "var(--text-primary)" }}
+              >
+                {st.name}{" "}: c&apos;est confirmé
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {!hasData ? (
         <Card>
@@ -140,13 +231,39 @@ export default function ComptabilitePage() {
             >
               <strong>Une nuance sur le montant.</strong>{" "}Le chiffre repris ici est celui que
               tu as saisi, c&apos;est-à-dire ce qui est arrivé sur ton compte. La déclaration de
-              revenus, elle, retient le <em>net imposable</em> — l&apos;allocation brute
+              revenus, elle, retient le <em>net imposable</em>{" "}— l&apos;allocation brute
               diminuée de la seule CSG déductible — qui est un peu plus élevé. France Travail
               préremplit ce montant sur ta déclaration et l&apos;indique sur son attestation
               fiscale annuelle : c&apos;est celui-là qui fait foi. L&apos;estimation
               d&apos;impôt ci-dessus est donc légèrement optimiste sur cette part.
             </p>
           </div>
+        </Card>
+      ) : null}
+
+      {/* ---- Cotisations mois par mois --------------------------------- */}
+      {scope === "annee" && report.cotisationsCents > 0 ? (
+        <Card
+          title="Cotisations mois par mois"
+          action={
+            // Le repère n'apparaît que si la fin d'ACRE tombe dans la
+            // période affichée : annoncer une légende sans repère à
+            // l'écran ferait chercher quelque chose qui n'y est pas.
+            acre && monthlyRows.some((r) => !r.underAcre) ? (
+              <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+                Le repère marque la fin de l&apos;ACRE
+              </span>
+            ) : null
+          }
+        >
+          <MonthlyUrssaf rows={monthlyRows} acreEndsOn={acre?.endsOn ?? null} height={230} />
+          {acre ? (
+            <p className="mt-3 max-w-[72ch] text-[12px]" style={{ color: "var(--text-secondary)" }}>
+              L&apos;ACRE court jusqu&apos;au {dayLabel(acre.endsOn)}. Au lendemain, les taux
+              repassent au plein d&apos;un seul coup — il n&apos;y a pas de dégressivité. À volume
+              égal, tes cotisations doubleront.
+            </p>
+          ) : null}
         </Card>
       ) : null}
 
@@ -265,31 +382,32 @@ export default function ComptabilitePage() {
 
       {/* ---- Ce qui reste vraiment -------------------------------------- */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card title="Ce qui te reste">
-          <RankedBars
-            items={[
+        <Card title="De l'encaissé au net">
+          <Waterfall
+            steps={[
+              {
+                id: "ca",
+                // L'allocation est incluse ici alors qu'elle est exclue de
+                // la tuile « chiffre d'affaires » : deux totaux différents
+                // à l'écran doivent porter deux noms différents.
+                label: "Tout encaissé",
+                deltaCents: report.caTotalCents,
+                total: true,
+              },
+              { id: "cot", label: "Cotisations", deltaCents: -report.cotisationsCents },
+              { id: "cfp", label: "Formation", deltaCents: -report.cfpCents },
+              ...(report.impotCents && report.impotCents > 0
+                ? [{ id: "ir", label: "Impôt", deltaCents: -report.impotCents }]
+                : []),
+              ...(report.liberatoireCents > 0
+                ? [{ id: "vl", label: "Libératoire", deltaCents: -report.liberatoireCents }]
+                : []),
               {
                 id: "net",
-                label: "Net après URSSAF et impôt",
-                value: report.netApresTouteChargeCents,
-                color: "var(--series-3)",
+                label: "Net",
+                deltaCents: report.netApresTouteChargeCents,
+                total: true,
               },
-              {
-                id: "urssaf",
-                label: "URSSAF",
-                value: report.urssafCents,
-                color: "var(--series-2)",
-              },
-              ...(report.impotCents && report.impotCents > 0
-                ? [
-                    {
-                      id: "impot",
-                      label: "Impôt estimé",
-                      value: report.impotCents,
-                      color: "var(--series-8)",
-                    },
-                  ]
-                : []),
             ]}
           />
           <p className="mt-3 text-[11.5px]" style={{ color: "var(--text-muted)" }}>
@@ -300,6 +418,29 @@ export default function ComptabilitePage() {
         </Card>
 
         <Card title="Paramètres appliqués">
+          {acre && acreProgress ? (
+            <div className="mb-4 flex flex-col gap-1.5">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[12px] font-medium">Période d&apos;ACRE</span>
+                <span className="tnum text-[12px]" style={{ color: "var(--text-secondary)" }}>
+                  {acreProgress.joursRestants > 0
+                    ? `${acreProgress.joursRestants} jours restants`
+                    : "terminée"}
+                </span>
+              </div>
+              <Meter
+                ratio={acreProgress.ratio}
+                tone={acreProgress.joursRestants < 60 ? "warning" : "accent"}
+              />
+              <div
+                className="flex justify-between text-[11px]"
+                style={{ color: "var(--text-muted)" }}
+              >
+                <span>{fiscal.activityStart ? dayLabel(fiscal.activityStart) : ""}</span>
+                <span>{dayLabel(acre.endsOn)}</span>
+              </div>
+            </div>
+          ) : null}
           <ul className="flex flex-col gap-2.5 text-[12.5px]">
             <Param
               label="ACRE"

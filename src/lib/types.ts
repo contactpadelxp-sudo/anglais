@@ -25,6 +25,8 @@ export type Stream = {
   auto_settle: boolean;
   /** Catégorie fiscale et sociale, qui pilote taux et abattement. */
   fiscal_category: string;
+  /** La catégorie a-t-elle été confirmée sur les documents officiels ? */
+  fiscal_confirmed: boolean;
   position: number;
   archived: boolean;
   created_at: string;

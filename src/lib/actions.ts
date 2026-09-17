@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isOwner, ownerEmail } from "@/lib/owner";
 import { projectRef, siteUrl } from "@/lib/supabase/config";
@@ -96,6 +97,90 @@ function explain(raw: string): string {
   // Message inconnu : on le laisse passer plutôt que de le masquer
   // derrière un « une erreur est survenue » qui n'aide personne.
   return `Supabase a refusé la demande : ${raw}`;
+}
+
+/* ===================================================================
+   Connexion par mot de passe
+
+   C'est le chemin principal : aucun email à attendre, aucun quota
+   d'envoi, aucune contrainte de navigateur. Le lien par email reste
+   disponible en secours, pour le jour où le mot de passe est oublié.
+   =================================================================== */
+
+export type PasswordState = { status: "idle" | "error"; message?: string };
+
+export async function signInWithPassword(
+  _prev: unknown,
+  formData: FormData,
+): Promise<PasswordState> {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "");
+
+  if (!email) return { status: "error", message: "Renseigne ton adresse email." };
+  if (!password) return { status: "error", message: "Saisis ton mot de passe." };
+
+  const owner = ownerEmail();
+  // Le filtre est ici, avant tout appel à Supabase : aucune autre
+  // adresse ne peut même tenter une connexion.
+  if (owner && email !== owner) {
+    return { status: "error", message: "Cette adresse n'a pas accès à l'application." };
+  }
+
+  const supabase = await createClient();
+  if (!supabase) return { status: "error", message: "Supabase n'est pas configuré." };
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    const raw = error.message.toLowerCase();
+    if (raw.includes("invalid login credentials")) {
+      return {
+        status: "error",
+        message:
+          "Adresse ou mot de passe incorrect. Si tu n'as jamais défini de mot de passe, " +
+          "crée-le depuis Supabase (Authentication → Users) ou demande un lien par email.",
+      };
+    }
+    if (raw.includes("email not confirmed")) {
+      return {
+        status: "error",
+        message:
+          "Ce compte n'a pas confirmé son adresse. Dans Supabase (Authentication → Users), " +
+          "ouvre l'utilisateur et confirme-le manuellement.",
+      };
+    }
+    return { status: "error", message: explain(error.message) };
+  }
+
+  if (!isOwner(data.user?.email)) {
+    await supabase.auth.signOut();
+    return { status: "error", message: "Ce compte n'a pas accès à l'application." };
+  }
+
+  revalidatePath("/", "layout");
+  // La redirection se fait ici plutôt que côté client : la session vient
+  // d'être écrite dans les cookies, et rediriger depuis le serveur évite
+  // un rendu intermédiaire où l'app ne la voit pas encore.
+  redirect("/");
+}
+
+/** Définit ou remplace le mot de passe du compte connecté. */
+export async function updatePassword(
+  _prev: unknown,
+  formData: FormData,
+): Promise<PasswordState> {
+  const password = String(formData.get("password") ?? "");
+  if (password.length < 8) {
+    return { status: "error", message: "Huit caractères minimum." };
+  }
+
+  const session = await authed();
+  if (!session.ok) return { status: "error", message: session.error };
+
+  const { error } = await session.supabase.auth.updateUser({ password });
+  if (error) return { status: "error", message: explain(error.message) };
+
+  return { status: "idle", message: "Mot de passe enregistré." };
 }
 
 export async function requestMagicLink(

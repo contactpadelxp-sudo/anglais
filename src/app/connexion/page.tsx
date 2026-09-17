@@ -57,8 +57,7 @@ export default async function LoginPage({
         </span>
         <h1 className="mt-2 text-[24px] font-semibold tracking-tight">Revenus</h1>
         <p className="text-[13.5px]" style={{ color: "var(--text-secondary)" }}>
-          Ce tableau de bord n&apos;a qu&apos;un seul utilisateur. Saisis ton adresse, un code
-          arrive par email.
+          Ce tableau de bord n&apos;a qu&apos;un seul utilisateur.
         </p>
       </div>
 

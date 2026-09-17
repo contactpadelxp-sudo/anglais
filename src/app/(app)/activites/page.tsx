@@ -44,16 +44,18 @@ export default function ActivitiesPage() {
               className="card anim-rise flex flex-col gap-3 p-4 transition-colors hover:bg-[var(--surface-2)]"
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2.5">
+                <div className="flex min-w-0 items-center gap-2.5">
                   <span
                     aria-hidden
-                    className="flex h-8 w-8 items-center justify-center rounded-[10px]"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px]"
                     style={{ background: color, color: "#fff" }}
                   >
                     <StreamIcon name={m.stream.icon} size={17} />
                   </span>
-                  <div>
-                    <p className="text-[14px] font-semibold leading-tight">{m.stream.name}</p>
+                  <div className="min-w-0">
+                    <p className="truncate text-[14px] font-semibold leading-tight">
+                      {m.stream.name}
+                    </p>
                     <p className="text-[11.5px]" style={{ color: "var(--text-muted)" }}>
                       {m.activeMonths > 0
                         ? plural(m.activeMonths, "mois actif", "mois actifs")

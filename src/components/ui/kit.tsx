@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { Icon } from "./icons";
-import { Sparkline } from "@/components/charts/small";
+import { SparkArea } from "@/components/charts/small";
 import { money, signedPercent } from "@/lib/format";
 
 /* ===================================================================
@@ -89,20 +89,22 @@ export function StatTile({
           {label}
         </span>
       </div>
-      <div className="flex items-end justify-between gap-2">
-        <span className="text-[22px] font-semibold leading-none tracking-tight sm:text-[25px]">
-          {value}
-        </span>
-        {trend && trend.length > 1 ? (
-          <Sparkline values={trend} color={trendColor ?? "var(--series-1)"} />
-        ) : null}
-      </div>
+      <span className="text-[22px] font-semibold leading-none tracking-tight sm:text-[25px]">
+        {value}
+      </span>
       {delta !== undefined && delta !== null ? (
         <Delta ratio={delta} label={deltaLabel} />
       ) : hint ? (
         <span className="text-[11.5px]" style={{ color: "var(--text-muted)" }}>
           {hint}
         </span>
+      ) : null}
+      {/* La courbe ferme la tuile sur toute sa largeur : à côté du
+          chiffre, elle n'avait plus la place de dire quoi que ce soit. */}
+      {trend && trend.length > 1 ? (
+        <div className="mt-auto pt-2">
+          <SparkArea values={trend} color={trendColor ?? "var(--series-1)"} />
+        </div>
       ) : null}
     </Root>
   );

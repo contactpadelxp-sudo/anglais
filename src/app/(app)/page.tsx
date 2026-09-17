@@ -8,11 +8,13 @@ import { Icon } from "@/components/ui/icons";
 import { StackedMonths } from "@/components/charts/stacked-months";
 import { Donut } from "@/components/charts/donut";
 import { Meter, RankedBars } from "@/components/charts/small";
+import { TrendArea, CumulativeYear } from "@/components/charts/area";
+import { ActivityTiles } from "@/components/activity-tiles";
 import { InsightList } from "@/components/insight-list";
 import { PendingPanel } from "@/components/pending-panel";
 import { GoalEditor } from "@/components/goal-editor";
 import { money, percent, plural } from "@/lib/format";
-import { monthLabel, currentMonth } from "@/lib/dates";
+import { monthLabel, monthsOfYear, yearOf, currentMonth } from "@/lib/dates";
 import { projectMonth } from "@/lib/analytics";
 
 export default function Dashboard() {
@@ -69,6 +71,56 @@ export default function Dashboard() {
 
   const netTrend = last12.map((b) => b.net);
 
+  /**
+   * Cumul de l'année en cours et de la précédente, mois après mois.
+   * Le cumul répond à ce que le mois par mois ne peut pas trancher :
+   * suis-je en avance ou en retard sur l'an dernier, à la même date ?
+   */
+  const cumulative = useMemo(() => {
+    const year = yearOf(month);
+    const build = (y: number) => {
+      let running = 0;
+      return monthsOfYear(y).map((m) => {
+        running += store.buckets.get(m)?.net ?? 0;
+        return running;
+      });
+    };
+    const current = build(year);
+    const previous = build(year - 1);
+
+    // Le dernier mois renseigné se lit sur les mois, pas sur le cumul :
+    // un cumul ne redescend jamais, donc « la dernière valeur non nulle »
+    // y désigne décembre dès qu'un seul mois porte un revenu — et la
+    // comparaison se ferait alors contre l'année précédente entière.
+    const lastFilled = monthsOfYear(year).reduce(
+      (acc, m, i) => ((store.buckets.get(m)?.count ?? 0) > 0 ? i : acc),
+      0,
+    );
+    const ecart =
+      previous[lastFilled] > 0
+        ? (current[lastFilled] - previous[lastFilled]) / previous[lastFilled]
+        : null;
+
+    // Objectif annuel : la somme des objectifs mensuels renseignés.
+    const goalCents = store.goals
+      .filter((g) => g.stream_id === null && g.month.slice(0, 4) === String(year))
+      .reduce((a, g) => a + g.target_cents, 0);
+
+    return {
+      year,
+      months: monthsOfYear(year),
+      current,
+      previous,
+      lastFilled,
+      goalCents: goalCents > 0 ? goalCents : null,
+      hasHistory: current.some((v) => v > 0),
+      deltaLabel:
+        ecart !== null
+          ? `${ecart >= 0 ? "+" : "−"}${percent(Math.abs(ecart))} par rapport à ${year - 1} à la même date`
+          : null,
+    };
+  }, [month, store.buckets, store.goals]);
+
   const chargeRate = store.settings.charge_rate_bps / 10_000;
   const afterCharges = Math.round(bucket.net - bucket.revenue * chargeRate);
 
@@ -122,6 +174,10 @@ export default function Dashboard() {
             onSave={(cents) => store.setGoal(month, null, cents)}
           />
         </div>
+
+        {/* Un grand nombre seul ne dit pas s'il est haut ou bas. La
+            courbe lui donne son échelle sans occuper de place. */}
+        <TrendArea months={last12.map((b) => b.month)} values={netTrend} height={76} />
 
         {goal ? (
           <div className="flex flex-col gap-1.5">
@@ -226,6 +282,8 @@ export default function Dashboard() {
             label="Après cotisations"
             value={money(afterCharges)}
             hint={`${percent(chargeRate)} retirés du brut encaissé`}
+            trend={last12.map((b) => Math.round(b.net - b.revenue * chargeRate))}
+            trendColor="var(--series-3)"
           />
         ) : (
           <StatTile
@@ -244,8 +302,15 @@ export default function Dashboard() {
           }
           deltaLabel="vs an dernier"
           hint={overview.ytdLastYear > 0 ? undefined : "Pas d'historique sur l'an dernier"}
+          trend={cumulative.current.slice(0, cumulative.lastFilled + 1)}
+          trendColor="var(--series-1)"
         />
       </div>
+
+      {/* ---- Une tuile par activité ------------------------------------
+          Douze mois côte à côte pour chacune : un empilement ne montre
+          pas qu'une activité stagne quand les autres bougent. */}
+      <ActivityTiles />
 
       {/* ---- Évolution ------------------------------------------------- */}
       <Card
@@ -265,6 +330,30 @@ export default function Dashboard() {
           height={250}
         />
       </Card>
+
+      {/* ---- Cumul de l'année ------------------------------------------ */}
+      {cumulative.hasHistory ? (
+        <Card
+          title={`Cumul ${cumulative.year}`}
+          action={
+            cumulative.deltaLabel ? (
+              <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+                {cumulative.deltaLabel}
+              </span>
+            ) : null
+          }
+        >
+          <CumulativeYear
+            months={cumulative.months}
+            current={cumulative.current}
+            previous={cumulative.previous}
+            currentLabel={String(cumulative.year)}
+            previousLabel={String(cumulative.year - 1)}
+            goalCents={cumulative.goalCents}
+            through={cumulative.lastFilled}
+          />
+        </Card>
+      ) : null}
 
       {/* ---- Répartition + lecture ------------------------------------- */}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">

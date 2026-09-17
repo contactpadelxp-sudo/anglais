@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { money, percent } from "@/lib/format";
 import { monthLabel, MOIS_INITIALE, type MonthKey } from "@/lib/dates";
-import { ChartTooltip, type TooltipState, smoothPath } from "./chart-kit";
+import { ChartTooltip, type TooltipState, smoothPath, useMeasure } from "./chart-kit";
 
 /* ===================================================================
    Sparkline — 12 points, la période courante accentuée.
@@ -45,6 +45,86 @@ export function Sparkline({
       />
       <circle cx={last.x} cy={last.y} r={3.5} fill={color} stroke="var(--surface-1)" strokeWidth={2} />
     </svg>
+  );
+}
+
+/* ===================================================================
+   Courbe de tuile — même forme, mais fluide.
+
+   La variante à largeur fixe ne tient pas dans une tuile de tableau de
+   bord : à 390 px, le nombre occupe déjà toute la ligne et la courbe
+   débordait de la carte. Ici la courbe prend toute la largeur
+   disponible, sous le chiffre, et se mesure au lieu de se deviner.
+   =================================================================== */
+
+export function SparkArea({
+  values,
+  height = 30,
+  color = "var(--series-1)",
+}: {
+  values: number[];
+  height?: number;
+  color?: string;
+}) {
+  const { ref, width } = useMeasure<HTMLDivElement>();
+  const gradientId = useId();
+
+  // Le conteneur est rendu dans tous les cas : c'est lui qui donne sa
+  // largeur à la mesure, et la hauteur reste réservée pour que la
+  // tuile ne saute pas d'un rendu à l'autre.
+  const drawable = values.length > 1 && width > 24;
+
+  let body = null;
+  if (drawable) {
+    const max = Math.max(...values, 1);
+    const min = Math.min(...values, 0);
+    const span = max - min || 1;
+    const pad = 3;
+    const pts = values.map((v, i) => ({
+      x: (i / (values.length - 1)) * (width - pad * 2) + pad,
+      y: height - 4 - ((v - min) / span) * (height - 9),
+    }));
+    const line = smoothPath(pts);
+    const last = pts[pts.length - 1];
+    body = (
+      <svg width={width} height={height} aria-hidden>
+        {/* Le lavis s'éteint vers le bas : un aplat à bord franc se lit
+            comme un bloc posé dans la tuile, pas comme une courbe. */}
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity={0.18} />
+            <stop offset="100%" stopColor={color} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <path
+          d={`${line} L${pts[pts.length - 1].x},${height} L${pts[0].x},${height} Z`}
+          fill={`url(#${gradientId})`}
+        />
+        <path
+          d={line}
+          fill="none"
+          stroke={color}
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={0.75}
+        />
+        <circle
+          cx={last.x}
+          cy={last.y}
+          r={3}
+          fill={color}
+          stroke="var(--surface-1)"
+          strokeWidth={2}
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <div ref={ref} className="w-full min-w-0" style={{ height }}>
+      {body}
+    </div>
   );
 }
 

@@ -65,7 +65,10 @@ export function LoginForm({ defaultEmail }: { defaultEmail: string }) {
           className="flex flex-col gap-3"
         >
           <input type="hidden" name="email" value={request.email ?? email} />
-          <Field label="Code reçu" hint={`Envoyé à ${request.email ?? email}.`}>
+          <Field
+            label="Code reçu"
+            hint={`Envoyé à ${request.email ?? email}. Si l'email contient un lien plutôt qu'un code, ouvre simplement le lien : il ouvre la session directement.`}
+          >
             <Input
               name="code"
               inputMode="numeric"

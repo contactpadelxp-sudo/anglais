@@ -32,6 +32,16 @@ export default async function LoginPage({
         </p>
       </div>
 
+      {params.erreur === "lien" ? (
+        <p
+          className="rounded-[var(--radius-sm)] px-3 py-2.5 text-[12.5px]"
+          style={{ background: "var(--surface-2)", color: "var(--text-secondary)" }}
+        >
+          Ce lien de connexion n&apos;est plus valable — ils expirent vite et ne servent
+          qu&apos;une fois. Demandes-en un nouveau.
+        </p>
+      ) : null}
+
       {params.erreur === "refuse" ? (
         <p
           className="rounded-[var(--radius-sm)] px-3 py-2.5 text-[12.5px]"

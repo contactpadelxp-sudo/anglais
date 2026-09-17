@@ -9,6 +9,7 @@ const PUBLIC_PATHS = [
   "/connexion",
   "/auth",
   "/diagnostic",
+  "/ping",
   "/manifest.webmanifest",
   "/sw.js",
   "/hors-ligne",
@@ -28,7 +29,30 @@ export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const config = supabaseConfig();
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
+
+  // Le lien reçu par email atterrit là où pointe le réglage « Site URL »
+  // de Supabase — souvent la racine, pas /auth/callback. Plutôt que
+  // d'exiger une configuration exacte, on réachemine tout code de
+  // connexion vers la route qui sait l'échanger.
+  const code = searchParams.get("code");
+  if (code && pathname !== "/auth/callback") {
+    const callback = new URL("/auth/callback", request.url);
+    callback.searchParams.set("code", code);
+    const next = searchParams.get("next");
+    if (next) callback.searchParams.set("next", next);
+    return NextResponse.redirect(callback);
+  }
+
+  // Même logique pour le format à jeton haché des modèles récents.
+  const tokenHash = searchParams.get("token_hash");
+  const type = searchParams.get("type");
+  if (tokenHash && type && pathname !== "/auth/confirmation") {
+    const confirm = new URL("/auth/confirmation", request.url);
+    confirm.searchParams.set("token_hash", tokenHash);
+    confirm.searchParams.set("type", type);
+    return NextResponse.redirect(confirm);
+  }
 
   // Sans configuration Supabase, on laisse passer : la page d'accueil
   // affiche alors les instructions de mise en route.

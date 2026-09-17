@@ -1,5 +1,5 @@
 import "server-only";
-import { supabaseConfig } from "@/lib/supabase/config";
+import { configDiagnosis, supabaseConfig } from "@/lib/supabase/config";
 
 export const dynamic = "force-dynamic";
 // Explicite : cette page lit process.env et fait un appel réseau
@@ -86,13 +86,26 @@ async function probe(url: string, key: string) {
 
 function readConfig() {
   const config = supabaseConfig();
+  const diagnosis = configDiagnosis();
   const rows: Row[] = [];
   const urlRef = config?.url.match(/https?:\/\/([a-z0-9]+)\.supabase\./i)?.[1] ?? null;
 
   rows.push(
-    config
-      ? { label: "SUPABASE_URL", value: config.url, tone: "ok" }
-      : { label: "SUPABASE_URL", value: "absente", tone: "ko" },
+    diagnosis.url.state === "ok"
+      ? {
+          label: "SUPABASE_URL",
+          value: diagnosis.urlRepaired
+            ? `${diagnosis.url.value}  (https:// ajouté — il manquait dans la variable)`
+            : diagnosis.url.value,
+          tone: diagnosis.urlRepaired ? "info" : "ok",
+        }
+      : diagnosis.url.state === "invalide"
+        ? {
+            label: "SUPABASE_URL",
+            value: `« ${diagnosis.url.value} » — ce n'est pas une adresse exploitable`,
+            tone: "ko",
+          }
+        : { label: "SUPABASE_URL", value: "absente", tone: "ko" },
   );
   rows.push({
     label: "Projet visé par l'adresse",

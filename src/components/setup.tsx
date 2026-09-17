@@ -1,4 +1,5 @@
 import "server-only";
+import { configDiagnosis } from "@/lib/supabase/config";
 
 /**
  * Écran affiché quand l'application ne trouve pas sa configuration.
@@ -21,15 +22,23 @@ type Check = {
   legacyPresent?: boolean;
   required: boolean;
   role: string;
+  /** Remplace la description quand la variable est là mais inutilisable. */
+  note?: string;
 };
 
 function inspect(): Check[] {
+  const diagnosis = configDiagnosis();
   return [
     {
       name: "SUPABASE_URL",
-      present: Boolean(process.env.SUPABASE_URL),
-      legacy: "NEXT_PUBLIC_SUPABASE_URL",
-      legacyPresent: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
+      present: diagnosis.url.state === "ok",
+      // Une adresse présente mais illisible n'est pas une adresse
+      // absente : le message doit le dire, sinon on cherche une variable
+      // manquante qui est sous nos yeux.
+      note:
+        diagnosis.url.state === "invalide"
+          ? `renseignée mais inutilisable : « ${diagnosis.url.value} » — il manque sans doute https:// au début`
+          : undefined,
       required: true,
       role: "adresse du projet Supabase",
     },
@@ -63,9 +72,13 @@ export function Setup() {
         <h1 className="text-[26px] font-semibold tracking-tight">Revenus</h1>
         <p className="mt-1 text-[14px]" style={{ color: "var(--text-secondary)" }}>
           {blocking.length > 1
-            ? "Le serveur ne trouve pas ces variables."
+            ? "Le serveur ne peut pas exploiter ces variables."
             : blocking.length === 1
-              ? `Le serveur ne trouve pas ${blocking[0].name}.`
+              ? blocking[0].note
+                // « Renseignée mais illisible » n'est pas « manquante » :
+                // annoncer l'absence ferait chercher au mauvais endroit.
+                ? `${blocking[0].name} est renseignée, mais inexploitable.`
+                : `Le serveur ne trouve pas ${blocking[0].name}.`
               : "Le serveur n'arrive pas à lire sa configuration."}
         </p>
       </div>
@@ -100,7 +113,9 @@ export function Setup() {
                 <div className="min-w-0">
                   <p className="font-mono text-[13px] font-medium">{check.name}</p>
                   <p className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
-                    {ok ? (
+                    {check.note ? (
+                      check.note
+                    ) : ok ? (
                       viaLegacy ? (
                         <>
                           absente, mais trouvée sous{" "}

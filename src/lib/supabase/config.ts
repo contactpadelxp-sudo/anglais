@@ -4,57 +4,111 @@
  * NE PAS ajouter `import "server-only"` ici. Ce module est importé par
  * src/lib/supabase/proxy.ts, qui s'exécute dans le runtime Edge : le
  * paquet server-only y est résolu comme dans un bundle navigateur et
- * lève une erreur, ce qui fait échouer TOUTES les requêtes avec une 500,
- * pages comprises. Le garde-fou est donc porté par les modules qui, eux,
- * ne tournent jamais en Edge (data.ts, setup.tsx, diagnostic/page.tsx),
- * et par le fait qu'aucun composant client n'importe ce fichier.
+ * lève. Le garde-fou est porté par les modules qui ne tournent jamais en
+ * Edge, et par le fait qu'aucun composant client n'importe ce fichier.
  *
  * Cette application ne parle à Supabase que depuis le serveur : les
  * composants serveur lisent, les Server Actions écrivent, le proxy
- * rafraîchit la session. Aucune requête ne part du navigateur — la clé
- * n'a donc aucune raison d'être embarquée dans le bundle JavaScript,
- * d'où des noms SANS préfixe `NEXT_PUBLIC_`, qui la gardent côté
- * serveur.
- *
- * (La clé publiable Supabase est conçue pour être exposable, et c'est
- * la RLS qui protège les données, pas le secret de la clé. La garder
- * côté serveur ne remplace donc pas la RLS : ça réduit simplement la
- * surface, et ça évite de la voir traîner dans le code source de la
- * page.)
- *
- * Le repli sur les noms préfixés reste accepté pour qu'un déploiement
- * déjà configuré ainsi continue de fonctionner sans intervention.
+ * rafraîchit la session. Aucune requête ne part du navigateur — d'où des
+ * noms SANS préfixe `NEXT_PUBLIC_`. Les noms préfixés restent acceptés en
+ * repli.
  */
+
 export type SupabaseConfig = { url: string; key: string };
+
+export type ConfigDiagnosis = {
+  url: { state: "ok"; value: string } | { state: "absente" } | { state: "invalide"; value: string };
+  key: { state: "ok" } | { state: "absente" };
+  /** Vrai si l'adresse a dû être complétée pour devenir utilisable. */
+  urlRepaired: boolean;
+};
 
 /**
  * Les valeurs sont nettoyées avant usage : un copier-coller depuis une
  * interface web embarque régulièrement une espace ou un retour à la
  * ligne, et Supabase répond alors « Invalid API key » pour une clé
- * pourtant juste. On retire aussi la barre oblique finale de l'URL, qui
- * produirait des adresses à double barre.
+ * pourtant juste.
  */
 function clean(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
   return trimmed ? trimmed : undefined;
 }
 
+/**
+ * Normalise l'adresse du projet.
+ *
+ * Le tableau de bord Supabase présente l'adresse sans schéma, et un
+ * copier-coller donne « xxx.supabase.co » tout court. Passée telle
+ * quelle à createServerClient, elle fait lever « Invalid supabaseUrl » —
+ * dans le proxy, donc avant tout rendu, ce qui met TOUT le site en
+ * erreur 500. On complète donc le schéma manquant plutôt que de laisser
+ * une omission aussi banale tout casser.
+ */
+function normalizeUrl(raw: string | undefined): {
+  url?: string;
+  invalid?: string;
+  repaired: boolean;
+} {
+  const value = clean(raw);
+  if (!value) return { repaired: false };
+
+  const hasScheme = /^https?:\/\//i.test(value);
+  const candidate = hasScheme ? value : `https://${value}`;
+
+  try {
+    const parsed = new URL(candidate);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return { invalid: value, repaired: false };
+    }
+    if (!parsed.hostname.includes(".")) return { invalid: value, repaired: false };
+    return { url: candidate.replace(/\/+$/, ""), repaired: !hasScheme };
+  } catch {
+    return { invalid: value, repaired: false };
+  }
+}
+
+function rawUrl() {
+  return process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+}
+
+function rawKey() {
+  return process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+}
+
+/**
+ * La configuration utilisable, ou null. Renvoyer null fait afficher
+ * l'écran de mise en route : c'est toujours préférable à une exception
+ * qui rendrait le site entier inaccessible.
+ */
 export function supabaseConfig(): SupabaseConfig | null {
-  const url = clean(process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL);
-  const key = clean(process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-  return url && key ? { url: url.replace(/\/+$/, ""), key } : null;
+  const { url } = normalizeUrl(rawUrl());
+  const key = clean(rawKey());
+  return url && key ? { url, key } : null;
+}
+
+/** Le détail, pour les écrans qui doivent expliquer ce qui manque. */
+export function configDiagnosis(): ConfigDiagnosis {
+  const { url, invalid, repaired } = normalizeUrl(rawUrl());
+  const key = clean(rawKey());
+  return {
+    url: url
+      ? { state: "ok", value: url }
+      : invalid !== undefined
+        ? { state: "invalide", value: invalid }
+        : { state: "absente" },
+    key: key ? { state: "ok" } : { state: "absente" },
+    urlRepaired: repaired,
+  };
 }
 
 /** Origine publique du site, utilisée par le lien de connexion. */
 export function siteUrl(): string | undefined {
-  const site = clean(process.env.SITE_URL ?? process.env.NEXT_PUBLIC_SITE_URL);
-  return site?.replace(/\/+$/, "");
+  return normalizeUrl(process.env.SITE_URL ?? process.env.NEXT_PUBLIC_SITE_URL).url;
 }
 
 /**
- * Identifiant du projet lu dans l'URL, pour pouvoir dire à l'écran de
- * connexion QUEL projet la clé est censée ouvrir. Jamais la clé
- * elle-même.
+ * Identifiant du projet lu dans l'adresse, pour pouvoir nommer le projet
+ * attendu dans un message d'erreur. Jamais la clé elle-même.
  */
 export function projectRef(): string | null {
   const url = supabaseConfig()?.url;

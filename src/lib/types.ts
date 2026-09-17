@@ -23,6 +23,8 @@ export type Stream = {
   settlement_days: number;
   /** Confirmer l'encaissement tout seul à la date prévue. */
   auto_settle: boolean;
+  /** Catégorie fiscale et sociale, qui pilote taux et abattement. */
+  fiscal_category: string;
   position: number;
   archived: boolean;
   created_at: string;
@@ -68,6 +70,17 @@ export type Settings = {
   default_basis: Basis;
   charge_rate_bps: number;
   fiscal_year_start: number;
+  /** Début d'activité — détermine la période couverte par l'ACRE. */
+  activity_start: string | null;
+  acre_enabled: boolean;
+  versement_liberatoire: boolean;
+  /** Parts du foyer fiscal. */
+  tax_parts: number;
+  /** Autres revenus imposables du foyer, en centimes. */
+  other_income_cents: number;
+  /** Barème de l'impôt, modifiable : les tranches changent chaque année. */
+  tax_brackets: { upToCents: number | null; rateBps: number }[] | null;
+  tax_brackets_year: string | null;
   updated_at: string;
 };
 

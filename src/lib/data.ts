@@ -15,6 +15,13 @@ const DEFAULT_SETTINGS = (userId: string): Settings => ({
   default_basis: "cash",
   charge_rate_bps: 0,
   fiscal_year_start: 1,
+  activity_start: null,
+  acre_enabled: false,
+  versement_liberatoire: false,
+  tax_parts: 1,
+  other_income_cents: 0,
+  tax_brackets: null,
+  tax_brackets_year: null,
   updated_at: new Date().toISOString(),
 });
 

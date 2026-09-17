@@ -31,6 +31,11 @@ import {
 import { type MonthKey, currentMonth, monthOf, monthRange, today } from "@/lib/dates";
 import { money, percent } from "@/lib/format";
 import * as api from "@/lib/actions";
+import {
+  DEFAULT_BRACKETS,
+  DEFAULT_BRACKETS_YEAR,
+  type FiscalSettings,
+} from "@/lib/fiscal";
 
 /* ===================================================================
    État
@@ -138,6 +143,8 @@ type Store = {
   pending: PendingReport;
   insights: ReturnType<typeof buildInsights>;
   goal: ReturnType<typeof goalProgress>;
+  /** Les réglages fiscaux, dans la forme attendue par le moteur de calcul. */
+  fiscal: FiscalSettings;
   /**
    * Vrai dès qu'au moins une écriture a été encaissée un autre mois que
    * celui de la vente, ou attend encore son versement. Tant que c'est
@@ -239,6 +246,22 @@ export function StoreProvider({
     [state.entries, state.streams],
   );
   const availableMonths = useMemo(() => coveredMonths(state.entries), [state.entries]);
+
+  const fiscal = useMemo<FiscalSettings>(
+    () => ({
+      activityStart: state.settings.activity_start,
+      acreEnabled: state.settings.acre_enabled,
+      versementLiberatoire: state.settings.versement_liberatoire,
+      taxParts: Number(state.settings.tax_parts) || 1,
+      otherIncomeCents: state.settings.other_income_cents ?? 0,
+      brackets:
+        state.settings.tax_brackets && state.settings.tax_brackets.length > 0
+          ? state.settings.tax_brackets
+          : DEFAULT_BRACKETS,
+      bracketsYear: state.settings.tax_brackets_year ?? DEFAULT_BRACKETS_YEAR,
+    }),
+    [state.settings],
+  );
 
   const hasTimingGap = useMemo(
     () =>
@@ -464,6 +487,7 @@ export function StoreProvider({
     pending,
     insights,
     goal,
+    fiscal,
     hasTimingGap,
     saveEntry,
     removeEntry,

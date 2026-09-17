@@ -403,7 +403,19 @@ export async function saveGoal(
 
 export async function saveStream(
   id: string,
-  patch: Partial<Pick<Stream, "name" | "color_slot" | "settlement_days" | "auto_settle" | "archived" | "position" | "kind">>,
+  patch: Partial<
+    Pick<
+      Stream,
+      | "name"
+      | "color_slot"
+      | "settlement_days"
+      | "auto_settle"
+      | "archived"
+      | "position"
+      | "kind"
+      | "fiscal_category"
+    >
+  >,
 ): Promise<ActionResult<Stream>> {
   const session = await authed();
   if (!session.ok) return fail(session.error);
@@ -468,7 +480,21 @@ export async function deleteStream(id: string): Promise<ActionResult<string>> {
 }
 
 export async function saveSettings(
-  patch: Partial<Pick<Settings, "default_basis" | "charge_rate_bps" | "currency">>,
+  patch: Partial<
+    Pick<
+      Settings,
+      | "default_basis"
+      | "charge_rate_bps"
+      | "currency"
+      | "activity_start"
+      | "acre_enabled"
+      | "versement_liberatoire"
+      | "tax_parts"
+      | "other_income_cents"
+      | "tax_brackets"
+      | "tax_brackets_year"
+    >
+  >,
 ): Promise<ActionResult<Settings>> {
   const session = await authed();
   if (!session.ok) return fail(session.error);

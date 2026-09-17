@@ -6,6 +6,7 @@ import { Button, Card, Field, Input, Segmented, Select, Sheet } from "@/componen
 import { Icon, StreamIcon } from "@/components/ui/icons";
 import { InstallHint } from "@/components/install-hint";
 import { PasswordCard } from "@/components/password-card";
+import { FiscalCard } from "@/components/fiscal-card";
 import { delayChecks, medianSettlementDelay } from "@/lib/analytics";
 import { money, percent, plural } from "@/lib/format";
 import { dateOf } from "@/lib/analytics";
@@ -168,6 +169,7 @@ export default function SettingsPage() {
         </div>
       </Card>
 
+      <FiscalCard />
       <PasswordCard />
       <ExportCard />
       <InstallHint />

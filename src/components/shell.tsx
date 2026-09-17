@@ -10,13 +10,19 @@ import { Segmented, ThemeToggle } from "./ui/kit";
 import { monthLabel, monthRange, shiftMonth, currentMonth, type MonthKey } from "@/lib/dates";
 import { signOut } from "@/lib/actions";
 
-const NAV: { href: string; label: string; icon: IconName }[] = [
-  { href: "/", label: "Tableau de bord", icon: "home" },
+const NAV: { href: string; label: string; icon: IconName; short?: string }[] = [
+  { href: "/", label: "Tableau de bord", icon: "home", short: "Tableau" },
   { href: "/revenus", label: "Revenus", icon: "list" },
+  { href: "/comptabilite", label: "Comptabilité", icon: "wallet", short: "Compta" },
   { href: "/analyse", label: "Analyse", icon: "chart" },
   { href: "/activites", label: "Activités", icon: "layers" },
   { href: "/reglages", label: "Réglages", icon: "settings" },
 ];
+
+// Six onglets ne tiennent pas en bas d'un écran de téléphone. « Activités »
+// sort de la barre : elle reste atteignable depuis les réglages et depuis
+// la répartition du tableau de bord.
+const MOBILE_NAV = NAV.filter((n) => n.href !== "/activites");
 
 export function Shell({ email, children }: { email: string; children: React.ReactNode }) {
   const store = useStore();
@@ -262,7 +268,7 @@ function MonthStepper({
 
 function BottomBar() {
   const pathname = usePathname();
-  const items = NAV.filter((n) => n.href !== "/reglages");
+  const items = MOBILE_NAV.filter((n) => n.href !== "/reglages");
 
   return (
     <nav
@@ -284,7 +290,9 @@ function BottomBar() {
                 style={{ color: active ? "var(--series-1)" : "var(--text-muted)" }}
               >
                 <Glyph size={20} />
-                <span className="text-[10px] font-medium">{item.label.split(" ")[0]}</span>
+                <span className="text-[10px] font-medium">
+                  {item.short ?? item.label.split(" ")[0]}
+                </span>
               </Link>
             </li>
           );

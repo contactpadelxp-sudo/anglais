@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isOwner, ownerEmail } from "@/lib/owner";
-import { siteUrl } from "@/lib/supabase/config";
+import { projectRef, siteUrl } from "@/lib/supabase/config";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Entry, EntryDraft, Goal, Settings, Stream } from "@/lib/types";
 
@@ -32,6 +32,72 @@ async function authed(): Promise<Session> {
    Connexion
    =================================================================== */
 
+/**
+ * Traduit les erreurs d'authentification Supabase.
+ *
+ * Le message brut est en anglais et décrit le symptôme sans jamais dire
+ * quoi faire. « Invalid API key » en particulier ne distingue pas une
+ * clé tronquée d'une clé appartenant à un autre projet — alors que
+ * c'est presque toujours le second cas.
+ */
+function explain(raw: string): string {
+  const message = raw.toLowerCase();
+
+  if (
+    message.includes("api key") ||
+    message.includes("invalid key") ||
+    message.includes("apikey")
+  ) {
+    const ref = projectRef();
+    return (
+      "La clé SUPABASE_ANON_KEY n'est pas reconnue par le projet Supabase" +
+      (ref ? ` « ${ref} »` : "") +
+      ". Le plus souvent, elle appartient à un autre projet que celui indiqué par " +
+      "SUPABASE_URL : reprends les deux valeurs dans le même projet, onglet API."
+    );
+  }
+  if (message.includes("rate limit") || message.includes("too many")) {
+    return (
+      "Trop de codes demandés d'affilée. Supabase limite les envois d'email " +
+      "à quelques-uns par heure sur le plan gratuit : attends un moment avant de réessayer."
+    );
+  }
+  if (message.includes("signups not allowed") || message.includes("signup is disabled")) {
+    return (
+      "Les inscriptions sont désactivées sur ce projet Supabase. Active-les le temps " +
+      "de créer ton compte (Authentication → Sign In / Providers), l'accès reste de " +
+      "toute façon verrouillé sur ton adresse."
+    );
+  }
+  if (
+    message.includes("failed to fetch") ||
+    message.includes("fetch failed") ||
+    message.includes("enotfound") ||
+    message.includes("econnrefused")
+  ) {
+    return "Le projet Supabase est injoignable. Vérifie SUPABASE_URL, et qu'il n'est pas en pause.";
+  }
+  // Une réponse qui n'est pas du JSON ne vient pas de Supabase : c'est
+  // un intermédiaire — proxy, passerelle, page d'erreur d'hébergeur —
+  // qui a répondu à sa place, ou une URL qui ne pointe pas vers un
+  // projet Supabase.
+  if (message.includes("is not valid json") || message.includes("unexpected token")) {
+    const ref = projectRef();
+    return (
+      "La réponse reçue ne vient pas de Supabase" +
+      (ref ? ` — SUPABASE_URL pointe vers « ${ref} »` : "") +
+      ". Vérifie que cette adresse est bien celle d'un projet Supabase actif, et qu'aucun " +
+      "filtrage réseau ne s'interpose."
+    );
+  }
+  if (message.includes("invalid") && message.includes("email")) {
+    return "Cette adresse email n'est pas acceptée par Supabase.";
+  }
+  // Message inconnu : on le laisse passer plutôt que de le masquer
+  // derrière un « une erreur est survenue » qui n'aide personne.
+  return `Supabase a refusé la demande : ${raw}`;
+}
+
 export async function requestMagicLink(
   _prev: unknown,
   formData: FormData,
@@ -58,7 +124,7 @@ export async function requestMagicLink(
     },
   });
 
-  if (error) return { status: "error", message: error.message };
+  if (error) return { status: "error", message: explain(error.message) };
   return { status: "sent", email };
 }
 
@@ -79,7 +145,17 @@ export async function verifyCode(
   if (!supabase) return { status: "error", message: "Supabase n'est pas configuré." };
 
   const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
-  if (error) return { status: "error", message: "Code invalide ou expiré." };
+  if (error) {
+    // Un code refusé est presque toujours un code périmé ou mal recopié.
+    // Mais une clé invalide échoue ici aussi, et mérite son vrai message.
+    const message = error.message.toLowerCase();
+    return {
+      status: "error",
+      message: message.includes("api key")
+        ? explain(error.message)
+        : "Code invalide ou expiré. Demande-en un nouveau.",
+    };
+  }
 
   revalidatePath("/", "layout");
   return { status: "idle" };

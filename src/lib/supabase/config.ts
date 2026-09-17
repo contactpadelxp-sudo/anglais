@@ -21,13 +21,36 @@ import "server-only";
  */
 export type SupabaseConfig = { url: string; key: string };
 
+/**
+ * Les valeurs sont nettoyées avant usage : un copier-coller depuis une
+ * interface web embarque régulièrement une espace ou un retour à la
+ * ligne, et Supabase répond alors « Invalid API key » pour une clé
+ * pourtant juste. On retire aussi la barre oblique finale de l'URL, qui
+ * produirait des adresses à double barre.
+ */
+function clean(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
 export function supabaseConfig(): SupabaseConfig | null {
-  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  return url && key ? { url, key } : null;
+  const url = clean(process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const key = clean(process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  return url && key ? { url: url.replace(/\/+$/, ""), key } : null;
 }
 
 /** Origine publique du site, utilisée par le lien de connexion. */
 export function siteUrl(): string | undefined {
-  return process.env.SITE_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? undefined;
+  const site = clean(process.env.SITE_URL ?? process.env.NEXT_PUBLIC_SITE_URL);
+  return site?.replace(/\/+$/, "");
+}
+
+/**
+ * Identifiant du projet lu dans l'URL, pour pouvoir dire à l'écran de
+ * connexion QUEL projet la clé est censée ouvrir. Jamais la clé
+ * elle-même.
+ */
+export function projectRef(): string | null {
+  const url = supabaseConfig()?.url;
+  return url?.match(/https?:\/\/([a-z0-9]+)\.supabase\./i)?.[1] ?? null;
 }

@@ -14,6 +14,7 @@ import {
   monthsOfYear,
   yearOf,
   currentMonth,
+  monthsBetween,
   type MonthKey,
 } from "@/lib/dates";
 
@@ -28,10 +29,18 @@ export default function AnalysePage() {
   const { entries, activeStreams, buckets, month, setMonth } = store;
   const [windowSize, setWindowSize] = useState<"6" | "12" | "24">("12");
 
-  const months = useMemo(
-    () => monthRange(currentMonth(), Number(windowSize)),
-    [windowSize],
-  );
+  /**
+   * La fenêtre est ancrée sur le mois courant, mais s'étire jusqu'au
+   * mois cadré s'il est plus ancien. Sans ça, la carte « Saisonnalité »
+   * promettait « clic sur une case pour cadrer ce mois » et rien ne
+   * bougeait à l'écran quand la case cliquée tombait hors fenêtre.
+   */
+  const months = useMemo(() => {
+    const now = currentMonth();
+    const asked = Number(windowSize);
+    const span = monthsBetween(month, now) + 1;
+    return monthRange(now, Math.max(asked, Math.min(span, 60)));
+  }, [windowSize, month]);
 
   const window = useMemo(() => months.map((m) => bucketFor(buckets, m)), [months, buckets]);
 

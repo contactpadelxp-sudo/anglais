@@ -10,7 +10,7 @@ import { StackedMonths } from "@/components/charts/stacked-months";
 import { Trend } from "@/components/charts/trend";
 import { streamMetrics, marginOf, revenueOf, dateOf } from "@/lib/analytics";
 import { money, percent, plural } from "@/lib/format";
-import { dayLabel, monthLabel, monthRange, currentMonth } from "@/lib/dates";
+import { dayLabel, monthLabel, monthRange } from "@/lib/dates";
 
 export default function StreamPage() {
   const params = useParams<{ key: string }>();
@@ -19,7 +19,10 @@ export default function StreamPage() {
 
   const key = decodeURIComponent(params.key ?? "");
   const stream = streams.find((s) => s.key === key);
-  const months = useMemo(() => monthRange(currentMonth(), 12), []);
+  // La fenêtre se termine sur le mois AFFICHÉ : sinon un mois choisi
+  // hors fenêtre n'y est pas trouvé, et la tuile affiche « 0 € » pour
+  // un mois qui porte peut-être des revenus.
+  const months = useMemo(() => monthRange(month, 12), [month]);
 
   const metrics = useMemo(
     () => (stream ? streamMetrics(stream, entries, basis, months) : null),

@@ -1,28 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useStore } from "@/components/store";
-import { Card, Chip, Delta, Empty, Hero, StatTile, Button } from "@/components/ui/kit";
+import { Card, Chip, Delta, Empty, Hero, Button } from "@/components/ui/kit";
 import { Icon } from "@/components/ui/icons";
-import { StackedMonths } from "@/components/charts/stacked-months";
-import { Donut } from "@/components/charts/donut";
-import { CumulativeYear } from "@/components/charts/area";
-import { GoalRing, MonthBars, DayRhythm, ShareBar, ShareLegend } from "@/components/charts/pulse";
-import { ActivityTiles } from "@/components/activity-tiles";
+import { YearGrid, type YearCell } from "@/components/charts/year";
+import { ActivityShift, type ShiftRow } from "@/components/charts/shift";
+import { MonthStairs } from "@/components/charts/stairs";
+import { GoalRing } from "@/components/charts/pulse";
 import { InsightList } from "@/components/insight-list";
 import { PendingPanel } from "@/components/pending-panel";
 import { GoalEditor } from "@/components/goal-editor";
 import { money, percent, plural } from "@/lib/format";
-import { monthLabel, monthsOfYear, yearOf, currentMonth, daysInMonth } from "@/lib/dates";
+import {
+  monthLabel,
+  monthsOfYear,
+  yearOf,
+  currentMonth,
+  daysInMonth,
+  shiftMonth,
+  type MonthKey,
+} from "@/lib/dates";
 import { projectMonth, dateOf } from "@/lib/analytics";
 
 export default function Dashboard() {
   const store = useStore();
-  const { bucket, overview, last12, activeStreams, month, setMonth, basis, pending, goal } = store;
-  const [focus, setFocus] = useState<string | null>(null);
+  const { bucket, overview, activeStreams, month, setMonth, basis, pending, goal } = store;
 
   const isCurrentMonth = month === currentMonth();
+  const year = yearOf(month);
+  const previousMonth = shiftMonth(month, -1);
 
   /** Ce qui est déjà vendu et dont le versement est prévu ce mois-ci. */
   const securedThisMonth = useMemo(
@@ -35,80 +43,49 @@ export default function Dashboard() {
     [bucket, month, securedThisMonth, isCurrentMonth],
   );
 
-  const slices = useMemo(
+  /* ---- L'année, case par case -------------------------------------
+     Douze cases fixes. Aucune fenêtre glissante, donc aucun mois qui
+     disparaît quand on en choisit un autre. */
+  const yearCells = useMemo<YearCell[]>(
     () =>
-      activeStreams
-        .map((s) => ({
-          id: s.id,
-          label: s.name,
-          value: bucket.byStream[s.id]?.net ?? 0,
-          color: `var(--series-${s.color_slot})`,
-        }))
-        .filter((s) => s.value > 0)
-        .sort((a, b) => b.value - a.value),
-    [activeStreams, bucket],
+      monthsOfYear(year).map((m) => {
+        const b = store.buckets.get(m);
+        const segments = activeStreams
+          .map((s) => ({
+            id: s.id,
+            label: s.name,
+            value: b?.byStream[s.id]?.net ?? 0,
+            color: `var(--series-${s.color_slot})`,
+          }))
+          // Pas de tri par montant : l'ordre des activités doit être le
+          // même dans les douze cases, sinon deux cases voisines
+          // n'empilent pas les mêmes couleurs dans le même ordre et
+          // plus rien ne se compare.
+          .filter((s) => s.value > 0);
+        return { month: m, total: Math.max(0, b?.net ?? 0), segments };
+      }),
+    [year, store.buckets, activeStreams],
   );
 
-  const netTrend = last12.map((b) => b.net);
+  const yearTotal = yearCells.reduce((s, c) => s + c.total, 0);
 
-  /**
-   * Cumul de l'année en cours et de la précédente, mois après mois.
-   * Le cumul répond à ce que le mois par mois ne peut pas trancher :
-   * suis-je en avance ou en retard sur l'an dernier, à la même date ?
-   */
-  const cumulative = useMemo(() => {
-    const year = yearOf(month);
-    const build = (y: number) => {
-      let running = 0;
-      return monthsOfYear(y).map((m) => {
-        running += store.buckets.get(m)?.net ?? 0;
-        return running;
-      });
-    };
-    const current = build(year);
-    const previous = build(year - 1);
+  /* ---- Ce qui a bougé depuis le mois dernier ----------------------- */
+  const shiftRows = useMemo<ShiftRow[]>(() => {
+    const previous = store.buckets.get(previousMonth);
+    return activeStreams
+      .map((s) => ({
+        id: s.id,
+        key: s.key,
+        label: s.name,
+        color: `var(--series-${s.color_slot})`,
+        current: bucket.byStream[s.id]?.net ?? 0,
+        previous: previous?.byStream[s.id]?.net ?? 0,
+      }))
+      .filter((r) => r.current !== 0 || r.previous !== 0)
+      .sort((a, b) => b.current - a.current);
+  }, [activeStreams, bucket, store.buckets, previousMonth]);
 
-    // Le dernier mois renseigné se lit sur les mois, pas sur le cumul :
-    // un cumul ne redescend jamais, donc « la dernière valeur non nulle »
-    // y désigne décembre dès qu'un seul mois porte un revenu — et la
-    // comparaison se ferait alors contre l'année précédente entière.
-    const lastFilled = monthsOfYear(year).reduce(
-      (acc, m, i) => ((store.buckets.get(m)?.count ?? 0) > 0 ? i : acc),
-      0,
-    );
-    const ecart =
-      previous[lastFilled] > 0
-        ? (current[lastFilled] - previous[lastFilled]) / previous[lastFilled]
-        : null;
-
-    // Objectif annuel : la somme des objectifs mensuels renseignés.
-    const goalCents = store.goals
-      .filter((g) => g.stream_id === null && g.month.slice(0, 4) === String(year))
-      .reduce((a, g) => a + g.target_cents, 0);
-
-    return {
-      year,
-      months: monthsOfYear(year),
-      current,
-      previous,
-      lastFilled,
-      goalCents: goalCents > 0 ? goalCents : null,
-      hasHistory: current.some((v) => v > 0),
-      deltaLabel:
-        ecart !== null
-          ? `${ecart >= 0 ? "+" : "−"}${percent(Math.abs(ecart))} par rapport à ${year - 1} à la même date`
-          : null,
-    };
-  }, [month, store.buckets, store.goals]);
-
-  const chargeRate = store.settings.charge_rate_bps / 10_000;
-  const afterCharges = Math.round(bucket.net - bucket.revenue * chargeRate);
-
-  /**
-   * Montant encaissé jour par jour sur le mois affiché. Le total d'un
-   * mois ne dit pas comment il s'est construit : quatre virements
-   * réguliers et une seule grosse rentrée donnent le même chiffre.
-   */
+  /* ---- Le mois, jour par jour -------------------------------------- */
   const rhythm = useMemo(() => {
     const days = new Array<number>(daysInMonth(month)).fill(0);
     for (const e of bucket.entries) {
@@ -118,58 +95,47 @@ export default function Dashboard() {
       if (i < 0 || i >= days.length) continue;
       days[i] += e.direction === "out" ? -e.gross_cents : e.gross_cents - e.fee_cents - e.cost_cents;
     }
-    const filled = days.filter((v) => v > 0).length;
-    return { days, filled };
+    return { days, filled: days.filter((v) => v > 0).length };
   }, [bucket.entries, basis, month]);
 
-  /** Montant moyen d'une rentrée sur douze mois. */
-  const averageTicket12 = useMemo(() => {
-    const count = last12.reduce((s, b) => s + b.count, 0);
-    const net = last12.reduce((s, b) => s + b.net, 0);
-    return count > 0 ? Math.round(net / count) : 0;
-  }, [last12]);
+  const chargeRate = store.settings.charge_rate_bps / 10_000;
+  const afterCharges = Math.round(bucket.net - bucket.revenue * chargeRate);
 
-  /** Part de chaque activité depuis le 1er janvier. */
-  const yearSlices = useMemo(
-    () =>
-      activeStreams
-        .map((s) => {
-          let total = 0;
-          for (const m of monthsOfYear(yearOf(month))) {
-            if (m > month) break;
-            total += store.buckets.get(m)?.byStream[s.id]?.net ?? 0;
-          }
-          return {
-            id: s.id,
-            label: s.name,
-            value: total,
-            color: `var(--series-${s.color_slot})`,
-          };
-        })
-        .filter((s) => s.value > 0)
-        .sort((a, b) => b.value - a.value),
-    [activeStreams, store.buckets, month],
+  /**
+   * Les compteurs portent sur le mois AFFICHÉ, donc leurs moyennes
+   * aussi : comparer avril à des mois postérieurs à avril donnerait un
+   * repère que l'utilisateur n'avait pas à l'époque.
+   */
+  const upTo = useMemo(
+    () => monthsOfYear(year).filter((m) => m <= month).map((m) => store.buckets.get(m)),
+    [year, month, store.buckets],
   );
 
-  /** Moyenne des trois derniers mois qui portent effectivement des revenus. */
   const average3 = useMemo(() => {
-    const active = last12.filter((b) => b.count > 0).slice(-3);
-    return active.length ? Math.round(active.reduce((s, b) => s + b.net, 0) / active.length) : 0;
-  }, [last12]);
+    const active = upTo.filter((b) => b && b.count > 0).slice(-3);
+    return active.length
+      ? Math.round(active.reduce((s, b) => s + (b?.net ?? 0), 0) / active.length)
+      : 0;
+  }, [upTo]);
+
+  const ticket = bucket.count > 0 ? Math.round(bucket.net / bucket.count) : 0;
+
   const hasAnything = store.entries.length > 0;
 
   return (
     <div className="flex flex-col gap-4">
-      {/* ---- Le mois -----------------------------------------------------
-          Trois choses, dans cet ordre : combien, par rapport à quoi, et
-          comment le mois s'est construit. Le reste de la page détaille. */}
+      {/* ================================================================
+          L'AFFICHE DU MOIS
+          Combien, par rapport à quoi, où j'en suis de l'objectif, et à
+          quoi ressemble l'année — sans scroller.
+          ================================================================ */}
       <section className="card anim-rise flex flex-col gap-5 p-5 sm:p-6">
         <div className="flex items-start justify-between gap-3 sm:gap-4">
           <Hero
             label={
               basis === "cash"
-                ? `Encaissé en ${monthLabel(month)} ${month.slice(0, 4)}`
-                : `Comptabilisé en ${monthLabel(month)} ${month.slice(0, 4)}`
+                ? `Encaissé en ${monthLabel(month)} ${year}`
+                : `Comptabilisé en ${monthLabel(month)} ${year}`
             }
             cents={bucket.net}
           >
@@ -187,7 +153,9 @@ export default function Dashboard() {
             </div>
             {overview.average12 > 0 ? (
               <p className="mt-2 text-[11.5px]" style={{ color: "var(--text-muted)" }}>
-                Moyenne 12 mois&nbsp;: {money(overview.average12)}
+                {/* Le libellé dit le nombre de mois réellement moyennés :
+                    « moyenne 12 mois » sur deux mois renseignés était faux. */}
+                {`Moyenne de ${plural(overview.averageMonths, "mois renseigné", "mois renseignés")}\u00a0: ${money(overview.average12)}`}
                 {overview.rank && overview.rank.position > 1 && overview.rank.outOf > 2
                   ? ` · ${overview.rank.position}ᵉ meilleur mois sur ${overview.rank.outOf}`
                   : ""}
@@ -195,8 +163,6 @@ export default function Dashboard() {
             ) : null}
           </Hero>
 
-          {/* L'anneau tient le rôle que la barre tenait plus bas : il se
-              lit de loin et il est lui-même le bouton de réglage. */}
           <GoalEditor
             month={month}
             goal={goal}
@@ -219,14 +185,42 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Douze barres, une par mois, cliquables : le mois se change
-            ici autant que dans l'en-tête. */}
-        <MonthBars
-          months={last12.map((b) => b.month)}
-          values={netTrend}
-          selected={month}
-          onSelect={setMonth}
-        />
+        {/* ---- L'année ------------------------------------------------ */}
+        <div className="flex flex-col gap-2.5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-0.5">
+              <button
+                type="button"
+                aria-label={`Année ${year - 1}`}
+                onClick={() => setMonth(`${year - 1}-${month.slice(5, 7)}` as MonthKey)}
+                className="rounded-full p-1 transition-colors hover:bg-[var(--surface-2)]"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                <Icon.left size={15} />
+              </button>
+              <span className="tnum px-1 text-[12.5px] font-semibold">{year}</span>
+              <button
+                type="button"
+                aria-label={`Année ${year + 1}`}
+                disabled={year >= yearOf(currentMonth())}
+                onClick={() => setMonth(`${year + 1}-${month.slice(5, 7)}` as MonthKey)}
+                className="rounded-full p-1 transition-colors enabled:hover:bg-[var(--surface-2)] disabled:opacity-30"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                <Icon.right size={15} />
+              </button>
+            </div>
+            {/* Chaîne construite plutôt que texte JSX collé à une
+                expression : JSX avale l'espace qui suit une accolade
+                fermante en fin de ligne, et « 12 557 €sur l'année »
+                est passé en production deux fois déjà. */}
+            <span className="tnum text-[11.5px]" style={{ color: "var(--text-muted)" }}>
+              {`${money(yearTotal)} sur l'année`}
+            </span>
+          </div>
+
+          <YearGrid cells={yearCells} selected={month} onSelect={setMonth} />
+        </div>
 
         {goal && !goal.reached ? (
           <p className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
@@ -245,7 +239,7 @@ export default function Dashboard() {
               <Icon.sparkle size={14} />
             </span>
             <span style={{ color: "var(--text-secondary)" }}>
-              Au rythme actuel, le mois finirait autour de
+              Au rythme des {projection.daysElapsed} premiers jours, le mois finirait autour de
             </span>
             <span className="tnum font-semibold">{money(projection.total)}</span>
             {projection.secured > 0 ? (
@@ -275,198 +269,103 @@ export default function Dashboard() {
         </Card>
       ) : null}
 
-      {/* ---- Tuiles ----------------------------------------------------
-          Aucune ne répète le chiffre de tête : quand il n'y a pas
-          d'achats, « encaissé brut » et « net » donnent le même nombre,
-          et une tuile qui redit le titre de la page ne sert à rien. */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {bucket.cost > 0 ? (
-          <StatTile
-            label="Encaissé brut"
-            value={money(bucket.revenue)}
-            hint={`${money(bucket.cost)} d'achats déduits`}
-            trend={last12.map((b) => b.revenue)}
-            trendColor="var(--series-1)"
-          />
-        ) : (
-          <StatTile
-            label="Encaissements"
-            value={String(bucket.count)}
-            hint={
-              rhythm.filled > 0
-                ? `sur ${plural(rhythm.filled, "jour", "jours")} du mois`
-                : "aucun ce mois-ci"
-            }
-            trend={last12.map((b) => b.count)}
-            trendColor="var(--series-1)"
-          />
-        )}
-        <StatTile
-          label="Par encaissement"
-          value={bucket.count > 0 ? money(Math.round(bucket.net / bucket.count)) : "—"}
-          hint={
-            averageTicket12 > 0
-              ? `${money(averageTicket12)} en moyenne sur 12 mois`
-              : "Montant moyen d'une rentrée"
-          }
-          trend={last12.map((b) => (b.count > 0 ? Math.round(b.net / b.count) : 0))}
-          trendColor="var(--series-3)"
-        />
-        {/* Cette tuile s'adapte : rien en attente et pas de taux de
-            cotisations réglé, elle montre la moyenne plutôt qu'un
-            « 0 € » qui n'apprend rien. */}
-        {pending.total > 0 ? (
-          <StatTile
-            label="En attente d'encaissement"
-            value={money(pending.total)}
-            tone={pending.overdueAmount > 0 ? "warning" : "neutral"}
-            hint={
-              pending.overdueAmount > 0
-                ? `dont ${money(pending.overdueAmount)} en retard`
-                : plural(pending.entries.length, "écriture", "écritures")
-            }
-            onClick={() =>
-              document.getElementById("attente")?.scrollIntoView({ behavior: "smooth" })
-            }
-          />
-        ) : chargeRate > 0 ? (
-          <StatTile
-            label="Après cotisations"
-            value={money(afterCharges)}
-            hint={`${percent(chargeRate)} retirés du brut encaissé`}
-            trend={last12.map((b) => Math.round(b.net - b.revenue * chargeRate))}
-            trendColor="var(--series-3)"
-          />
-        ) : (
-          <StatTile
-            label="Moyenne 3 mois"
-            value={money(average3)}
-            hint="Sur les trois derniers mois avec des revenus"
-          />
-        )}
-        <StatTile
-          label={`Cumul ${month.slice(0, 4)}`}
-          value={money(overview.ytd)}
-          delta={
-            overview.ytdLastYear > 0
-              ? (overview.ytd - overview.ytdLastYear) / overview.ytdLastYear
-              : null
-          }
-          deltaLabel="vs an dernier"
-          hint={overview.ytdLastYear > 0 ? undefined : "Pas d'historique sur l'an dernier"}
-          trend={cumulative.current.slice(0, cumulative.lastFilled + 1)}
-          trendColor="var(--series-1)"
-        />
-      </div>
-
-      {/* ---- D'où vient l'argent, ce mois-ci --------------------------- */}
-      <Card title={`D'où vient l'argent — ${monthLabel(month)}`}>
-        {slices.length > 0 ? (
-          <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center">
-            <Donut
-              slices={slices}
-              centerLabel="net du mois"
-              selected={focus}
-              onSelect={(id) => setFocus((f) => (f === id ? null : id))}
-            />
-            <div className="w-full min-w-0 flex-1">
-              <ShareLegend
-                slices={slices}
-                selected={focus}
-                onSelect={(id) => setFocus((f) => (f === id ? null : id))}
-              />
-            </div>
-          </div>
-        ) : (
-          <Empty
-            title={`Rien en ${monthLabel(month)}`}
-            detail="Change de mois dans l'en-tête, ou ajoute un encaissement pour ce mois."
-          />
-        )}
-      </Card>
-
-      {/* ---- Par activité ----------------------------------------------
-          Le ruban porte sur l'année, le camembert plus haut sur le mois :
-          deux périodes, deux questions — « qui me paie en ce moment »
-          n'est pas « qui m'a fait vivre cette année ». */}
-      {yearSlices.length > 0 ? (
-        <Card title={`Par activité — ${month.slice(0, 4)}`}>
-          <div className="flex flex-col gap-4">
-            <ShareBar
-              slices={yearSlices}
-              selected={focus}
-              onSelect={(id) => setFocus((f) => (f === id ? null : id))}
-            />
-            <ActivityTiles />
-          </div>
+      {/* ================================================================
+          QUI ME PAIE, ET QU'EST-CE QUI A BOUGÉ
+          ================================================================ */}
+      {shiftRows.length > 0 ? (
+        <Card title={`Qui me paie — ${monthLabel(month)}`}>
+          <ActivityShift rows={shiftRows} month={month} previousMonth={previousMonth} />
         </Card>
-      ) : (
-        <ActivityTiles />
-      )}
+      ) : null}
 
-      {/* ---- Rythme du mois --------------------------------------------- */}
+      {/* ================================================================
+          OÙ EN EST LE MOIS
+          ================================================================ */}
       {rhythm.filled > 0 ? (
         <Card
-          title={`Rythme de ${monthLabel(month)}`}
+          title={`Où en est ${monthLabel(month)}`}
           action={
             <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
               {plural(rhythm.filled, "jour avec une rentrée", "jours avec une rentrée")}
             </span>
           }
         >
-          <DayRhythm month={month} amounts={rhythm.days} />
-        </Card>
-      ) : null}
-
-      {/* ---- Évolution ------------------------------------------------- */}
-      <Card
-        title="Douze derniers mois"
-        action={
-          <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-            Clic sur un mois pour le cadrer
-          </span>
-        }
-      >
-        <StackedMonths
-          data={last12}
-          streams={activeStreams}
-          metric="net"
-          selected={month}
-          onSelect={setMonth}
-          height={250}
-        />
-      </Card>
-
-      {/* ---- Cumul de l'année ------------------------------------------ */}
-      {cumulative.hasHistory ? (
-        <Card
-          title={`Cumul ${cumulative.year}`}
-          action={
-            cumulative.deltaLabel ? (
-              <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-                {cumulative.deltaLabel}
-              </span>
-            ) : null
-          }
-        >
-          <CumulativeYear
-            months={cumulative.months}
-            current={cumulative.current}
-            previous={cumulative.previous}
-            currentLabel={String(cumulative.year)}
-            previousLabel={String(cumulative.year - 1)}
-            goalCents={cumulative.goalCents}
-            through={cumulative.lastFilled}
+          <MonthStairs
+            month={month}
+            amounts={rhythm.days}
+            goalCents={goal?.target ?? null}
+            basis={basis}
           />
         </Card>
       ) : null}
 
-      {/* ---- Ce qu'il faut retenir -------------------------------------- */}
+      {/* ================================================================
+          LES COMPTEURS — quatre nombres, une seule carte
+          ================================================================ */}
+      <Card padded={false}>
+        <div className="grid grid-cols-2 lg:grid-cols-4">
+          <Counter
+            label={basis === "cash" ? "Encaissements" : "Ventes"}
+            value={String(bucket.count)}
+            hint={
+              rhythm.filled > 0
+                ? `sur ${plural(rhythm.filled, "jour", "jours")} du mois`
+                : "aucun ce mois-ci"
+            }
+            cell={0}
+          />
+          <Counter
+            label="Par encaissement"
+            value={bucket.count > 0 ? money(ticket) : "—"}
+            hint="Montant moyen d'une rentrée"
+            cell={1}
+          />
+          {pending.total > 0 ? (
+            <Counter
+              label="En attente"
+              value={money(pending.total)}
+              tone={pending.overdueAmount > 0 ? "var(--warning)" : undefined}
+              hint={
+                pending.overdueAmount > 0
+                  ? `dont ${money(pending.overdueAmount)} en retard`
+                  : plural(pending.entries.length, "écriture", "écritures")
+              }
+              cell={2}
+              onClick={() =>
+                document.getElementById("attente")?.scrollIntoView({ behavior: "smooth" })
+              }
+            />
+          ) : chargeRate > 0 ? (
+            <Counter
+              label="Après cotisations"
+              value={money(afterCharges)}
+              hint={`${percent(chargeRate)} retirés du brut`}
+              cell={2}
+            />
+          ) : (
+            <Counter
+              label="Moyenne 3 mois"
+              value={money(average3)}
+              hint="Les trois derniers mois actifs"
+              cell={2}
+            />
+          )}
+          <Counter
+            label={`Cumul ${year}`}
+            value={money(overview.ytd)}
+            hint={`à fin ${monthLabel(month)}`}
+            cell={3}
+          />
+        </div>
+      </Card>
+
+      {/* ================================================================
+          CE QU'IL FAUT RETENIR
+          ================================================================ */}
       <Card title="Ce qu'il faut retenir">
         <InsightList insights={store.insights} />
       </Card>
 
-      {/* ---- Encaissements en attente ---------------------------------- */}
       {pending.entries.length > 0 ? (
         <div id="attente">
           <PendingPanel />
@@ -484,5 +383,64 @@ export default function Dashboard() {
         </Link>
       </div>
     </div>
+  );
+}
+
+/* ===================================================================
+   Un compteur : un nombre, son libellé, son indice. Pas de courbe —
+   celle des tuiles redisait au 1/10ᵉ ce que l'affiche montre en grand,
+   et son point accentué ne désignait même pas le mois affiché.
+   =================================================================== */
+
+/**
+ * Les filets suivent la grille : deux colonnes sur téléphone, quatre
+ * sur grand écran. D'où des classes par rang plutôt qu'un booléen —
+ * la case 1 n'a pas de filet à droite à deux colonnes, elle en a un à
+ * quatre.
+ */
+const CELL_BORDERS = [
+  "border-b border-r lg:border-b-0",
+  "border-b lg:border-b-0 lg:border-r",
+  "border-r",
+  "",
+];
+
+function Counter({
+  label,
+  value,
+  hint,
+  tone,
+  cell = 0,
+  onClick,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  tone?: string;
+  cell?: number;
+  onClick?: () => void;
+}) {
+  const Root = onClick ? "button" : "div";
+  return (
+    <Root
+      {...(onClick ? { type: "button" as const, onClick } : {})}
+      className={`flex flex-col gap-1 p-4 text-left ${CELL_BORDERS[cell] ?? ""} ${
+        onClick ? "transition-colors hover:bg-[var(--surface-2)]" : ""
+      }`}
+      style={{ borderColor: "var(--border)" }}
+    >
+      <span className="flex items-center gap-1.5 text-[11.5px]" style={{ color: "var(--text-secondary)" }}>
+        {tone ? (
+          <span aria-hidden className="h-1.5 w-1.5 rounded-full" style={{ background: tone }} />
+        ) : null}
+        {label}
+      </span>
+      <span className="tnum text-[20px] font-semibold leading-none tracking-tight">{value}</span>
+      {hint ? (
+        <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+          {hint}
+        </span>
+      ) : null}
+    </Root>
   );
 }

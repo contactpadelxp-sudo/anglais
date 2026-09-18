@@ -17,13 +17,23 @@ import {
   thresholds,
 } from "@/lib/fiscal";
 import { money, percent } from "@/lib/format";
-import { dayLabel, monthLabel, monthsOfYear, yearOf, currentMonth } from "@/lib/dates";
+import { dayLabel, monthLabel, monthsOfYear, yearOf, currentMonth, type MonthKey } from "@/lib/dates";
 
 export default function ComptabilitePage() {
   const store = useStore();
   const { entries, streams, fiscal, month } = store;
 
-  const [year, setYear] = useState(() => String(yearOf(month)));
+  /**
+   * L'année est DÉRIVÉE du mois, avec une surcharge explicite.
+   *
+   * Elle était figée au montage : choisir décembre 2025 dans l'en-tête
+   * laissait la page sur 2026, et comme le sélecteur d'année se cache
+   * tant qu'il n'y a qu'une seule année de données, la page restait
+   * bloquée sur une année vide sans aucun moyen d'en sortir.
+   */
+  const [override, setOverride] = useState<{ year: string; from: MonthKey } | null>(null);
+  const year = override && override.from === month ? override.year : String(yearOf(month));
+  const setYear = (y: string) => setOverride({ year: y, from: month });
   const [scope, setScope] = useState<"annee" | "mois">("annee");
 
   const months = useMemo(
@@ -86,11 +96,13 @@ export default function ComptabilitePage() {
     };
   }, [acre, fiscal.activityStart]);
 
+  // L'année affichée fait toujours partie de la liste, même sans
+  // aucune écriture : sinon le sélecteur ne permet pas de la quitter.
   const years = useMemo(() => {
-    const set = new Set<string>([String(yearOf(currentMonth()))]);
+    const set = new Set<string>([String(yearOf(currentMonth())), year]);
     for (const e of entries) if (e.received_on) set.add(e.received_on.slice(0, 4));
     return [...set].sort().reverse();
-  }, [entries]);
+  }, [entries, year]);
 
   const hasData = report.caTotalCents > 0;
 

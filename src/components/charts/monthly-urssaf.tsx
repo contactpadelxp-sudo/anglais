@@ -56,7 +56,7 @@ export function MonthlyUrssaf({
           height={height}
           role="img"
           aria-label="Cotisations dues mois par mois"
-          onMouseLeave={() => {
+          onPointerLeave={() => {
             setTip(null);
             setHovered(null);
           }}
@@ -150,7 +150,7 @@ export function MonthlyUrssaf({
                   width={band}
                   height={plotH}
                   fill="transparent"
-                  onMouseMove={(e) => {
+                  onPointerMove={(e) => {
                     setHovered(i);
                     const rect = e.currentTarget.ownerSVGElement!.getBoundingClientRect();
                     setTip({

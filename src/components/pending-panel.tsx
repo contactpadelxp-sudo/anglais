@@ -30,25 +30,37 @@ export function PendingPanel() {
       return next;
     });
 
-  const selectedAmount = useMemo(
-    () =>
-      pending.entries
-        .filter((e) => selected.has(e.id))
-        .reduce((s, e) => s + e.gross_cents - e.fee_cents, 0),
+  /**
+   * La sélection effective est DÉRIVÉE de la liste courante, jamais
+   * seulement stockée.
+   *
+   * Une écriture cochée puis encaissée ailleurs (depuis la page
+   * Revenus, ou dans la feuille d'édition ouverte par-dessus ce
+   * panneau) quitte `pending.entries` mais restait dans `selected` :
+   * le bouton « Encaisser » la redatait alors une seconde fois, au
+   * jour du clic, écrasant sa vraie date d'encaissement.
+   */
+  const live = useMemo(
+    () => pending.entries.filter((e) => selected.has(e.id)),
     [pending.entries, selected],
+  );
+  const liveIds = useMemo(() => live.map((e) => e.id), [live]);
+  const selectedAmount = useMemo(
+    () => live.reduce((s, e) => s + e.gross_cents - e.fee_cents, 0),
+    [live],
   );
 
   return (
     <Card
       title="En attente d'encaissement"
       action={
-        selected.size > 0 ? (
+        liveIds.length > 0 ? (
           <Button
             size="sm"
             variant="primary"
             icon={<Icon.check size={14} />}
             onClick={async () => {
-              await settle([...selected], today());
+              await settle(liveIds, today());
               setSelected(new Set());
             }}
           >

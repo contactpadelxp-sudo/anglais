@@ -215,11 +215,15 @@ function MonthStepper({
         {monthLabel(month, "full")}
       </button>
 
+      {/* Borné au mois courant, comme la liste déroulante juste à côté :
+          la flèche emmenait dans un futur sans données, que la liste ne
+          proposait pas et où aucune coche n'était affichée. */}
       <button
         type="button"
         onClick={() => onChange(shiftMonth(month, 1))}
+        disabled={isCurrent}
         aria-label="Mois suivant"
-        className="rounded-full p-1.5 transition-colors hover:bg-[var(--surface-2)]"
+        className="rounded-full p-1.5 transition-colors enabled:hover:bg-[var(--surface-2)] disabled:opacity-30"
         style={{ color: "var(--text-secondary)" }}
       >
         <Icon.right size={17} />

@@ -25,10 +25,9 @@ import {
   indexStreams,
   monthOverview,
   pendingReport,
-  series,
   sortStreams,
 } from "@/lib/analytics";
-import { type MonthKey, currentMonth, monthOf, monthRange, today } from "@/lib/dates";
+import { type MonthKey, currentMonth, monthOf, today } from "@/lib/dates";
 import { money, percent } from "@/lib/format";
 import * as api from "@/lib/actions";
 import {
@@ -139,7 +138,6 @@ type Store = {
   buckets: Map<MonthKey, MonthBucket>;
   bucket: MonthBucket;
   overview: MonthOverview;
-  last12: MonthBucket[];
   pending: PendingReport;
   insights: ReturnType<typeof buildInsights>;
   goal: ReturnType<typeof goalProgress>;
@@ -240,7 +238,6 @@ export function StoreProvider({
   const buckets = useMemo(() => bucketByMonth(state.entries, basis), [state.entries, basis]);
   const bucket = useMemo(() => bucketFor(buckets, month), [buckets, month]);
   const overview = useMemo(() => monthOverview(buckets, month), [buckets, month]);
-  const last12 = useMemo(() => series(buckets, monthRange(month, 12)), [buckets, month]);
   const pending = useMemo(
     () => pendingReport(state.entries, state.streams),
     [state.entries, state.streams],
@@ -483,7 +480,6 @@ export function StoreProvider({
     buckets,
     bucket,
     overview,
-    last12,
     pending,
     insights,
     goal,

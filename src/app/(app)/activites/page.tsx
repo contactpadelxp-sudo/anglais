@@ -8,11 +8,15 @@ import { Icon, StreamIcon } from "@/components/ui/icons";
 import { Sparkline } from "@/components/charts/small";
 import { streamMetrics } from "@/lib/analytics";
 import { money, percent, plural } from "@/lib/format";
-import { monthRange, currentMonth } from "@/lib/dates";
+import { monthRange, monthLabel } from "@/lib/dates";
 
 export default function ActivitiesPage() {
-  const { activeStreams, entries, basis } = useStore();
-  const months = useMemo(() => monthRange(currentMonth(), 12), []);
+  const { activeStreams, entries, basis, month } = useStore();
+  // La fenêtre va jusqu'au mois AFFICHÉ : l'en-tête garde son
+  // sélecteur de mois sur cette page, et une tuile « Ce mois-ci » qui
+  // montrait septembre pendant que l'en-tête affichait avril était
+  // simplement fausse.
+  const months = useMemo(() => monthRange(month, 12), [month]);
 
   const cards = useMemo(
     () => activeStreams.map((s) => streamMetrics(s, entries, basis, months)),
@@ -69,7 +73,7 @@ export default function ActivitiesPage() {
               <div className="grid grid-cols-3 gap-2">
                 <Stat label="12 mois" value={money(m.total.net)} />
                 <Stat
-                  label="Ce mois-ci"
+                  label={monthLabel(month)}
                   value={money(m.months.at(-1)?.net ?? 0)}
                 />
                 <Stat

@@ -30,15 +30,23 @@ export default function LedgerPage() {
 
   const hasPending = useMemo(() => entries.some((e) => e.status === "pending"), [entries]);
 
+  /**
+   * Le filtre « En attente » ne survit pas à la disparition de son
+   * option : en confirmant la dernière écriture en attente depuis
+   * cette page, la liste se vidait et plus aucun segment n'était
+   * marqué actif — rien n'expliquait le vide.
+   */
+  const activeKind: Kind = kind === "pending" && !hasPending ? "all" : kind;
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return entries
       .filter((e) => {
         if (e.status === "cancelled") return false;
         if (stream && e.stream_id !== stream) return false;
-        if (kind === "in" && e.direction !== "in") return false;
-        if (kind === "out" && e.direction !== "out") return false;
-        if (kind === "pending" && e.status !== "pending") return false;
+        if (activeKind === "in" && e.direction !== "in") return false;
+        if (activeKind === "out" && e.direction !== "out") return false;
+        if (activeKind === "pending" && e.status !== "pending") return false;
         if (scope === "month") {
           // Une écriture en attente n'a pas de date d'encaissement : on
           // la rattache au mois de sa vente pour qu'elle reste visible.
@@ -58,7 +66,7 @@ export default function LedgerPage() {
         const db = dateOf(b, basis) ?? b.occurred_on;
         return db.localeCompare(da);
       });
-  }, [entries, stream, kind, scope, query, basis, month, streamById]);
+  }, [entries, stream, activeKind, scope, query, basis, month, streamById]);
 
   const grouped = useMemo(() => {
     const map = new Map<DayKey, Entry[]>();
@@ -102,7 +110,7 @@ export default function LedgerPage() {
         <Segmented
           size="sm"
           label="Type"
-          value={kind}
+          value={activeKind}
           onChange={setKind}
           options={[
             { value: "all", label: "Tout" },

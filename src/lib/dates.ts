@@ -69,6 +69,12 @@ export function shiftMonth(month: MonthKey, delta: number): MonthKey {
   return `${ny}-${pad(nm + 1)}`;
 }
 
+/** Nombre de mois entre deux clés, toujours positif ou nul. */
+export function monthsBetween(a: MonthKey, b: MonthKey): number {
+  const index = (k: MonthKey) => yearOf(k) * 12 + monthIndex(k);
+  return Math.abs(index(b) - index(a));
+}
+
 /** La fenêtre des `n` derniers mois, celui de `end` compris. */
 export function monthRange(end: MonthKey, n: number): MonthKey[] {
   return Array.from({ length: n }, (_, i) => shiftMonth(end, i - n + 1));

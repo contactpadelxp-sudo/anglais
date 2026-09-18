@@ -95,11 +95,20 @@ export function StackedMonths({
     return undefined;
   };
 
-  const legend = streams.map((s) => ({
-    id: s.id,
-    label: s.name,
-    color: `var(--series-${s.color_slot})`,
-  }));
+  // La légende ne propose que les activités qui ont quelque chose à
+  // montrer sur la période. Sinon, en sélectionner une donnait un
+  // graphique vide surmonté de cinq graduations « 0 € » identiques.
+  const legend = useMemo(
+    () =>
+      streams
+        .filter((s) => data.some((b) => (b.byStream[s.id]?.[metric] ?? 0) !== 0))
+        .map((s) => ({
+          id: s.id,
+          label: s.name,
+          color: `var(--series-${s.color_slot})`,
+        })),
+    [streams, data, metric],
+  );
 
   function showTip(i: number, clientX: number, rect: DOMRect) {
     const bucket = data[i];
@@ -143,7 +152,7 @@ export function StackedMonths({
             height={height}
             role="img"
             aria-label={`Revenus par activité sur ${data.length} mois`}
-            onMouseLeave={() => {
+            onPointerLeave={() => {
               setTip(null);
               setHovered(null);
             }}
@@ -269,7 +278,7 @@ export function StackedMonths({
                     height={plotH}
                     fill="transparent"
                     style={{ cursor: onSelect ? "pointer" : "default" }}
-                    onMouseMove={(e) => {
+                    onPointerMove={(e) => {
                       setHovered(i);
                       showTip(i, e.clientX, e.currentTarget.ownerSVGElement!.getBoundingClientRect());
                     }}

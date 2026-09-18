@@ -408,7 +408,13 @@ export function projectMonth(
   /** Encaissements déjà vendus dont la date prévue tombe dans ce mois. */
   securedPending: number,
   ref: DayKey = today(),
-): { paced: number; secured: number; total: number; confidence: number } | null {
+): {
+  paced: number;
+  secured: number;
+  total: number;
+  confidence: number;
+  daysElapsed: number;
+} | null {
   if (monthOf(ref) !== month) return null;
   const total = daysInMonth(month);
   const elapsed = Math.max(1, Number(ref.slice(8, 10)));
@@ -418,6 +424,7 @@ export function projectMonth(
     secured: securedPending,
     total: paced + securedPending,
     confidence: elapsed / total,
+    daysElapsed: elapsed,
   };
 }
 
@@ -434,6 +441,8 @@ export type MonthOverview = {
   vsLastYear: Delta;
   /** Moyenne des 12 mois précédents (le mois courant exclu). */
   average12: number;
+  /** Nombre de mois réellement moyennés dans `average12`. */
+  averageMonths: number;
   best: MonthBucket | null;
   ytd: number;
   ytdLastYear: number;
@@ -448,11 +457,17 @@ export function monthOverview(
   const previous = bucketFor(buckets, shiftMonth(month, -1));
   const lastYear = bucketFor(buckets, shiftMonth(month, -12));
 
+  // La moyenne ne porte que sur les mois RENSEIGNÉS des douze
+  // précédents — inclure les mois d'avant le début d'activité la
+  // ferait chuter sans que ça veuille dire quoi que ce soit. Le compte
+  // est renvoyé avec elle : « moyenne 12 mois » sur deux mois
+  // renseignés était un libellé faux.
   const trailing = monthRange(shiftMonth(month, -1), 12).map((m) => bucketFor(buckets, m));
   const nonEmpty = trailing.filter((b) => b.count > 0);
   const average12 = nonEmpty.length
     ? Math.round(nonEmpty.reduce((s, b) => s + b.net, 0) / nonEmpty.length)
     : 0;
+  const averageMonths = nonEmpty.length;
 
   const all = [...buckets.values()].filter((b) => b.count > 0);
   const best = all.length ? all.reduce((a, b) => (b.net > a.net ? b : a)) : null;
@@ -478,6 +493,7 @@ export function monthOverview(
     vsPrevious: delta(current.net, previous.net),
     vsLastYear: delta(current.net, lastYear.net),
     average12,
+    averageMonths,
     best,
     ytd,
     ytdLastYear,
@@ -758,7 +774,12 @@ export function buildInsights(input: InsightInput): Insight[] {
         id: "vs-avg",
         tone: d.absolute > 0 ? "good" : "neutral",
         title: `${pct(Math.abs(d.ratio))} ${d.absolute > 0 ? "au-dessus" : "en dessous"} de ta moyenne`,
-        detail: `Moyenne des 12 derniers mois : ${fmt(overview.average12)}.`,
+        // Le nombre de mois est dit : « moyenne des 12 derniers mois »
+        // sur sept mois renseignés était faux, et le chiffre de tête
+        // annonce déjà la bonne période.
+        detail: `Moyenne de ${overview.averageMonths} mois renseigné${
+          overview.averageMonths > 1 ? "s" : ""
+        } : ${fmt(overview.average12)}.`,
       });
     }
   }

@@ -85,7 +85,7 @@ export function Trend({
             height={height}
             role="img"
             aria-label={series.map((s) => s.label).join(" et ")}
-            onMouseMove={(e) => {
+            onPointerMove={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               const raw = (e.clientX - rect.left - PAD.left) / (step || 1);
               const i = Math.max(0, Math.min(months.length - 1, Math.round(raw)));
@@ -101,7 +101,7 @@ export function Trend({
                 })),
               });
             }}
-            onMouseLeave={() => {
+            onPointerLeave={() => {
               setIndex(null);
               setTip(null);
             }}

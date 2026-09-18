@@ -315,7 +315,7 @@ export function Heatmap({
                         style={{ background: shade(value) }}
                         aria-label={`${monthLabel(key, "full")} : ${money(value)}`}
                         onClick={() => onSelect?.(key)}
-                        onMouseMove={(e) => {
+                        onPointerMove={(e) => {
                           const host = e.currentTarget.closest(".relative") as HTMLElement;
                           const rect = host.getBoundingClientRect();
                           setTip({
@@ -325,7 +325,7 @@ export function Heatmap({
                             rows: [{ label: "Revenu net", value: money(value) }],
                           });
                         }}
-                        onMouseLeave={() => setTip(null)}
+                        onPointerLeave={() => setTip(null)}
                       />
                     </td>
                   );

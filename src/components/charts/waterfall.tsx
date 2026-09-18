@@ -68,7 +68,7 @@ export function Waterfall({ steps, height = 260 }: { steps: WaterfallStep[]; hei
             height={height}
             role="img"
             aria-label="Décomposition du chiffre d'affaires jusqu'au net"
-            onMouseLeave={() => {
+            onPointerLeave={() => {
               setTip(null);
               setHovered(null);
             }}
@@ -167,7 +167,7 @@ export function Waterfall({ steps, height = 260 }: { steps: WaterfallStep[]; hei
                     width={band}
                     height={plotH}
                     fill="transparent"
-                    onMouseMove={(e) => {
+                    onPointerMove={(e) => {
                       setHovered(i);
                       const rect = e.currentTarget.ownerSVGElement!.getBoundingClientRect();
                       setTip({

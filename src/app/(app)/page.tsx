@@ -337,9 +337,15 @@ export default function Dashboard() {
                           className="h-2 w-2 shrink-0 rounded-full"
                           style={{
                             background: r.color,
-                            // Trois teintes de la palette passent sous 3:1
-                            // sur fond clair : un filet leur rend un bord.
-                            outline: "1px solid var(--border)",
+                            // Trois teintes passent sous 3:1 sur fond
+                            // clair. Le filet se pose DEDANS, assez
+                            // appuyé pour créer une arête : --border
+                            // composé sur la teinte ne donne que
+                            // 2,57:1, --border-strong monte à 3,03:1
+                            // sur le pire cas. Le nom écrit juste à
+                            // côté reste le vrai recours — la couleur
+                            // n'est jamais seule à porter l'identité.
+                            outline: "1px solid var(--border-strong)",
                             outlineOffset: -1,
                           }}
                         />
@@ -470,6 +476,16 @@ export default function Dashboard() {
                 <span className="tnum font-semibold">
                   {money(projection.total)}
                 </span>
+                {/* Le total additionne le rythme ET les ventes déjà
+                    conclues dont le versement tombe ce mois-ci. Sans
+                    cette clause, la phrase met au compte du rythme un
+                    argent qui ne lui doit rien — jusqu'à 40 % de plus
+                    que ce qu'elle affirme. */}
+                {projection.secured > 0 ? (
+                  <span style={{ color: "var(--text-muted)" }}>
+                    {`dont ${money(projection.secured)} déjà vendus, versement prévu ce mois-ci`}
+                  </span>
+                ) : null}
               </div>
             ) : null}
           </div>
@@ -488,7 +504,7 @@ export default function Dashboard() {
           <span className="flex items-center gap-1">
             <span
               className="tnum mr-1 text-[11.5px]"
-              style={{ color: "var(--text-muted)" }}
+              style={{ color: "var(--text-secondary)" }}
             >
               {`${money(yearTotal)} sur l'année`}
             </span>

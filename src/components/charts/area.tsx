@@ -89,26 +89,29 @@ export function TrendArea({
             strokeLinecap="round"
             strokeLinejoin="round"
           />
+          {/* Le trait vertical n'apparaît qu'au survol : posé en
+              permanence sur le dernier point, il se lisait comme une
+              bordure de la courbe. */}
+          {index !== null ? (
+            <line
+              x1={x(index)}
+              x2={x(index)}
+              y1={y(values[index])}
+              y2={height - 6}
+              stroke={color}
+              strokeWidth={1}
+              opacity={0.35}
+            />
+          ) : null}
           {shown !== null ? (
-            <>
-              <line
-                x1={x(shown)}
-                x2={x(shown)}
-                y1={y(values[shown])}
-                y2={height - 6}
-                stroke={color}
-                strokeWidth={1}
-                opacity={0.35}
-              />
-              <circle
-                cx={x(shown)}
-                cy={y(values[shown])}
-                r={4}
-                fill={color}
-                stroke="var(--surface-1)"
-                strokeWidth={2}
-              />
-            </>
+            <circle
+              cx={x(shown)}
+              cy={y(values[shown])}
+              r={4}
+              fill={color}
+              stroke="var(--surface-1)"
+              strokeWidth={2}
+            />
           ) : null}
         </svg>
       ) : null}

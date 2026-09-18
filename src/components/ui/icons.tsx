@@ -162,6 +162,14 @@ export const Icon = {
       <circle cx="12" cy="12" r="8" />
     </svg>
   ),
+  /** Le bouton Partager d'iOS : le geste d'installation passe par lui. */
+  share: (p: P) => (
+    <svg {...base(p)}>
+      <path d="M12 15V3" />
+      <path d="m8 7 4-4 4 4" />
+      <path d="M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7" />
+    </svg>
+  ),
   download: (p: P) => (
     <svg {...base(p)}>
       <path d="M12 3v12M7 11l5 5 5-5M4 20h16" />

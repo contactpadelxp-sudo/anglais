@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useStore } from "./store";
 import { Composer } from "./composer";
+import { InstallBanner } from "./install-banner";
 import { Icon, type IconName } from "./ui/icons";
 import { Segmented, ThemeToggle } from "./ui/kit";
 import { monthLabel, monthRange, shiftMonth, currentMonth, type MonthKey } from "@/lib/dates";
@@ -32,7 +33,8 @@ export function Shell({ email, children }: { email: string; children: React.Reac
       <Sidebar email={email} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Header />
-        <main className="mx-auto w-full max-w-[1180px] flex-1 px-4 pb-28 pt-4 sm:px-6 lg:pb-10">
+        <main className="mx-auto flex w-full max-w-[1180px] flex-1 flex-col gap-4 px-4 pb-28 pt-4 sm:px-6 lg:pb-10">
+          <InstallBanner />
           {children}
         </main>
       </div>
@@ -134,33 +136,39 @@ function Header() {
         background: "color-mix(in oklab, var(--plane) 82%, transparent)",
       }}
     >
-      <div className="mx-auto flex w-full max-w-[1180px] items-center gap-2 px-4 py-2.5 sm:px-6">
+      {/* Le sélecteur de base ne tient pas sur la même ligne que le mois
+          à 390 px : il passait sous le bord droit de l'écran, coupé et
+          inatteignable. Il descend d'une ligne au lieu de disparaître. */}
+      <div className="mx-auto flex w-full max-w-[1180px] flex-wrap items-center gap-2 px-4 py-2.5 sm:flex-nowrap sm:px-6">
         <span className="flex items-center gap-2 lg:hidden">
           <Logo />
         </span>
         <MonthStepper month={month} onChange={setMonth} />
         <div className="flex-1" />
-        {hasTimingGap ? (
-          <Segmented
-            label="Base de calcul"
-            size="sm"
-            value={basis}
-            onChange={setBasis}
-            options={[
-              {
-                value: "cash",
-                label: "Encaissé",
-                hint: "L'argent au jour où il arrive sur le compte",
-              },
-              {
-                value: "accrual",
-                label: "Comptabilisé",
-                hint: "La vente au jour où elle est conclue",
-              },
-            ]}
-          />
-        ) : null}
         <ThemeToggle />
+        {hasTimingGap ? (
+          <div className="order-last w-full sm:order-none sm:w-auto">
+            <Segmented
+              label="Base de calcul"
+              size="sm"
+              full
+              value={basis}
+              onChange={setBasis}
+              options={[
+                {
+                  value: "cash",
+                  label: "Encaissé",
+                  hint: "L'argent au jour où il arrive sur le compte",
+                },
+                {
+                  value: "accrual",
+                  label: "Comptabilisé",
+                  hint: "La vente au jour où elle est conclue",
+                },
+              ]}
+            />
+          </div>
+        ) : null}
       </div>
     </header>
   );

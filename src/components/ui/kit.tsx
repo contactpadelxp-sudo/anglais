@@ -110,19 +110,81 @@ export function StatTile({
   );
 }
 
-export function Delta({ ratio, label }: { ratio: number; label?: string }) {
+export function Delta({
+  ratio,
+  label,
+  variant = "text",
+}: {
+  ratio: number;
+  label?: string;
+  /**
+   * « pill » teinte le fond : à côté d'un chiffre de 44 px, une
+   * variation en gris de 11 px ne se voit pas.
+   */
+  variant?: "text" | "pill";
+}) {
   const up = ratio >= 0;
   const Arrow = up ? Icon.up : Icon.down;
+  const tone = up ? "var(--delta-up)" : "var(--delta-down)";
+
+  if (variant === "pill") {
+    return (
+      <span className="flex items-center gap-1.5">
+        <span
+          className="flex items-center gap-1 rounded-full px-2 py-[3px] text-[12px] font-semibold"
+          style={{
+            color: tone,
+            background: `color-mix(in oklab, ${tone} 14%, transparent)`,
+          }}
+        >
+          <Arrow size={12} className="shrink-0" />
+          <span className="tnum">{signedPercent(ratio)}</span>
+        </span>
+        {label ? (
+          <span className="text-[11.5px]" style={{ color: "var(--text-muted)" }}>
+            {label}
+          </span>
+        ) : null}
+      </span>
+    );
+  }
+
   return (
     <span className="flex items-center gap-1 text-[11.5px]">
       <Arrow size={12} className="shrink-0" />
-      <span
-        className="tnum font-medium"
-        style={{ color: up ? "var(--delta-up)" : "var(--delta-down)" }}
-      >
+      <span className="tnum font-medium" style={{ color: tone }}>
         {signedPercent(ratio)}
       </span>
       {label ? <span style={{ color: "var(--text-muted)" }}>{label}</span> : null}
+    </span>
+  );
+}
+
+/* ===================================================================
+   Pastille de fait — une donnée de contexte, pas une phrase.
+   =================================================================== */
+
+export function Chip({
+  icon,
+  children,
+  tone,
+}: {
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  tone?: string;
+}) {
+  return (
+    <span
+      className="flex items-center gap-1.5 rounded-full px-2.5 py-[3px] text-[11.5px]"
+      style={{
+        background: tone
+          ? `color-mix(in oklab, ${tone} 13%, transparent)`
+          : "var(--surface-2)",
+        color: tone ?? "var(--text-secondary)",
+      }}
+    >
+      {icon ? <span className="flex shrink-0 items-center">{icon}</span> : null}
+      {children}
     </span>
   );
 }
@@ -143,11 +205,11 @@ export function Hero({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex min-w-0 flex-col gap-1">
       <span className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
         {label}
       </span>
-      <span className="text-[44px] font-semibold leading-[1.05] tracking-[-0.02em] sm:text-[56px]">
+      <span className="text-[40px] font-semibold leading-[1.05] tracking-[-0.02em] sm:text-[56px]">
         {money(cents)}
       </span>
       {children}
@@ -165,18 +227,21 @@ export function Segmented<T extends string>({
   onChange,
   size = "md",
   label,
+  full = false,
 }: {
   options: { value: T; label: string; hint?: string }[];
   value: T;
   onChange: (v: T) => void;
   size?: "sm" | "md";
   label?: string;
+  /** Occupe toute la largeur, options à parts égales. */
+  full?: boolean;
 }) {
   return (
     <div
       role="radiogroup"
       aria-label={label}
-      className="inline-flex shrink-0 rounded-full p-0.5"
+      className={`rounded-full p-0.5 ${full ? "flex w-full" : "inline-flex shrink-0"}`}
       style={{ background: "var(--surface-2)" }}
     >
       {options.map((o) => {
@@ -191,7 +256,7 @@ export function Segmented<T extends string>({
             onClick={() => onChange(o.value)}
             className={`rounded-full font-medium transition-all ${
               size === "sm" ? "px-2.5 py-1 text-[11.5px]" : "px-3.5 py-1.5 text-[12.5px]"
-            }`}
+            } ${full ? "flex-1" : ""}`}
             style={{
               background: active ? "var(--surface-1)" : "transparent",
               color: active ? "var(--text-primary)" : "var(--text-secondary)",

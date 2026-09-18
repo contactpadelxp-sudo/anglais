@@ -12,9 +12,20 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "Revenus",
-    // Laisse le contenu passer sous la barre d'état iOS ; les zones de
-    // sécurité sont gérées par les classes .pt-safe / .pb-safe.
-    statusBarStyle: "black-translucent",
+    // « default » et pas « black-translucent » : le mode translucide
+    // écrit l'heure et la batterie en blanc quel que soit le thème, ce
+    // qui les rend invisibles sur le fond clair. Ici la barre d'état
+    // prend la couleur déclarée par `themeColor`, différente en clair
+    // et en sombre, et iOS y choisit un texte lisible.
+    statusBarStyle: "default",
+  },
+  other: {
+    // Next 16 n'émet plus que `mobile-web-app-capable`. iOS ne
+    // s'ouvre en plein écran sans barre d'adresse que s'il trouve
+    // AUSSI l'ancienne balise, ou un manifeste en `display:
+    // standalone` — et seulement depuis iOS 16.4. Les deux coûtent une
+    // ligne ; l'écran plein coûte plus cher à rater.
+    "apple-mobile-web-app-capable": "yes",
   },
   formatDetection: { telephone: false },
   robots: { index: false, follow: false },

@@ -54,7 +54,7 @@ export function ActivityTiles({ months = 12 }: { months?: number }) {
             href={`/activites/${encodeURIComponent(stream.key)}`}
             className="card anim-rise flex flex-col gap-2 p-3.5 transition-colors hover:bg-[var(--surface-2)]"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex min-h-[24px] items-center gap-2">
               <span
                 aria-hidden
                 className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[8px]"
@@ -62,8 +62,10 @@ export function ActivityTiles({ months = 12 }: { months?: number }) {
               >
                 <StreamIcon name={stream.icon} size={13} />
               </span>
+              {/* Le nom se replie plutôt que de se faire couper :
+                  « Création de sit… » ne nomme plus rien. */}
               <span
-                className="truncate text-[12px] font-medium"
+                className="text-[12px] font-medium leading-tight"
                 style={{ color: "var(--text-secondary)" }}
               >
                 {stream.name}

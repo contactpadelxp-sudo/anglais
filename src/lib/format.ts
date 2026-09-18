@@ -51,6 +51,9 @@ export function percent(ratio: number, digits = 0) {
 export function signedPercent(ratio: number, digits = 0) {
   if (!Number.isFinite(ratio)) return "—";
   const s = percent(Math.abs(ratio), digits);
+  // « −0 % » n'existe pas. Une variation qui s'arrondit à zéro se dit
+  // « stable » : le signe annonçait une baisse que le chiffre dément.
+  if (s === percent(0, digits)) return "stable";
   if (ratio > 0) return `+${s}`;
   if (ratio < 0) return `−${s}`;
   return s;

@@ -21,7 +21,16 @@ import { monthLabel, currentMonth, type MonthKey } from "@/lib/dates";
 
 export type YearCell = {
   month: MonthKey;
+  /** Le net réel du mois, charges comprises. C'est le nombre écrit. */
   total: number;
+  /**
+   * La somme des nets POSITIFS. C'est ce que la barre mesure, et la
+   * somme exacte de ses segments : un mois avec une charge a un net
+   * plus petit que ses segments, et mesurer la barre sur le net
+   * donnerait une case dont la barre et le nombre ne disent pas la
+   * même chose.
+   */
+  barTotal: number;
   segments: { id: string; label: string; value: number; color: string }[];
 };
 
@@ -35,7 +44,9 @@ export function YearGrid({
   onSelect: (m: MonthKey) => void;
 }) {
   const now = currentMonth();
-  const max = Math.max(...cells.map((c) => c.total), 1);
+  // L'échelle se calcule sur `barTotal`, la somme des segments — pas
+  // sur le net, qui peut être plus petit, voire négatif.
+  const max = Math.max(...cells.map((c) => c.barTotal), 1);
 
   return (
     <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
@@ -66,14 +77,19 @@ export function YearGrid({
           >
             <span
               className="text-[10.5px] font-medium leading-none"
-              style={{ color: isSelected ? "var(--text-primary)" : "var(--text-muted)" }}
+              style={{
+                color: isSelected ? "var(--text-primary)" : "var(--text-muted)",
+              }}
             >
               {monthLabel(cell.month, "short")}
             </span>
 
             <span
               className="tnum text-[12px] font-semibold leading-none"
-              style={{ color: cell.total > 0 ? "var(--text-primary)" : "var(--text-muted)" }}
+              style={{
+                color:
+                  cell.total > 0 ? "var(--text-primary)" : "var(--text-muted)",
+              }}
             >
               {cell.total > 0 ? moneyCompact(cell.total) : "—"}
             </span>
@@ -82,13 +98,24 @@ export function YearGrid({
                 l'autre ; un mois vide garde son filet, sinon la grille
                 paraît s'arrêter là où les revenus s'arrêtent. */}
             <span className="flex h-[7px] w-full gap-[2px] overflow-hidden rounded-full">
-              {cell.total > 0 ? (
+              {cell.barTotal > 0 && cell.segments.length > 0 ? (
                 cell.segments.map((s) => (
                   <span
                     key={s.id}
-                    className="h-full"
+                    // shrink-0 : sans lui, le mois le plus fort somme
+                    // déjà 100 % de la barre, les écarts débordent, et
+                    // flex comprime ses segments — l'échelle commune
+                    // devient fausse précisément en haut de l'échelle.
+                    className="h-full shrink-0"
                     style={{
-                      width: `${((s.value / max) * 100).toFixed(2)}%`,
+                      // La place des écarts est retirée du TOTAL, puis
+                      // la part s'applique à ce qui reste. Retrancher
+                      // un nombre fixe de pixels à chaque segment
+                      // écrasait les petits à zéro.
+                      width: `calc((100% - ${(cell.segments.length - 1) * 2}px) * ${(
+                        Math.max(0, s.value) / max
+                      ).toFixed(4)})`,
+                      minWidth: 2,
                       background: s.color,
                       borderRadius: 2,
                     }}
@@ -97,7 +124,11 @@ export function YearGrid({
               ) : (
                 <span
                   className="h-full w-full"
-                  style={{ background: "var(--axis)", opacity: 0.35, borderRadius: 2 }}
+                  style={{
+                    background: "var(--axis)",
+                    opacity: 0.35,
+                    borderRadius: 2,
+                  }}
                 />
               )}
             </span>

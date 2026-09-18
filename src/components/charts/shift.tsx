@@ -67,6 +67,7 @@ export function ActivityShift({
         const from = Math.min(pc, pp);
         const width = Math.abs(pc - pp);
         const ratio = row.previous > 0 ? (row.current - row.previous) / row.previous : null;
+        const flat = ratio !== null && Math.abs(ratio) < 0.005;
         const up = row.current >= row.previous;
 
         return (
@@ -86,7 +87,13 @@ export function ActivityShift({
               {ratio !== null ? (
                 <span
                   className="tnum text-[11.5px] font-medium"
-                  style={{ color: up ? "var(--delta-up)" : "var(--delta-down)" }}
+                  style={{
+                    color: flat
+                      ? "var(--text-secondary)"
+                      : up
+                        ? "var(--delta-up)"
+                        : "var(--delta-down)",
+                  }}
                 >
                   {signedPercent(ratio)}
                 </span>

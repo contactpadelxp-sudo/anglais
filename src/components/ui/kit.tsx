@@ -3,7 +3,7 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { Icon } from "./icons";
 import { SparkArea } from "@/components/charts/small";
-import { money, signedPercent } from "@/lib/format";
+import { signedPercent } from "@/lib/format";
 
 /* ===================================================================
    Carte
@@ -123,9 +123,12 @@ export function Delta({
    */
   variant?: "text" | "pill";
 }) {
+  // Une variation qui s'arrondit à zéro n'a ni sens ni direction : pas
+  // de flèche, pas de couleur de tendance.
+  const flat = Math.abs(ratio) < 0.005;
   const up = ratio >= 0;
   const Arrow = up ? Icon.up : Icon.down;
-  const tone = up ? "var(--delta-up)" : "var(--delta-down)";
+  const tone = flat ? "var(--text-secondary)" : up ? "var(--delta-up)" : "var(--delta-down)";
 
   if (variant === "pill") {
     return (
@@ -137,7 +140,7 @@ export function Delta({
             background: `color-mix(in oklab, ${tone} 14%, transparent)`,
           }}
         >
-          <Arrow size={12} className="shrink-0" />
+          {flat ? null : <Arrow size={12} className="shrink-0" />}
           <span className="tnum">{signedPercent(ratio)}</span>
         </span>
         {label ? (
@@ -151,7 +154,7 @@ export function Delta({
 
   return (
     <span className="flex items-center gap-1 text-[11.5px]">
-      <Arrow size={12} className="shrink-0" />
+      {flat ? null : <Arrow size={12} className="shrink-0" />}
       <span className="tnum font-medium" style={{ color: tone }}>
         {signedPercent(ratio)}
       </span>
@@ -186,34 +189,6 @@ export function Chip({
       {icon ? <span className="flex shrink-0 items-center">{icon}</span> : null}
       {children}
     </span>
-  );
-}
-
-/* ===================================================================
-   Chiffre de tête — un seul par vue.
-   Chiffres proportionnels : à cette taille, `tabular-nums` fait
-   flotter les chiffres étroits.
-   =================================================================== */
-
-export function Hero({
-  label,
-  cents,
-  children,
-}: {
-  label: string;
-  cents: number;
-  children?: React.ReactNode;
-}) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <span className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
-        {label}
-      </span>
-      <span className="text-[40px] font-semibold leading-[1.05] tracking-[-0.02em] sm:text-[56px]">
-        {money(cents)}
-      </span>
-      {children}
-    </div>
   );
 }
 

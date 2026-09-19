@@ -49,13 +49,36 @@ function periodeADeclarer(kind: UrssafPeriodKind): MonthKey {
 
 export function DeclarationUrssaf() {
   const store = useStore();
-  const { entries, streams, fiscal, settings, declarationByPeriod } = store;
+  const { entries, streams, fiscal, settings, declarationByPeriod, month: moisAffiche } = store;
   // Une base restée en arrière ne porte pas encore la colonne : la
   // périodicité mensuelle est celle de la très grande majorité des
   // micro-entrepreneurs, et c'est le défaut de l'inscription.
   const kind: UrssafPeriodKind = settings.urssaf_period ?? "monthly";
 
-  const [start, setStart] = useState<MonthKey>(() => periodeADeclarer(kind));
+  /*
+   * La période lue se DÉDUIT du mois de l'en-tête, elle n'est pas
+   * mémorisée à part : lire « août » en haut et « juillet » ici serait
+   * le genre de désaccord qu'on ne remarque qu'après avoir recopié le
+   * mauvais chiffre.
+   *
+   * Une exception, et c'est le cas d'ouverture : sur le mois courant,
+   * la période à déclarer n'est pas celle qu'on traverse, c'est la
+   * précédente — la dernière close. On arrive ici pour recopier trois
+   * nombres, pas pour regarder un mois qui n'est pas fini.
+   *
+   * Les flèches posent une surcharge attachée au mois d'en-tête : elles
+   * restent maîtresses tant qu'on ne retouche pas l'en-tête, et
+   * s'effacent d'elles-mêmes dès qu'on en change.
+   */
+  const [override, setOverride] = useState<{ start: MonthKey; from: MonthKey } | null>(null);
+
+  const defaut =
+    moisAffiche === monthOf(today())
+      ? periodeADeclarer(kind)
+      : periodMonths(moisAffiche, kind)[0];
+  const start = override && override.from === moisAffiche ? override.start : defaut;
+  const setStart = (m: MonthKey) => setOverride({ start: m, from: moisAffiche });
+
   const [appele, setAppele] = useState("");
 
   const pas = kind === "monthly" ? 1 : 3;

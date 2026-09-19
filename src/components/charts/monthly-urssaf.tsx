@@ -32,18 +32,30 @@ const GAP = 2;
 export function MonthlyUrssaf({
   rows,
   acreEndsOn,
+  selectedMonth,
   height = 230,
 }: {
   rows: MonthlyRow[];
   acreEndsOn?: DayKey | null;
+  /**
+   * Le mois lu à l'ouverture. La page le passe pour que le graphe
+   * s'accorde au mois choisi en en-tête, et le remonte par une clé
+   * quand ce mois change — sinon un choix fait à la main ici
+   * l'emporterait pour toujours sur l'en-tête.
+   */
+  selectedMonth?: MonthKey;
   height?: number;
 }) {
   const { ref, width } = useMeasure<HTMLDivElement>();
 
   const defaut = useMemo(() => {
+    if (selectedMonth) {
+      const i = rows.findIndex((r) => r.month === selectedMonth);
+      if (i >= 0) return i;
+    }
     for (let i = rows.length - 1; i >= 0; i -= 1) if (rows[i].totalCents > 0) return i;
     return rows.length - 1;
-  }, [rows]);
+  }, [rows, selectedMonth]);
 
   const [choisi, setChoisi] = useState<number | null>(null);
   // Un index mémorisé peut sortir de la liste quand l'année change :

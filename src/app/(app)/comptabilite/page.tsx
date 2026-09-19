@@ -48,35 +48,46 @@ export default function ComptabilitePage() {
   const [override, setOverride] = useState<{ year: string; from: MonthKey } | null>(null);
   const year = override && override.from === month ? override.year : String(yearOf(month));
   const setYear = (y: string) => setOverride({ year: y, from: month });
-  const [scope, setScope] = useState<"annee" | "mois">("annee");
-
-  const months = useMemo(
-    () => (scope === "mois" ? [month] : monthsOfYear(Number(year))),
-    [scope, month, year],
-  );
-
-  const report = useMemo(
-    () => buildReport(entries, streams, fiscal, months),
-    [entries, streams, fiscal, months],
-  );
 
   /*
-   * Les seuils sont annuels, toujours : les confronter à la fenêtre
-   * affichée faisait qu'en portée « mois », aucune alerte ne pouvait
-   * se déclencher — le CA d'un mois n'approche jamais un plafond
-   * annuel. On les calcule donc sur l'année entière, quelle que soit
-   * la portée, et on projette sur les mois écoulés.
+   * La page se lit sur DEUX horizons à la fois, et non sur l'un OU
+   * l'autre. Un sélecteur « année / mois » obligeait à basculer pour
+   * répondre à deux questions qu'on se pose ensemble : « combien ce
+   * mois-ci » et « où j'en suis sur l'année ». Le mois vient de
+   * l'en-tête, l'année l'accompagne partout.
+   *
+   * Certaines choses n'ont de sens qu'annuellement — le barème de
+   * l'impôt, les abattements et leur plancher, les plafonds : elles
+   * restent sur l'année et le disent.
    */
+  const moisAnnee = useMemo(() => monthsOfYear(Number(year)), [year]);
+
+  /** Le mois affiché en en-tête. */
+  const report = useMemo(
+    () => buildReport(entries, streams, fiscal, [month]),
+    [entries, streams, fiscal, month],
+  );
+
+  /** L'année, cumulée jusqu'au dernier encaissement. */
   const reportAnnuel = useMemo(
-    () =>
-      scope === "annee"
-        ? report
-        : buildReport(entries, streams, fiscal, monthsOfYear(Number(year))),
-    [scope, report, entries, streams, fiscal, year],
+    () => buildReport(entries, streams, fiscal, moisAnnee),
+    [entries, streams, fiscal, moisAnnee],
   );
 
   /** L'année affichée est-elle encore en cours ? */
   const anneeEnCours = year === currentMonth().slice(0, 4);
+
+  /*
+   * Le tableau par catégorie est le seul endroit où l'on veut parfois
+   * l'un OU l'autre : sept colonnes de chiffres mensuels et annuels
+   * côte à côte ne tiendraient pas sur un téléphone. Il garde donc sa
+   * propre bascule, locale à la carte.
+   */
+  const [detail, setDetail] = useState<"mois" | "annee">("mois");
+  const detailReport = detail === "mois" ? report : reportAnnuel;
+  // Le taux affiché est celui qui s'applique au dernier jour de la
+  // fenêtre : c'est lui qu'on lira sur l'appel de cotisations.
+  const detailDernierMois = detail === "mois" ? month : moisAnnee[moisAnnee.length - 1];
 
   const moisEcoules = useMemo(() => {
     const courant = currentMonth();
@@ -96,22 +107,24 @@ export default function ComptabilitePage() {
     [reportAnnuel, fiscal],
   );
 
-  /** Ce qui a été encaissé mais rangé hors comptabilité. */
+  /** Ce qui a été encaissé mais rangé hors comptabilité, sur l'année. */
   const hors = useMemo(
-    () => horsComptabilite(entries, streams, months),
-    [entries, streams, months],
+    () => horsComptabilite(entries, streams, moisAnnee),
+    [entries, streams, moisAnnee],
   );
 
   const cfe = useMemo(
     () => cfeStatus(fiscal.activityStart, Number(year), reportAnnuel.caActivitesCents),
     [fiscal.activityStart, year, reportAnnuel.caActivitesCents],
   );
-  const boxes = useMemo(() => taxReturnBoxes(report, fiscal), [report, fiscal]);
+  // La déclaration de revenus porte sur l'année entière : elle se lit
+  // sur le rapport annuel, jamais sur le mois affiché.
+  const boxes = useMemo(() => taxReturnBoxes(reportAnnuel, fiscal), [reportAnnuel, fiscal]);
   const acre = report.acre;
 
   const monthly = useMemo(
-    () => monthlyBreakdown(entries, streams, fiscal, months),
-    [entries, streams, fiscal, months],
+    () => monthlyBreakdown(entries, streams, fiscal, moisAnnee),
+    [entries, streams, fiscal, moisAnnee],
   );
 
   /** Ce que la fin de l'ACRE coûtera, en euros et sur un mois réel. */
@@ -176,17 +189,10 @@ export default function ComptabilitePage() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-[17px] font-semibold tracking-tight">Comptabilité</h1>
         <div className="flex flex-wrap items-center gap-2">
-          <Segmented
-            size="sm"
-            label="Période"
-            value={scope}
-            onChange={setScope}
-            options={[
-              { value: "annee", label: `Année ${year}` },
-              { value: "mois", label: monthLabel(month, "full") },
-            ]}
-          />
-          {scope === "annee" && years.length > 1 ? (
+          <span className="text-[12.5px]" style={{ color: "var(--text-secondary)" }}>
+            {monthLabel(month, "full")} · cumul {year}
+          </span>
+          {years.length > 1 ? (
             <Segmented
               size="sm"
               label="Année"
@@ -250,48 +256,44 @@ export default function ComptabilitePage() {
       {/* ---- Ce qu'il faut provisionner -------------------------------- */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile
-          label="Chiffre d'affaires"
+          label={`Chiffre d'affaires · ${monthLabel(month)}`}
           value={money(report.caActivitesCents)}
-          hint="Hors allocation chômage, qui n'est pas du chiffre d'affaires"
+          hint={`${money(reportAnnuel.caActivitesCents)} depuis janvier`}
         />
         <StatTile
-          label="À payer à l'URSSAF"
+          label={`À payer à l'URSSAF · ${monthLabel(month)}`}
           value={money(report.urssafCents)}
           tone="warning"
           hint={
-            acre && report.acreCoveredMonths === months.length
-              ? `ACRE appliquée sur toute la période, jusqu'au ${dayLabel(acre.endsOn)}`
-              : acre && report.acreCoveredMonths > 0
-                ? `ACRE jusqu'au ${dayLabel(acre.endsOn)}, puis taux plein`
-                : "Cotisations + formation professionnelle"
+            acre && report.acreCoveredMonths > 0
+              ? `${money(reportAnnuel.urssafCents)} sur l'année · ACRE jusqu'au ${dayLabel(acre.endsOn)}`
+              : `${money(reportAnnuel.urssafCents)} sur l'année`
           }
         />
+        {/* Les deux tuiles suivantes sont ANNUELLES, et le disent : le
+            barème de l'impôt, les abattements et leur plancher de 305 €
+            se calculent sur une année civile. Les montrer sur un mois
+            donnerait un chiffre qui ne veut rien dire. */}
         <StatTile
-          label="Revenu imposable"
-          value={money(report.revenuImposableCents)}
+          label={`Revenu imposable ${year}`}
+          value={money(reportAnnuel.revenuImposableCents)}
           hint="Après abattements, allocation chômage comprise"
         />
         {/* `impotCents` vaut null pour DEUX raisons distinctes : le
             versement libératoire, et une période qui n'est pas une
             année entière. Les confondre annonçait « Versement
             libératoire » à quelqu'un au barème qui regardait un mois. */}
-        {report.impotRaison === "periode-partielle" ? (
+        {reportAnnuel.impotRaison === "liberatoire-total" ? (
           <StatTile
-            label="Impôt estimé"
-            value="—"
-            hint="Le barème est annuel : cadre sur l'année pour l'estimer"
-          />
-        ) : report.impotRaison === "liberatoire-total" ? (
-          <StatTile
-            label="Versement libératoire"
-            value={money(report.liberatoireCents)}
+            label={`Versement libératoire ${year}`}
+            value={money(reportAnnuel.liberatoireCents)}
             hint="Payé avec les cotisations"
           />
         ) : (
           <StatTile
-            label={anneeEnCours ? "Impôt à date" : "Impôt estimé"}
-            value={money(report.impotCents ?? 0)}
-            tone={report.impotCents === 0 ? "good" : "neutral"}
+            label={anneeEnCours ? `Impôt ${year} à date` : `Impôt ${year}`}
+            value={money(reportAnnuel.impotCents ?? 0)}
+            tone={reportAnnuel.impotCents === 0 ? "good" : "neutral"}
             /* Le barème s'applique à une ANNÉE. Sur l'année en cours,
                les mois qui restent ne sont pas encaissés : le chiffre
                n'est pas l'impôt de l'année, c'est celui qu'on devrait
@@ -300,7 +302,7 @@ export default function ComptabilitePage() {
             hint={
               anneeEnCours
                 ? `Si l'année s'arrêtait aujourd'hui. Barème ${fiscal.bracketsYear}`
-                : report.impotCents === 0
+                : reportAnnuel.impotCents === 0
                   ? "Sous la première tranche, décote comprise"
                   : `Barème ${fiscal.bracketsYear}`
             }
@@ -314,7 +316,7 @@ export default function ComptabilitePage() {
           style={{ background: "var(--surface-2)", color: "var(--text-secondary)" }}
         >
           <strong>{money(hors.cents)}</strong>{" "}
-          encaissés sur la période sont rangés <em>hors comptabilité</em> ({hors.count}{" "}
+          encaissés en {year} sont rangés <em>hors comptabilité</em> ({hors.count}{" "}
           {hors.count > 1 ? "écritures" : "écriture"}) : remboursements, virements internes,
           ventes d&apos;objets personnels. Ils n&apos;entrent dans aucun chiffre de cette page.
           Si l&apos;un d&apos;eux est en réalité du chiffre d&apos;affaires, change la
@@ -325,7 +327,7 @@ export default function ComptabilitePage() {
       {/* ---- Ce qu'il faut recopier, et où --------------------------- */}
       <DeclarationUrssaf />
 
-      {scope === "annee" && boxes.length > 0 ? (
+      {boxes.length > 0 ? (
         <Card title={`Ma déclaration de revenus ${year}`}>
           <p className="max-w-[72ch] pb-3 text-[12.5px]" style={{ color: "var(--text-secondary)" }}>
             Ces cases attendent le chiffre d&apos;affaires <strong>BRUT encaissé</strong>.
@@ -368,19 +370,25 @@ export default function ComptabilitePage() {
       ) : null}
 
       {/* ---- L'ARE, le point que tout le monde confond ---------------- */}
-      {report.areCents > 0 ? (
+      {reportAnnuel.areCents > 0 ? (
         <Card title="Allocation chômage">
           <div className="flex flex-col gap-3">
             <div className="grid grid-cols-2 gap-3">
-              <Figure label="Perçue sur la période" value={money(report.areCents)} />
-              <Figure label="Cotisations URSSAF dues" value={money(0)} tone="good" />
               <Figure
-                label="Abattement de 10 %"
-                value={`− ${money(report.areAbattementCents)}`}
+                label={`Perçue en ${monthLabel(month)}`}
+                value={money(report.areCents)}
+              />
+              <Figure label="Cotisations URSSAF dues" value={money(0)} tone="good" />
+              {/* L'abattement est ANNUEL — son minimum de 495 € ne joue
+                  qu'une fois par an. Le montrer sur un mois donnerait un
+                  chiffre qui ne se retrouvera sur aucune déclaration. */}
+              <Figure
+                label={`Perçue en ${year}`}
+                value={money(reportAnnuel.areCents)}
               />
               <Figure
-                label="Ce qui entre au barème"
-                value={money(report.areCents - report.areAbattementCents)}
+                label={`Au barème ${year}, après 10 %`}
+                value={money(reportAnnuel.areCents - reportAnnuel.areAbattementCents)}
               />
             </div>
             <p className="max-w-[72ch] text-[12.5px]" style={{ color: "var(--text-secondary)" }}>
@@ -409,7 +417,7 @@ export default function ComptabilitePage() {
       ) : null}
 
       {/* ---- Cotisations mois par mois --------------------------------- */}
-      {scope === "annee" && report.cotisationsCents > 0 ? (
+      {reportAnnuel.cotisationsCents > 0 ? (
         <Card
           title="Cotisations mois par mois"
           action={
@@ -423,7 +431,13 @@ export default function ComptabilitePage() {
             ) : null
           }
         >
-          <MonthlyUrssaf rows={monthlyRows} acreEndsOn={acre?.endsOn ?? null} height={230} />
+          <MonthlyUrssaf
+            key={month}
+            rows={monthlyRows}
+            acreEndsOn={acre?.endsOn ?? null}
+            selectedMonth={month}
+            height={230}
+          />
           {acre ? (
             <p className="mt-3 max-w-[72ch] text-[12px]" style={{ color: "var(--text-secondary)" }}>
               L&apos;ACRE court jusqu&apos;au {dayLabel(acre.endsOn)}. Au lendemain, les taux
@@ -444,15 +458,30 @@ export default function ComptabilitePage() {
       ) : null}
 
       {/* ---- Détail par catégorie -------------------------------------- */}
-      <Card title="Par catégorie" padded={false}>
+      <Card
+        title="Par catégorie"
+        padded={false}
+        action={
+          <Segmented
+            size="sm"
+            label="Détail par catégorie"
+            value={detail}
+            onChange={setDetail}
+            options={[
+              { value: "mois", label: monthLabel(month) },
+              { value: "annee", label: year },
+            ]}
+          />
+        }
+      >
         {/* Sept colonnes ne tiennent pas sur un écran de téléphone : en
             dessous de 640 px, chaque catégorie devient une fiche. Un
             tableau qu'il faut faire défiler latéralement pour lire un
             montant n'est pas un tableau lisible. */}
         <ul className="sm:hidden">
-          {report.byCategory.map((row, i) => {
+          {detailReport.byCategory.map((row, i) => {
             const spec = CATEGORIES[row.category];
-            const last = months[months.length - 1];
+            const last = detailDernierMois;
             const bps = cotisationBpsOn(row.category, `${last}-28`, acre);
             return (
               <li
@@ -503,20 +532,20 @@ export default function ComptabilitePage() {
             <div className="flex items-baseline justify-between gap-2">
               <span className="text-[13px] font-semibold">Total encaissé</span>
               <span className="tnum text-[14px] font-semibold">
-                {money(report.caTotalCents)}
+                {money(detailReport.caTotalCents)}
               </span>
             </div>
             <div className="flex items-baseline justify-between gap-2">
               <span className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
                 dont chiffre d&apos;affaires
               </span>
-              <span className="tnum text-[12.5px]">{money(report.caActivitesCents)}</span>
+              <span className="tnum text-[12.5px]">{money(detailReport.caActivitesCents)}</span>
             </div>
             <div className="flex items-baseline justify-between gap-2">
               <span className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
                 dû à l&apos;URSSAF
               </span>
-              <span className="tnum text-[12.5px]">{money(report.urssafCents)}</span>
+              <span className="tnum text-[12.5px]">{money(detailReport.urssafCents)}</span>
             </div>
           </li>
         </ul>
@@ -535,9 +564,9 @@ export default function ComptabilitePage() {
               </tr>
             </thead>
             <tbody>
-              {report.byCategory.map((row) => {
+              {detailReport.byCategory.map((row) => {
                 const spec = CATEGORIES[row.category];
-                const last = months[months.length - 1];
+                const last = detailDernierMois;
                 const bps = cotisationBpsOn(row.category, `${last}-28`, acre);
                 return (
                   <tr key={row.category} className="border-t" style={{ borderColor: "var(--border)" }}>
@@ -570,11 +599,11 @@ export default function ComptabilitePage() {
                     colonne ne s'additionnait donc pas à l'œil. Le chiffre
                     à déclarer est sur la ligne suivante, nommé. */}
                 <td className="tnum px-3 py-2.5 text-right font-semibold">
-                  {money(report.caTotalCents)}
+                  {money(detailReport.caTotalCents)}
                 </td>
                 <td />
-                <td className="tnum px-3 py-2.5 text-right font-semibold">{money(report.cotisationsCents)}</td>
-                <td className="tnum px-3 py-2.5 text-right font-semibold">{money(report.cfpCents)}</td>
+                <td className="tnum px-3 py-2.5 text-right font-semibold">{money(detailReport.cotisationsCents)}</td>
+                <td className="tnum px-3 py-2.5 text-right font-semibold">{money(detailReport.cfpCents)}</td>
                 <td />
                 {/* La somme de SA colonne, pas le revenu imposable du
                     foyer : celui-ci ajoute les autres revenus et retire
@@ -582,14 +611,14 @@ export default function ComptabilitePage() {
                     au-dessus ne parle. Il a sa tuile en haut de page. */}
                 <td className="tnum px-4 py-2.5 text-right font-semibold sm:px-5">
                   {money(
-                    report.byCategory.reduce((a, r) => a + r.baseImposableCents, 0),
+                    detailReport.byCategory.reduce((a, r) => a + r.baseImposableCents, 0),
                   )}
                 </td>
               </tr>
               <tr style={{ color: "var(--text-secondary)" }}>
                 <td className="px-4 py-2 sm:px-5">dont chiffre d&apos;affaires</td>
                 <td className="tnum px-3 py-2 text-right font-medium">
-                  {money(report.caActivitesCents)}
+                  {money(detailReport.caActivitesCents)}
                 </td>
                 <td colSpan={5} className="px-3 py-2 text-[11.5px]">
                   l&apos;allocation chômage n&apos;est pas du chiffre d&apos;affaires : c&apos;est
@@ -603,7 +632,7 @@ export default function ComptabilitePage() {
 
       {/* ---- Ce qui reste vraiment -------------------------------------- */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card title="De l'encaissé au net">
+        <Card title={`De l'encaissé au net · ${monthLabel(month, "full")}`}>
           <Waterfall
             steps={[
               {
@@ -631,10 +660,13 @@ export default function ComptabilitePage() {
               },
             ]}
           />
-          <p className="mt-3 text-[11.5px]" style={{ color: "var(--text-muted)" }}>
-            Calculé sur l&apos;ensemble encaissé, allocation comprise. Le coût d&apos;achat des
-            articles revendus n&apos;est pas déduit ici : en micro-entreprise, il n&apos;est
-            jamais déductible — c&apos;est l&apos;abattement forfaitaire qui en tient lieu.
+          <p className="mt-3 max-w-[72ch] text-[11.5px]" style={{ color: "var(--text-muted)" }}>
+            Calculé sur l&apos;ensemble encaissé du mois, allocation comprise. L&apos;impôt
+            n&apos;y figure pas : il est annuel, et se lit dans la tuile en haut de page. Sur
+            {" "}{year}, il reste <strong>{money(reportAnnuel.netApresTouteChargeCents)}</strong>
+            {" "}une fois tout retiré. Le coût d&apos;achat des articles revendus n&apos;est
+            jamais déduit : en micro-entreprise, c&apos;est l&apos;abattement forfaitaire qui en
+            tient lieu.
           </p>
         </Card>
 

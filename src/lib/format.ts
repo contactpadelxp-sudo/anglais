@@ -56,10 +56,14 @@ export function moneyArrondi(cents: number) {
 
 export function percent(ratio: number, digits = 0) {
   if (!Number.isFinite(ratio)) return "—";
-  return `${(ratio * 100).toLocaleString("fr-FR", {
+  const n = (ratio * 100).toLocaleString("fr-FR", {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
-  })} %`;
+  });
+  // Espace fine insécable avant le signe : c'est la règle française, et
+  // surtout le « % » ne part plus seul à la ligne suivante quand la
+  // colonne est étroite — « Cotisations 12,80 » puis « % » en dessous.
+  return `${n}\u202f%`;
 }
 
 export function signedPercent(ratio: number, digits = 0) {

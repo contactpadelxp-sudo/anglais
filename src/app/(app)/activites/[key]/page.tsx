@@ -138,8 +138,12 @@ export default function StreamPage() {
           value={money(metrics.pendingAmount)}
           tone={metrics.pendingAmount > 0 ? "warning" : "neutral"}
           hint={
+            /* « en moyenne » décrivait une MÉDIANE : le délai qui coupe
+               les encaissements en deux, pas leur moyenne. Sur quelques
+               versements dont un très en retard, les deux diffèrent de
+               plusieurs jours, et c'est la médiane qui est juste ici. */
             metrics.medianDelay !== null
-              ? `Encaissé en ${metrics.medianDelay} j en moyenne`
+              ? `Encaissé en ${metrics.medianDelay} j, une fois sur deux`
               : metrics.pendingCount > 0
                 ? plural(metrics.pendingCount, "écriture", "écritures")
                 : "Tout est encaissé"

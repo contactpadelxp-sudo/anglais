@@ -100,12 +100,21 @@ export function axisLabel(month: MonthKey, previous?: MonthKey) {
   return short;
 }
 
+/**
+ * Le quantième, à la française : « 1er », puis « 2 », « 3 »… Écrire
+ * « 1 octobre » se remarque immédiatement, et pas en bien.
+ */
+function quantieme(day: DayKey) {
+  const n = Number(day.slice(8, 10));
+  return n === 1 ? "1er" : String(n);
+}
+
 export function dayLabel(day: DayKey) {
-  return `${Number(day.slice(8, 10))} ${MOIS_COURT[monthIndex(day)]} ${yearOf(day)}`;
+  return `${quantieme(day)} ${MOIS_COURT[monthIndex(day)]} ${yearOf(day)}`;
 }
 
 export function dayLabelShort(day: DayKey) {
-  return `${Number(day.slice(8, 10))} ${MOIS_COURT[monthIndex(day)]}`;
+  return `${quantieme(day)} ${MOIS_COURT[monthIndex(day)]}`;
 }
 
 /** Nombre de jours entre deux dates. Positif si `b` est après `a`. */

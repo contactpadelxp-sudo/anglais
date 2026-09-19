@@ -5,12 +5,12 @@ import { useStore } from "@/components/store";
 import { Button, Card, Empty, Input, Segmented } from "@/components/ui/kit";
 import { Icon } from "@/components/ui/icons";
 import { money, plural } from "@/lib/format";
-import { dayLabel, monthLabel, monthOf, type DayKey } from "@/lib/dates";
+import { dayLabel, monthLabel, monthOf, today, type DayKey } from "@/lib/dates";
 import { dateOf, revenueOf, marginOf } from "@/lib/analytics";
 import type { Entry } from "@/lib/types";
 
 type Scope = "month" | "all";
-type Kind = "all" | "in" | "out" | "pending";
+type Kind = "all" | "in" | "out" | "pending" | "cancelled";
 
 /**
  * Le journal des écritures.
@@ -29,6 +29,16 @@ export default function LedgerPage() {
   const [query, setQuery] = useState("");
 
   const hasPending = useMemo(() => entries.some((e) => e.status === "pending"), [entries]);
+  /*
+   * Une écriture annulée disparaît de toutes les listes — c'est bien
+   * ce qu'on veut, elle ne compte plus nulle part. Mais elle devenait
+   * alors introuvable, et personne ne pouvait revenir sur le geste.
+   * Le filtre n'apparaît que s'il y a quelque chose à montrer.
+   */
+  const hasCancelled = useMemo(
+    () => entries.some((e) => e.status === "cancelled"),
+    [entries],
+  );
 
   /**
    * Le filtre « En attente » ne survit pas à la disparition de son
@@ -36,13 +46,19 @@ export default function LedgerPage() {
    * cette page, la liste se vidait et plus aucun segment n'était
    * marqué actif — rien n'expliquait le vide.
    */
-  const activeKind: Kind = kind === "pending" && !hasPending ? "all" : kind;
+  const activeKind: Kind =
+    (kind === "pending" && !hasPending) || (kind === "cancelled" && !hasCancelled)
+      ? "all"
+      : kind;
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return entries
       .filter((e) => {
-        if (e.status === "cancelled") return false;
+        // Les annulées ne se mélangent jamais aux autres : soit on les
+        // regarde seules, soit on ne les voit pas.
+        const annulee = e.status === "cancelled";
+        if (annulee !== (activeKind === "cancelled")) return false;
         if (stream && e.stream_id !== stream) return false;
         if (activeKind === "in" && e.direction !== "in") return false;
         if (activeKind === "out" && e.direction !== "out") return false;
@@ -120,6 +136,7 @@ export default function LedgerPage() {
             // barre : il apparaît le jour où une écriture attend son
             // versement.
             ...(hasPending ? [{ value: "pending" as const, label: "En attente" }] : []),
+            ...(hasCancelled ? [{ value: "cancelled" as const, label: "Annulées" }] : []),
           ]}
         />
         <div className="flex flex-wrap gap-1.5">
@@ -269,19 +286,23 @@ function EntryRow({ entry }: { entry: Entry }) {
             {entry.counterparty ? ` · ${entry.counterparty}` : ""}
             {entry.cost_cents > 0 ? ` · ${money(entry.cost_cents)} d'achat` : ""}
             {entry.status === "pending" ? " · en attente" : ""}
+            {entry.status === "cancelled" ? " · annulée" : ""}
           </p>
         </button>
 
         {entry.status === "pending" ? (
+          /* Toujours visible, jamais au survol : sur iPhone il n'y a
+             pas de survol, et ce bouton était transparent en
+             permanence — on ne pouvait le toucher qu'à l'aveugle.
+             44 px de cible, comme partout ailleurs. */
           <button
             type="button"
-            onClick={() => settle([entry.id], new Date().toISOString().slice(0, 10))}
-            className="shrink-0 rounded-full p-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
-            aria-label="Marquer comme encaissé"
-            title="Marquer comme encaissé"
+            onClick={() => settle([entry.id], today())}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-[var(--surface-2)]"
+            aria-label={`Marquer « ${entry.label || "cette écriture"} » comme encaissé aujourd'hui`}
             style={{ color: "var(--good)" }}
           >
-            <Icon.check size={16} />
+            <Icon.check size={18} />
           </button>
         ) : null}
 

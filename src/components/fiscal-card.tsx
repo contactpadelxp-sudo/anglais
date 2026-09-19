@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useStore } from "./store";
 import { Card, Field, Input, Segmented } from "./ui/kit";
 import { Icon } from "./ui/icons";
@@ -70,6 +71,23 @@ export function FiscalCard() {
             );
           })}
         </ul>
+      </Card>
+
+      <Card title="Déclaration URSSAF">
+        <Field
+          label="Périodicité"
+          hint="Choisie à l'inscription. Elle pilote la période et l'échéance du bloc « Ma déclaration » de la page Comptabilité. Elle ne se change qu'avant le 31 décembre, pour l'année suivante."
+        >
+          <Segmented
+            label="Périodicité de la déclaration"
+            value={settings.urssaf_period ?? "monthly"}
+            onChange={(v) => void updateSettings({ urssaf_period: v })}
+            options={[
+              { value: "monthly", label: "Mensuelle" },
+              { value: "quarterly", label: "Trimestrielle" },
+            ]}
+          />
+        </Field>
       </Card>
 
       <Card title="Début d'activité et ACRE">
@@ -202,13 +220,78 @@ export function FiscalCard() {
   );
 }
 
-/** Saisie des tranches, une par ligne : « plafond ; taux ». */
+/**
+ * Saisie des tranches, une par ligne : « plafond ; taux ».
+ *
+ * Le barème est lu DANS L'ORDRE par le moteur : une ligne mal placée
+ * ne produit pas une erreur, elle produit un impôt faux. Et deux
+ * tranches sans plafond font que tout ce qui suit la première est
+ * ignoré en silence. La saisie est donc remise en ordre, vérifiée, et
+ * le barème réellement appliqué est réaffiché en toutes lettres.
+ */
 function BracketEditor() {
-  const { settings, fiscal, updateSettings } = useStore();
+  const { settings, fiscal, updateSettings, notify } = useStore();
+  const [erreur, setErreur] = useState<string | null>(null);
 
   const text = fiscal.brackets
     .map((b) => `${b.upToCents === null ? "" : b.upToCents / 100} ; ${b.rateBps / 100}`)
     .join("\n");
+
+  function enregistrer(valeur: string) {
+    const lues = valeur
+      .split("\n")
+      .map((line) => line.split(";").map((x) => x.trim()))
+      .filter((parts) => parts.length === 2 && parts[1] !== "")
+      .map(([limit, rate]) => ({
+        upToCents: limit === "" ? null : Math.round(Number(limit.replace(",", ".")) * 100),
+        rateBps: Math.round(Number(rate.replace(",", ".")) * 100),
+      }))
+      .filter(
+        (b) => Number.isFinite(b.rateBps) && (b.upToCents === null || Number.isFinite(b.upToCents)),
+      );
+
+    if (lues.length === 0) {
+      setErreur("Aucune tranche lisible. Format attendu : « 11497 ; 11 ».");
+      return;
+    }
+
+    const sansPlafond = lues.filter((b) => b.upToCents === null);
+    if (sansPlafond.length > 1) {
+      setErreur(
+        "Une seule tranche peut être sans plafond — c'est la dernière. Les autres seraient ignorées.",
+      );
+      return;
+    }
+    if (sansPlafond.length === 0) {
+      setErreur("La dernière tranche doit être sans plafond : laisse son plafond vide.");
+      return;
+    }
+    if (lues.some((b) => b.rateBps < 0 || b.rateBps > 10_000)) {
+      setErreur("Un taux se situe entre 0 et 100 %.");
+      return;
+    }
+
+    // Remises en ordre plutôt que refusées : l'ordre est une contrainte
+    // du moteur, pas une intention de l'utilisateur.
+    const triees = [...lues].sort((a, b) => {
+      if (a.upToCents === null) return 1;
+      if (b.upToCents === null) return -1;
+      return a.upToCents - b.upToCents;
+    });
+
+    const plafonds = triees.filter((b) => b.upToCents !== null).map((b) => b.upToCents as number);
+    if (new Set(plafonds).size !== plafonds.length) {
+      setErreur("Deux tranches portent le même plafond.");
+      return;
+    }
+
+    setErreur(null);
+    void updateSettings({
+      tax_brackets: triees,
+      tax_brackets_year: settings.tax_brackets_year ?? "personnalisé",
+    });
+    notify({ tone: "good", message: "Barème enregistré." });
+  }
 
   return (
     <details className="mt-1">
@@ -221,34 +304,44 @@ function BracketEditor() {
         spellCheck={false}
         className="tnum mt-2 w-full rounded-[var(--radius-sm)] px-2.5 py-2 font-mono text-[11.5px] outline-none"
         style={{ background: "var(--surface-1)", color: "var(--text-primary)" }}
-        onBlur={(e) => {
-          // Une ligne par tranche : « plafond en euros ; taux en % ».
-          // Plafond vide = dernière tranche, sans limite supérieure.
-          const brackets = e.target.value
-            .split("\n")
-            .map((line) => line.split(";").map((x) => x.trim()))
-            .filter((parts) => parts.length === 2 && parts[1] !== "")
-            .map(([limit, rate]) => ({
-              upToCents: limit === "" ? null : Math.round(Number(limit.replace(",", ".")) * 100),
-              rateBps: Math.round(Number(rate.replace(",", ".")) * 100),
-            }))
-            .filter((b) => Number.isFinite(b.rateBps) && (b.upToCents === null || Number.isFinite(b.upToCents)));
-
-          if (brackets.length > 0) {
-            void updateSettings({
-              tax_brackets: brackets,
-              tax_brackets_year: settings.tax_brackets_year ?? "personnalisé",
-            });
-          }
-        }}
+        onBlur={(e) => enregistrer(e.target.value)}
       />
       <p className="mt-1 text-[11px]" style={{ color: "var(--text-muted)" }}>
         Une ligne par tranche : plafond en euros, point-virgule, taux en %. Laisse le plafond vide
         sur la dernière ligne. Exemple : <code>11497 ; 11</code>
       </p>
+
+      {erreur ? (
+        <p className="mt-2 text-[11.5px]" style={{ color: "var(--critical)" }}>
+          {erreur} Rien n&apos;a été enregistré.
+        </p>
+      ) : null}
+
+      {/* Le barème réellement appliqué, relu depuis les réglages : la
+          seule façon de voir qu'une saisie a bien été prise. */}
+      <ul className="mt-2 flex flex-col gap-0.5">
+        {fiscal.brackets.map((b, i) => {
+          const bas = i === 0 ? 0 : (fiscal.brackets[i - 1].upToCents ?? 0);
+          return (
+            <li
+              key={`${b.upToCents}-${b.rateBps}`}
+              className="flex items-baseline justify-between gap-2 text-[11.5px]"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              <span className="tnum">
+                {b.upToCents === null
+                  ? `au-delà de ${money(bas)}`
+                  : `de ${money(bas)} à ${money(b.upToCents)}`}
+              </span>
+              <span className="tnum font-medium" style={{ color: "var(--text-primary)" }}>
+                {b.rateBps / 100} %
+              </span>
+            </li>
+          );
+        })}
+      </ul>
       <p className="mt-1 text-[11px]" style={{ color: "var(--text-muted)" }}>
-        Total actuel des tranches : {fiscal.brackets.length} · première tranche imposable à partir
-        de {money(fiscal.brackets[0]?.upToCents ?? 0)}
+        Par part de quotient familial. L&apos;app en compte {fiscal.taxParts}.
       </p>
     </details>
   );

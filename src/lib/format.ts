@@ -40,6 +40,20 @@ export function moneyCompact(cents: number) {
   return `${plain.format(Math.round(v))} €`;
 }
 
+/**
+ * Le montant tel qu'il se tape sur net-entreprises : l'URSSAF ne veut
+ * pas de centimes, elle arrondit à l'euro le plus proche. Afficher
+ * « 1 240,37 € » en face d'une case qui n'accepte que des entiers
+ * oblige à arrondir de tête — et c'est là qu'on se trompe.
+ */
+export function eurosArrondis(cents: number): number {
+  return Math.round(cents / 100);
+}
+
+export function moneyArrondi(cents: number) {
+  return eur.format(eurosArrondis(cents));
+}
+
 export function percent(ratio: number, digits = 0) {
   if (!Number.isFinite(ratio)) return "—";
   return `${(ratio * 100).toLocaleString("fr-FR", {

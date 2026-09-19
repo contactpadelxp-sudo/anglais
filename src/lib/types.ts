@@ -11,6 +11,21 @@ export type EntryStatus = "pending" | "received" | "cancelled";
  */
 export type Basis = "cash" | "accrual";
 
+/**
+ * Mode de règlement. Le livre des recettes doit le porter ligne à
+ * ligne ; sans lui, l'export n'est pas opposable.
+ */
+export type PaymentMethod =
+  | "virement"
+  | "carte"
+  | "especes"
+  | "cheque"
+  | "plateforme"
+  | "autre";
+
+/** Périodicité de la déclaration URSSAF. */
+export type UrssafPeriod = "monthly" | "quarterly";
+
 export type Stream = {
   id: string;
   user_id: string;
@@ -48,10 +63,15 @@ export type Entry = {
   /** Date d'encaissement réelle. null tant que l'argent n'est pas arrivé. */
   received_on: string | null;
   status: EntryStatus;
-  quantity: number;
   counterparty: string | null;
   notes: string | null;
-  tags: string[];
+  /** Mode de règlement — mention obligatoire du livre des recettes. */
+  payment_method: PaymentMethod | null;
+  /** Référence de la pièce justificative — mention obligatoire. */
+  reference: string | null;
+  /** Mise en attente à la main : la confirmation automatique la saute. */
+  settle_locked: boolean;
+  /** Réservée à la charge utile d'un import (Vinted). */
   meta: Record<string, unknown>;
   created_at: string;
   updated_at: string;
@@ -68,10 +88,7 @@ export type Goal = {
 
 export type Settings = {
   user_id: string;
-  currency: string;
   default_basis: Basis;
-  charge_rate_bps: number;
-  fiscal_year_start: number;
   /** Début d'activité — détermine la période couverte par l'ACRE. */
   activity_start: string | null;
   acre_enabled: boolean;
@@ -83,6 +100,48 @@ export type Settings = {
   /** Barème de l'impôt, modifiable : les tranches changent chaque année. */
   tax_brackets: { upToCents: number | null; rateBps: number }[] | null;
   tax_brackets_year: string | null;
+  /**
+   * Abattement de 10 % des revenus de remplacement : taux, minimum et
+   * plafond. Stocké plutôt que codé en dur, comme le barème — ces trois
+   * valeurs sont revalorisées chaque année.
+   */
+  salary_abatement: {
+    rateBps: number;
+    floorCents: number;
+    ceilingCents: number;
+  } | null;
+  /** Décote : seuils, bases et taux, revalorisés chaque année. */
+  decote: {
+    singleThresholdCents: number;
+    coupleThresholdCents: number;
+    singleBaseCents: number;
+    coupleBaseCents: number;
+    rateBps: number;
+  } | null;
+  /** Périodicité de la déclaration URSSAF : pilote l'échéancier. */
+  urssaf_period: UrssafPeriod;
+  /**
+   * Part à provisionner sur chaque encaissement, en points de base.
+   * 0 signifie « calcule-la depuis mes taux réels » — c'est le défaut,
+   * et le seul réglage qui ne se trompe pas tout seul.
+   */
+  provision_bps: number;
+  updated_at: string;
+};
+
+/** Une déclaration URSSAF, telle qu'elle a été faite et payée. */
+export type Declaration = {
+  id: string;
+  user_id: string;
+  /** Premier jour de la période déclarée. */
+  period: string;
+  periodicity: UrssafPeriod;
+  declared_cents: Record<string, number>;
+  called_cents: number | null;
+  paid_cents: number | null;
+  paid_on: string | null;
+  notes: string | null;
+  created_at: string;
   updated_at: string;
 };
 
@@ -90,6 +149,7 @@ export type Snapshot = {
   streams: Stream[];
   entries: Entry[];
   goals: Goal[];
+  declarations: Declaration[];
   settings: Settings;
 };
 
@@ -106,8 +166,9 @@ export type EntryDraft = {
   expected_on: string | null;
   received_on: string | null;
   status: EntryStatus;
-  quantity: number;
   counterparty: string | null;
   notes: string | null;
+  payment_method: PaymentMethod | null;
+  reference: string | null;
   meta?: Record<string, unknown>;
 };

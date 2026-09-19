@@ -6,7 +6,6 @@ import {
   currentMonth,
   daysBetween,
   daysInMonth,
-  firstDayOf,
   monthOf,
   monthRange,
   shiftMonth,
@@ -162,11 +161,6 @@ export function indexStreams(streams: Stream[]): StreamIndex {
   return Object.fromEntries(streams.map((s) => [s.id, s]));
 }
 
-export type PendingBucket = {
-  label: string;
-  entries: Entry[];
-  amount: number;
-};
 
 export type UpcomingMonth = {
   month: MonthKey;
@@ -191,22 +185,10 @@ export type PendingReport = {
   overdue: Entry[];
   overdueAmount: number;
 
-  /** Conclu ce mois-ci, pas encore encaissé : ce qui glissera au suivant. */
-  fromCurrentMonth: number;
-  /** Conclu avant ce mois-ci et toujours pas encaissé. */
-  carriedOver: number;
-
-  aging: PendingBucket[];
   /** Délai médian réellement constaté entre vente et encaissement. */
   medianDelay: number | null;
 };
 
-const AGING = [
-  { label: "dans les temps", max: 0 },
-  { label: "1 à 7 j de retard", max: 7 },
-  { label: "8 à 30 j de retard", max: 30 },
-  { label: "plus de 30 j de retard", max: Infinity },
-];
 
 const OVERDUE_GRACE_DAYS = 14;
 
@@ -217,9 +199,7 @@ export function pendingReport(
 ): PendingReport {
   const index = indexStreams(streams);
   const pending = entries.filter((e) => e.status === "pending" && e.direction === "in");
-  const month = monthOf(ref);
 
-  const aging: PendingBucket[] = AGING.map((b) => ({ label: b.label, entries: [], amount: 0 }));
   const dueNow: Entry[] = [];
   const upcoming: Entry[] = [];
   const overdue: Entry[] = [];
@@ -228,16 +208,11 @@ export function pendingReport(
   let total = 0;
   let dueNowAmount = 0;
   let upcomingAmount = 0;
-  let fromCurrentMonth = 0;
-  let carriedOver = 0;
 
   for (const e of pending) {
     const amount = revenueOf(e);
     const expected = expectedOf(e, index);
     total += amount;
-
-    if (monthOf(e.occurred_on) === month) fromCurrentMonth += amount;
-    else if (e.occurred_on < firstDayOf(month)) carriedOver += amount;
 
     if (expected > ref) {
       upcoming.push(e);
@@ -252,12 +227,6 @@ export function pendingReport(
       dueNowAmount += amount;
       if (daysBetween(expected, ref) > OVERDUE_GRACE_DAYS) overdue.push(e);
     }
-
-    const lateness = Math.max(0, daysBetween(expected, ref));
-    const idx = AGING.findIndex((b) => lateness <= b.max);
-    const slot = aging[idx === -1 ? AGING.length - 1 : idx];
-    slot.entries.push(e);
-    slot.amount += amount;
   }
 
   const order = (a: Entry, b: Entry) => expectedOf(a, index).localeCompare(expectedOf(b, index));
@@ -272,9 +241,6 @@ export function pendingReport(
     upcomingByMonth: [...byMonth.values()].sort((a, b) => a.month.localeCompare(b.month)),
     overdue: overdue.sort(order),
     overdueAmount: overdue.reduce((s, e) => s + revenueOf(e), 0),
-    fromCurrentMonth,
-    carriedOver,
-    aging: aging.filter((b) => b.entries.length > 0),
     medianDelay: medianSettlementDelay(entries),
   };
 }
@@ -292,6 +258,9 @@ export function autoSettlable(
   const out: { entry: Entry; on: DayKey }[] = [];
   for (const e of entries) {
     if (e.status !== "pending" || e.direction !== "in") continue;
+    // Remise en attente à la main : c'est une affirmation, pas un
+    // oubli. La confirmation automatique ne la contredit pas.
+    if (e.settle_locked) continue;
     const stream = index[e.stream_id ?? ""];
     if (!stream?.auto_settle) continue;
     const expected = expectedOf(e, index);
@@ -535,14 +504,25 @@ export function streamMetrics(
   const buckets = bucketByMonth(own, basis);
   const list = series(buckets, months);
 
+  // Borné à la FENÊTRE demandée. Sans ce test, `total` balayait toutes
+  // les écritures de l'activité depuis toujours, et les deux pages qui
+  // l'affichent sous le titre « 12 mois » annonçaient en réalité le
+  // total de l'historique.
+  const inWindow = new Set(months);
   const total = emptyTotals();
   for (const e of own) {
     if (e.status === "cancelled") continue;
     if (!isCounted(e, basis)) continue;
+    const day = dateOf(e, basis);
+    if (!day || !inWindow.has(monthOf(day))) continue;
     addEntry(total, e);
   }
 
-  const incoming = own.filter((e) => e.direction === "in" && isCounted(e, basis));
+  const incoming = own.filter((e) => {
+    if (e.direction !== "in" || !isCounted(e, basis)) return false;
+    const day = dateOf(e, basis);
+    return !!day && inWindow.has(monthOf(day));
+  });
   const pending = own.filter((e) => e.status === "pending" && e.direction === "in");
 
   const withCount = list.filter((b) => b.count > 0);
@@ -554,7 +534,13 @@ export function streamMetrics(
     stream,
     total,
     months: list,
-    marginRate: total.gross > 0 ? total.margin / total.gross : null,
+    /*
+     * Le taux de marge n'a de sens que si un coût d'achat est saisi.
+     * Sans lui, marge = brut et le ratio vaut exactement 1 : afficher
+     * « 100 % de marge » sur de l'achat-revente est le pire des
+     * mensonges possibles sur cette page. On préfère ne rien dire.
+     */
+    marginRate: total.gross > 0 && total.cost + total.fee > 0 ? total.margin / total.gross : null,
     averageTicket: incoming.length ? Math.round(total.revenue / incoming.length) : null,
     medianDelay: medianSettlementDelay(entries, stream.id),
     pendingAmount: pending.reduce((s, e) => s + revenueOf(e), 0),
@@ -578,9 +564,14 @@ export function yearProjection(
   year: number,
   ref: DayKey = today(),
 ): { earned: number; projected: number; monthsLeft: number; runRate: number } {
-  const done = [...buckets.values()].filter(
-    (b) => b.month.slice(0, 4) === String(year) && b.month < monthOf(ref),
-  );
+  // TRIÉ, sans quoi `.slice(-3)` plus bas ne prend pas les trois mois
+  // les plus récents mais les trois premiers arrivés dans la Map —
+  // c'est-à-dire, l'ordre de chargement étant décroissant, les trois
+  // plus ANCIENS. Pour quelqu'un qui monte en charge, la projection
+  // était massivement sous-estimée.
+  const done = [...buckets.values()]
+    .filter((b) => b.month.slice(0, 4) === String(year) && b.month < monthOf(ref))
+    .sort((a, b) => a.month.localeCompare(b.month));
   const currentBucket = bucketFor(buckets, monthOf(ref));
   const inYear = monthOf(ref).slice(0, 4) === String(year);
 
@@ -644,49 +635,20 @@ type InsightInput = {
 };
 
 export function buildInsights(input: InsightInput): Insight[] {
-  const { overview, pending, streams, goal, fmt, pct, month, basis } = input;
+  const { overview, pending, streams, goal, fmt, pct } = input;
   const out: Insight[] = [];
   const cur = overview.current;
 
-  // 1. Le décalage vente → encaissement : la raison d'être de l'app.
-  if (pending.fromCurrentMonth > 0) {
-    const n = pending.entries.filter((e) => monthOf(e.occurred_on) === month).length;
-    out.push({
-      id: "shift",
-      tone: "neutral",
-      title: `${fmt(pending.fromCurrentMonth)} vendus ce mois-ci tomberont plus tard`,
-      detail:
-        `${n} écriture${n > 1 ? "s" : ""} conclue${n > 1 ? "s" : ""} en ${month.slice(5)}/${month.slice(0, 4)} ` +
-        `n'${n > 1 ? "ont" : "a"} pas encore été encaissée${n > 1 ? "s" : ""}` +
-        (pending.medianDelay !== null
-          ? `. Ton délai habituel est de ${pending.medianDelay} jour${pending.medianDelay > 1 ? "s" : ""}.`
-          : "."),
-    });
-  }
-
-  // 2. Ce qui doit être confirmé maintenant.
-  if (pending.dueNow.length > 0) {
-    const n = pending.dueNow.length;
-    out.push({
-      id: "due-now",
-      tone: "neutral",
-      title: `${fmt(pending.dueNowAmount)} à confirmer`,
-      detail: `${n} encaissement${n > 1 ? "s ont" : " a"} atteint ${n > 1 ? "leur" : "sa"} date prévue. Un clic suffit à tout valider.`,
-    });
-  }
-
-  // 3. Ce qui va tomber, et quand.
-  if (pending.upcomingByMonth.length > 0) {
-    const next = pending.upcomingByMonth[0];
-    out.push({
-      id: "upcoming",
-      tone: "good",
-      title: `${fmt(next.amount)} attendus en ${monthNameOf(next.month)}`,
-      detail: `${next.entries.length} encaissement${next.entries.length > 1 ? "s" : ""} déjà vendu${next.entries.length > 1 ? "s" : ""}, versement prévu le mois prochain.`,
-    });
-  }
-
-  // 4. Encaissements qui n'arrivent pas.
+  /*
+   * Les constats redisaient le panneau « En attente » qui les suit
+   * immédiatement sur le tableau de bord : total en attente, somme à
+   * confirmer, versements attendus le mois prochain, effet de la base
+   * de calcul. Quatre phrases pour quatre chiffres déjà affichés 200 px
+   * plus bas. Ne restent ici que les constats que rien d'autre ne dit.
+   *
+   * Le retard, lui, n'est chiffré nulle part ailleurs : c'est une
+   * relance à faire, pas un état des lieux.
+   */
   if (pending.overdue.length > 0) {
     out.push({
       id: "overdue",
@@ -784,17 +746,6 @@ export function buildInsights(input: InsightInput): Insight[] {
     }
   }
 
-  // 11. Ce que la base de calcul change, chiffré.
-  if (basis === "cash" && pending.total > 0) {
-    out.push({
-      id: "basis",
-      tone: "neutral",
-      title: `${fmt(pending.total)} déjà gagnés mais pas encore sur le compte`,
-      detail:
-        "En base « comptabilisé », cette somme apparaîtrait au mois de la vente. " +
-        "En base « encaissé », elle n'apparaîtra qu'au versement.",
-    });
-  }
 
   return out;
 }
@@ -803,14 +754,7 @@ export function buildInsights(input: InsightInput): Insight[] {
    Divers
    =================================================================== */
 
-function monthNameOf(month: MonthKey) {
-  return MONTHS[Number(month.slice(5, 7)) - 1];
-}
 
-const MONTHS = [
-  "janvier", "février", "mars", "avril", "mai", "juin",
-  "juillet", "août", "septembre", "octobre", "novembre", "décembre",
-];
 
 export function streamColor(slot: number) {
   return `var(--series-${((slot - 1) % 8) + 1})`;

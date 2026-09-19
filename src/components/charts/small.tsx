@@ -1,9 +1,8 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId } from "react";
 import { money, percent } from "@/lib/format";
-import { monthLabel, MOIS_INITIALE, type MonthKey } from "@/lib/dates";
-import { ChartTooltip, type TooltipState, smoothPath, useMeasure } from "./chart-kit";
+import { smoothPath, useMeasure } from "./chart-kit";
 
 /* ===================================================================
    Sparkline — 12 points, la période courante accentuée.
@@ -246,107 +245,3 @@ export function RankedBars({
   );
 }
 
-/* ===================================================================
-   Carte de saisonnalité — années × mois, rampe bleue à teinte unique,
-   du plus clair (proche de zéro) au plus foncé.
-   =================================================================== */
-
-const RAMP = ["var(--seq-100)", "var(--seq-250)", "var(--seq-400)", "var(--seq-550)", "var(--seq-700)"];
-
-export function Heatmap({
-  years,
-  valueAt,
-  onSelect,
-}: {
-  years: number[];
-  valueAt: (month: MonthKey) => number;
-  onSelect?: (month: MonthKey) => void;
-}) {
-  const [tip, setTip] = useState<TooltipState>(null);
-  const cells = years.flatMap((y) =>
-    Array.from({ length: 12 }, (_, m) => {
-      const key = `${y}-${String(m + 1).padStart(2, "0")}`;
-      return { year: y, m, key, value: valueAt(key) };
-    }),
-  );
-  const max = Math.max(...cells.map((c) => c.value), 1);
-
-  function shade(value: number) {
-    if (value <= 0) return "var(--surface-2)";
-    const idx = Math.min(RAMP.length - 1, Math.floor((value / max) * RAMP.length));
-    return RAMP[idx];
-  }
-
-  return (
-    <div className="relative">
-      <div className="overflow-x-auto">
-        <table className="w-full border-separate" style={{ borderSpacing: "2px" }}>
-          <thead>
-            <tr>
-              <th />
-              {MOIS_INITIALE.map((m, i) => (
-                <th
-                  key={i}
-                  className="pb-1 text-[10px] font-medium"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  {m}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {years.map((year) => (
-              <tr key={year}>
-                <th
-                  className="pr-2 text-right text-[11px] font-medium"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  {year}
-                </th>
-                {Array.from({ length: 12 }, (_, m) => {
-                  const key = `${year}-${String(m + 1).padStart(2, "0")}`;
-                  const value = valueAt(key);
-                  return (
-                    <td key={key} className="p-0">
-                      <button
-                        type="button"
-                        className="block h-7 w-full min-w-[18px] rounded-[4px] transition-transform hover:scale-110"
-                        style={{ background: shade(value) }}
-                        aria-label={`${monthLabel(key, "full")} : ${money(value)}`}
-                        onClick={() => onSelect?.(key)}
-                        onPointerMove={(e) => {
-                          const host = e.currentTarget.closest(".relative") as HTMLElement;
-                          const rect = host.getBoundingClientRect();
-                          setTip({
-                            x: e.clientX - rect.left,
-                            y: e.clientY - rect.top,
-                            title: monthLabel(key, "full"),
-                            rows: [{ label: "Revenu net", value: money(value) }],
-                          });
-                        }}
-                        onPointerLeave={() => setTip(null)}
-                      />
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="mt-3 flex items-center gap-2">
-        <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-          Rien
-        </span>
-        {RAMP.map((c) => (
-          <span key={c} className="h-3 w-6 rounded-[3px]" style={{ background: c }} />
-        ))}
-        <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-          {money(max)}
-        </span>
-      </div>
-      <ChartTooltip state={tip} width={9999} />
-    </div>
-  );
-}

@@ -27,6 +27,7 @@ import {
   type MonthKey,
 } from "@/lib/dates";
 import { projectMonth, dateOf } from "@/lib/analytics";
+import { buildReport } from "@/lib/fiscal";
 
 export default function Dashboard() {
   const store = useStore();
@@ -172,8 +173,21 @@ export default function Dashboard() {
     return { days, filled: days.filter((v) => v > 0).length };
   }, [bucket.entries, basis, month]);
 
-  const chargeRate = store.settings.charge_rate_bps / 10_000;
-  const afterCharges = Math.round(bucket.net - bucket.revenue * chargeRate);
+  /**
+   * Ce que ce mois doit vraiment à l'URSSAF, calculé par le moteur
+   * fiscal sur les taux de chaque catégorie et l'ACRE — plus par un
+   * pourcentage saisi à la main dans les réglages, qui s'appliquait
+   * indistinctement à tout, allocation chômage comprise, et qui
+   * contredisait la page Comptabilité sur le même écran.
+   *
+   * Un mois est exactement la maille d'une déclaration URSSAF : le
+   * taux s'y applique sans approximation.
+   */
+  const urssafDuMois = useMemo(
+    () => buildReport(store.entries, store.streams, store.fiscal, [month]),
+    [store.entries, store.streams, store.fiscal, month],
+  );
+  const afterCharges = bucket.net - urssafDuMois.urssafCents;
 
   /**
    * Les compteurs portent sur le mois AFFICHÉ, donc leurs moyennes
@@ -635,11 +649,11 @@ export default function Dashboard() {
                   ?.scrollIntoView({ behavior: "smooth" })
               }
             />
-          ) : chargeRate > 0 ? (
+          ) : urssafDuMois.urssafCents > 0 ? (
             <Counter
               label="Après cotisations"
               value={money(afterCharges)}
-              hint={`${percent(chargeRate)} retirés du brut`}
+              hint={`${money(urssafDuMois.urssafCents)} d'URSSAF sur ce mois`}
               cell={2}
             />
           ) : (

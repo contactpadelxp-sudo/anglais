@@ -10,7 +10,16 @@ import {
   useState,
   useTransition,
 } from "react";
-import type { Basis, Entry, EntryDraft, Goal, Settings, Snapshot, Stream } from "@/lib/types";
+import type {
+  Basis,
+  Declaration,
+  Entry,
+  EntryDraft,
+  Goal,
+  Settings,
+  Snapshot,
+  Stream,
+} from "@/lib/types";
 import {
   type MonthBucket,
   type MonthOverview,
@@ -33,6 +42,8 @@ import * as api from "@/lib/actions";
 import {
   DEFAULT_BRACKETS,
   DEFAULT_BRACKETS_YEAR,
+  DEFAULT_SALARY_ABATEMENT,
+  DEFAULT_DECOTE,
   type FiscalSettings,
 } from "@/lib/fiscal";
 
@@ -44,6 +55,7 @@ type State = {
   streams: Stream[];
   entries: Entry[];
   goals: Goal[];
+  declarations: Declaration[];
   settings: Settings;
 };
 
@@ -56,6 +68,8 @@ type Action =
   | { type: "stream:put"; stream: Stream }
   | { type: "stream:remove"; id: string }
   | { type: "settings:put"; settings: Settings }
+  | { type: "declaration:put"; declaration: Declaration }
+  | { type: "declaration:remove"; period: string }
   | { type: "reset"; snapshot: Snapshot };
 
 function reducer(state: State, action: Action): State {
@@ -98,6 +112,20 @@ function reducer(state: State, action: Action): State {
       };
     case "settings:put":
       return { ...state, settings: action.settings };
+    case "declaration:put": {
+      const rest = state.declarations.filter((d) => d.period !== action.declaration.period);
+      return {
+        ...state,
+        declarations: [action.declaration, ...rest].sort((a, b) =>
+          b.period.localeCompare(a.period),
+        ),
+      };
+    }
+    case "declaration:remove":
+      return {
+        ...state,
+        declarations: state.declarations.filter((d) => d.period !== action.period),
+      };
     case "reset":
       return { ...action.snapshot };
   }
@@ -125,6 +153,9 @@ type Store = {
   streamById: Record<string, Stream | undefined>;
   entries: Entry[];
   goals: Goal[];
+  /** Les déclarations URSSAF déjà faites, la plus récente d'abord. */
+  declarations: Declaration[];
+  declarationByPeriod: Record<string, Declaration | undefined>;
   settings: Settings;
 
   // réglages de lecture
@@ -162,6 +193,8 @@ type Store = {
   addStream: (...args: Parameters<typeof api.createStream>) => Promise<void>;
   removeStream: (id: string) => Promise<void>;
   updateSettings: (patch: Parameters<typeof api.saveSettings>[0]) => Promise<void>;
+  saveDeclaration: (patch: Parameters<typeof api.saveDeclaration>[0]) => Promise<void>;
+  removeDeclaration: (period: string) => Promise<void>;
 
   // interface
   busy: boolean;
@@ -197,9 +230,12 @@ export function blankDraft(streamId: string | null): EntryDraft {
     // Par défaut l'argent est déjà là : on saisit un encaissement qu'on
     // vient de recevoir, pas une promesse.
     status: "received",
-    quantity: 1,
     counterparty: null,
     notes: null,
+    // Le virement est le mode de règlement de la quasi-totalité des
+    // encaissements ici ; le livre des recettes exige la mention.
+    payment_method: "virement",
+    reference: null,
   };
 }
 
@@ -244,6 +280,12 @@ export function StoreProvider({
   );
   const availableMonths = useMemo(() => coveredMonths(state.entries), [state.entries]);
 
+  const declarationByPeriod = useMemo(() => {
+    const out: Record<string, Declaration | undefined> = {};
+    for (const d of state.declarations) out[d.period] = d;
+    return out;
+  }, [state.declarations]);
+
   const fiscal = useMemo<FiscalSettings>(
     () => ({
       activityStart: state.settings.activity_start,
@@ -256,6 +298,8 @@ export function StoreProvider({
           ? state.settings.tax_brackets
           : DEFAULT_BRACKETS,
       bracketsYear: state.settings.tax_brackets_year ?? DEFAULT_BRACKETS_YEAR,
+      salaryAbatement: state.settings.salary_abatement ?? DEFAULT_SALARY_ABATEMENT,
+      decote: state.settings.decote ?? DEFAULT_DECOTE,
     }),
     [state.settings],
   );
@@ -412,6 +456,28 @@ export function StoreProvider({
     [run],
   );
 
+  const saveDeclaration = useCallback(
+    async (patch: Parameters<typeof api.saveDeclaration>[0]) => {
+      await run(
+        () => api.saveDeclaration(patch),
+        (declaration) => dispatch({ type: "declaration:put", declaration }),
+        "Déclaration enregistrée.",
+      );
+    },
+    [run],
+  );
+
+  const removeDeclaration = useCallback(
+    async (period: string) => {
+      await run(
+        () => api.deleteDeclaration(period),
+        () => dispatch({ type: "declaration:remove", period }),
+        "Déclaration effacée.",
+      );
+    },
+    [run],
+  );
+
   const updateSettings = useCallback(
     async (patch: Parameters<typeof api.saveSettings>[0]) => {
       await run(
@@ -471,6 +537,8 @@ export function StoreProvider({
     streamById,
     entries: state.entries,
     goals: state.goals,
+    declarations: state.declarations,
+    declarationByPeriod,
     settings: state.settings,
     basis,
     setBasis,
@@ -494,6 +562,8 @@ export function StoreProvider({
     addStream,
     removeStream,
     updateSettings,
+    saveDeclaration,
+    removeDeclaration,
     busy,
     toasts,
     notify,

@@ -5,9 +5,9 @@ import { useStore } from "@/components/store";
 import { Card, Segmented, StatTile } from "@/components/ui/kit";
 import { Trend } from "@/components/charts/trend";
 import { StackedMonths } from "@/components/charts/stacked-months";
-import { Heatmap, RankedBars } from "@/components/charts/small";
+import { RankedBars } from "@/components/charts/small";
 import { basisComparison, bucketFor, yearProjection } from "@/lib/analytics";
-import { money, percent } from "@/lib/format";
+import { money, percent, plural } from "@/lib/format";
 import {
   monthLabel,
   monthRange,
@@ -31,9 +31,9 @@ export default function AnalysePage() {
 
   /**
    * La fenêtre est ancrée sur le mois courant, mais s'étire jusqu'au
-   * mois cadré s'il est plus ancien. Sans ça, la carte « Saisonnalité »
-   * promettait « clic sur une case pour cadrer ce mois » et rien ne
-   * bougeait à l'écran quand la case cliquée tombait hors fenêtre.
+   * mois cadré s'il est plus ancien : choisir mars dans l'en-tête et
+   * lire une fenêtre qui commence en juin ne montrerait pas le mois
+   * qu'on vient de désigner.
    */
   const months = useMemo(() => {
     const now = currentMonth();
@@ -59,6 +59,14 @@ export default function AnalysePage() {
   const year = yearOf(month);
   const projection = useMemo(() => yearProjection(buckets, year), [buckets, year]);
 
+  /*
+   * Le cumul de l'année. Il n'était tracé que pour être COMPARÉ à
+   * l'année précédente — laquelle, avant l'immatriculation, ne
+   * contient rien : la courbe de référence était une ligne plate à
+   * zéro, qui occupait la moitié du cadre et n'apprenait rien. La
+   * comparaison n'apparaît donc que si l'année d'avant a réellement
+   * porté quelque chose.
+   */
   const cumulative = useMemo(() => {
     const build = (y: number) => {
       let running = 0;
@@ -67,18 +75,13 @@ export default function AnalysePage() {
         return running;
       });
     };
-    return { current: build(year), previous: build(year - 1) };
+    const previous = build(year - 1);
+    return {
+      current: build(year),
+      previous,
+      aUnPasse: previous[previous.length - 1] !== 0,
+    };
   }, [buckets, year]);
-
-  const years = useMemo(() => {
-    const set = new Set<number>();
-    for (const e of entries) {
-      set.add(yearOf(e.occurred_on));
-      if (e.received_on) set.add(yearOf(e.received_on));
-    }
-    set.add(yearOf(currentMonth()));
-    return [...set].sort((a, b) => b - a).slice(0, 5);
-  }, [entries]);
 
   /* --- Classement des mois -------------------------------------------- */
   const bestMonths = useMemo(
@@ -108,11 +111,26 @@ export default function AnalysePage() {
   }, [activeStreams, window]);
 
   const windowTotal = window.reduce((s, b) => s + b.net, 0);
-  const windowAverage = window.length ? Math.round(windowTotal / window.length) : 0;
 
-  /* --- Régularité : l'écart-type rapporté à la moyenne ---------------- */
+  /*
+   * La moyenne porte sur les mois RENSEIGNÉS, pas sur la largeur de la
+   * fenêtre. Diviser par douze quand huit mois seulement portent des
+   * revenus compte les mois d'avant l'immatriculation comme des mois à
+   * zéro et rabaisse la moyenne d'un tiers.
+   */
+  const filledMonths = useMemo(() => window.filter((b) => b.count > 0), [window]);
+  const windowAverage = filledMonths.length
+    ? Math.round(filledMonths.reduce((s, b) => s + b.net, 0) / filledMonths.length)
+    : 0;
+
+  /* --- Régularité : l'écart-type rapporté à la moyenne ----------------
+     Le mois EN COURS est écarté : vu au tiers, il tire mécaniquement la
+     dispersion vers le haut et fait basculer la tuile de « stable » à
+     « irrégulier » sans que rien n'ait changé. */
   const volatility = useMemo(() => {
-    const active = window.filter((b) => b.count > 0).map((b) => b.net);
+    const active = window
+      .filter((b) => b.count > 0 && b.month < currentMonth())
+      .map((b) => b.net);
     if (active.length < 3) return null;
     const mean = active.reduce((s, v) => s + v, 0) / active.length;
     if (mean === 0) return null;
@@ -137,7 +155,11 @@ export default function AnalysePage() {
         <StatTile
           label={`Total ${windowSize} mois`}
           value={money(windowTotal)}
-          hint={`${money(windowAverage)} par mois en moyenne`}
+          hint={`${money(windowAverage)} par mois sur ${plural(
+            filledMonths.length,
+            "mois renseigné",
+            "mois renseignés",
+          )}`}
         />
         <StatTile
           label={`Cumul ${year}`}
@@ -231,7 +253,11 @@ export default function AnalysePage() {
       )}
 
       {/* ---- Cumul annuel --------------------------------------------- */}
-      <Card title={`Cumul ${year} face à ${year - 1}`}>
+      <Card
+        title={
+          cumulative.aUnPasse ? `Cumul ${year} face à ${year - 1}` : `Cumul ${year}`
+        }
+      >
         <Trend
           months={monthsOfYear(year)}
           series={[
@@ -241,15 +267,25 @@ export default function AnalysePage() {
               color: "var(--series-1)",
               values: cumulative.current,
             },
-            {
-              id: "prev",
-              label: `${year - 1}`,
-              color: "var(--series-5)",
-              values: cumulative.previous,
-            },
+            ...(cumulative.aUnPasse
+              ? [
+                  {
+                    id: "prev",
+                    label: `${year - 1}`,
+                    color: "var(--series-5)",
+                    values: cumulative.previous,
+                  },
+                ]
+              : []),
           ]}
           height={220}
         />
+        {!cumulative.aUnPasse ? (
+          <p className="mt-3 max-w-[72ch] text-[12.5px]" style={{ color: "var(--text-muted)" }}>
+            Pas d&apos;année précédente à comparer : l&apos;activité a commencé en {year}. La
+            comparaison apparaîtra d&apos;elle-même l&apos;an prochain.
+          </p>
+        ) : null}
       </Card>
 
       {/* ---- Empilé + contributions ------------------------------------ */}
@@ -286,21 +322,6 @@ export default function AnalysePage() {
         </Card>
       </div>
 
-      {/* ---- Saisonnalité ---------------------------------------------- */}
-      <Card
-        title="Saisonnalité"
-        action={
-          <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-            Clic sur une case pour cadrer ce mois
-          </span>
-        }
-      >
-        <Heatmap
-          years={years}
-          valueAt={(m) => bucketFor(buckets, m).net}
-          onSelect={setMonth}
-        />
-      </Card>
     </div>
   );
 }

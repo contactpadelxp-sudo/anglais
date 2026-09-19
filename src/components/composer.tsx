@@ -4,9 +4,23 @@ import { useMemo, useRef, useState } from "react";
 import { useStore } from "./store";
 import { Button, Field, Input, Segmented, Sheet, inputStyle } from "./ui/kit";
 import { Icon } from "./ui/icons";
-import { centsToInput, money, parseMoney } from "@/lib/format";
+import { centsToInput, money, parseMoney, percent } from "@/lib/format";
 import { addDays, dayLabelShort, today } from "@/lib/dates";
-import type { EntryDraft } from "@/lib/types";
+import { CATEGORIES, provisionOn, type FiscalCategory } from "@/lib/fiscal";
+import type { EntryDraft, PaymentMethod } from "@/lib/types";
+
+/**
+ * Modes de règlement. Le livre des recettes doit porter celui de
+ * chaque ligne : sans lui, l'export n'est pas opposable en contrôle.
+ */
+const REGLEMENTS: { value: PaymentMethod; label: string }[] = [
+  { value: "virement", label: "Virement" },
+  { value: "plateforme", label: "Plateforme" },
+  { value: "carte", label: "Carte" },
+  { value: "especes", label: "Espèces" },
+  { value: "cheque", label: "Chèque" },
+  { value: "autre", label: "Autre" },
+];
 
 /**
  * Saisie d'un encaissement.
@@ -34,6 +48,7 @@ export function Composer({ initial }: { initial: EntryDraft }) {
         initial.fee_cents ||
         initial.counterparty ||
         initial.notes ||
+        initial.reference ||
         initial.occurred_on !== initial.received_on,
     ),
   );
@@ -111,6 +126,36 @@ export function Composer({ initial }: { initial: EntryDraft }) {
     { label: "Hier", day: addDays(today(), -1) },
     { label: dayLabelShort(addDays(today(), -2)), day: addDays(today(), -2) },
   ];
+
+  /*
+   * « Hier » ne déplaçait que la date d'encaissement : l'écriture
+   * restait vendue AUJOURD'HUI et encaissée HIER, c'est-à-dire payée
+   * avant d'avoir été vendue. Quand les deux dates sont confondues —
+   * le cas de toutes les saisies rapides — le raccourci les déplace
+   * ensemble. Si elles ont été séparées à la main, on n'y touche pas.
+   */
+  function setQuickDay(day: string) {
+    const liees = draft!.occurred_on === draft!.received_on;
+    if (liees) patch({ occurred_on: day, received_on: day, expected_on: day, status: "received" });
+    else setReceivedOn(day);
+  }
+
+  /**
+   * Ce qu'il faudra reverser sur cet encaissement, au taux réellement
+   * dû ce jour-là. C'est la seule question qui se pose au moment où
+   * l'argent arrive, et elle n'avait pas de réponse dans l'app.
+   */
+  const provision =
+    isIncome && stream
+      ? provisionOn(
+          (stream.fiscal_category as FiscalCategory) in CATEGORIES
+            ? (stream.fiscal_category as FiscalCategory)
+            : "hors",
+          draft.received_on ?? draft.expected_on ?? today(),
+          parseMoney(amount),
+          store.fiscal,
+        )
+      : { bps: 0, cents: 0 };
 
   return (
     <Sheet
@@ -240,7 +285,7 @@ export function Composer({ initial }: { initial: EntryDraft }) {
                   <button
                     key={q.day}
                     type="button"
-                    onClick={() => setReceivedOn(q.day)}
+                    onClick={() => setQuickDay(q.day)}
                     className="rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors"
                     style={{
                       background:
@@ -325,6 +370,42 @@ export function Composer({ initial }: { initial: EntryDraft }) {
               />
             </Field>
 
+            <Field
+              label="Mode de règlement"
+              hint="Mention obligatoire du livre des recettes."
+            >
+              <div className="flex flex-wrap gap-1.5">
+                {REGLEMENTS.map((r) => {
+                  const active = draft.payment_method === r.value;
+                  return (
+                    <button
+                      key={r.value}
+                      type="button"
+                      onClick={() => patch({ payment_method: active ? null : r.value })}
+                      className="rounded-full px-3 py-1.5 text-[12.5px] font-medium transition-colors"
+                      style={{
+                        background: active ? "var(--text-primary)" : "var(--surface-2)",
+                        color: active ? "var(--surface-1)" : "var(--text-secondary)",
+                      }}
+                    >
+                      {r.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </Field>
+
+            <Field
+              label="Référence de la pièce"
+              hint="Numéro de facture, de virement, de bordereau — ce qui permet de la retrouver."
+            >
+              <Input
+                value={draft.reference ?? ""}
+                onChange={(e) => patch({ reference: e.target.value || null })}
+                placeholder="Facultatif"
+              />
+            </Field>
+
             <Field label="Client / contrepartie">
               <Input
                 value={draft.counterparty ?? ""}
@@ -355,6 +436,40 @@ export function Composer({ initial }: { initial: EntryDraft }) {
             <span style={{ color: "var(--text-secondary)" }}>Net réellement gagné</span>
             <span className="tnum font-semibold">{money(net)}</span>
           </div>
+        ) : null}
+
+        {/* Ce qu'il faut garder de côté : la question du moment. */}
+        {provision.cents > 0 ? (
+          <div
+            className="flex items-center justify-between gap-3 rounded-[var(--radius-sm)] px-3 py-2.5 text-[12.5px]"
+            style={{ background: "color-mix(in oklab, var(--warning) 12%, var(--surface-2))" }}
+          >
+            <span style={{ color: "var(--text-secondary)" }}>
+              À garder de côté ·{" "}
+              <span className="tnum">{percent(provision.bps / 10_000, 2)}</span>
+            </span>
+            <span className="tnum font-semibold">{money(provision.cents)}</span>
+          </div>
+        ) : null}
+
+        {/* Une écriture peut être annulée sans être effacée : une vente
+            remboursée sort du chiffre d'affaires, mais sa trace reste.
+            Le statut était filtré partout et écrit nulle part. */}
+        {existing ? (
+          <button
+            type="button"
+            onClick={() =>
+              patch({ status: draft.status === "cancelled" ? "received" : "cancelled" })
+            }
+            className="self-start text-[12px] underline"
+            style={{
+              color: draft.status === "cancelled" ? "var(--critical)" : "var(--text-muted)",
+            }}
+          >
+            {draft.status === "cancelled"
+              ? "Écriture annulée — la remettre dans la comptabilité"
+              : "Annuler cette écriture (la garder sans la compter)"}
+          </button>
         ) : null}
       </div>
     </Sheet>

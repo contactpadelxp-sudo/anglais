@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isOwner, ownerEmail } from "@/lib/owner";
 import { projectRef, siteUrl } from "@/lib/supabase/config";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Entry, EntryDraft, Goal, Settings, Stream } from "@/lib/types";
+import type { Declaration, Entry, EntryDraft, Goal, Settings, Stream } from "@/lib/types";
 
 export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -275,11 +275,23 @@ export async function saveEntry(draft: EntryDraft): Promise<ActionResult<Entry>>
     // une date sans l'état. On aligne les deux ici.
     received_on: draft.status === "received" ? draft.received_on : null,
     status: draft.status,
-    quantity: draft.quantity,
     counterparty: draft.counterparty,
     notes: draft.notes,
+    // Mentions obligatoires du livre des recettes.
+    payment_method: draft.payment_method,
+    reference: draft.reference,
+    // Rouvrir une écriture lève la mise en attente manuelle : l'état
+    // qu'on vient de choisir est le dernier mot.
+    settle_locked: false,
     meta: draft.meta ?? {},
   };
+
+  // Un montant négatif retranchait du chiffre d'affaires déclaré sans
+  // que rien ne le signale. Une charge se saisit avec direction
+  // « out », jamais avec un moins devant le montant.
+  if (payload.gross_cents < 0 || payload.fee_cents < 0 || payload.cost_cents < 0) {
+    return fail("Les montants doivent être positifs. Pour une charge, choisis le sens « sortie ».");
+  }
 
   const query = draft.id
     ? supabase.from("entries").update(payload).eq("id", draft.id).select().single()
@@ -334,7 +346,7 @@ export async function settleEntriesOnOwnDates(
     [...byDate.entries()].map(([on, ids]) =>
       session.supabase
         .from("entries")
-        .update({ status: "received", received_on: on })
+        .update({ status: "received", received_on: on, settle_locked: false })
         .in("id", ids)
         .select(),
     ),
@@ -345,6 +357,14 @@ export async function settleEntriesOnOwnDates(
   return { ok: true, data: results.flatMap((r) => (r.data ?? []) as Entry[]) };
 }
 
+/**
+ * Remet des écritures en attente.
+ *
+ * `expected_on` doit repartir dans le futur : laissée à la date
+ * d'encaissement — donc dans le passé — la confirmation automatique la
+ * rattrapait au chargement suivant et l'écriture se remettait toute
+ * seule en « encaissée ». Le geste était défait sans un mot.
+ */
 export async function unsettleEntries(ids: string[]): Promise<ActionResult<Entry[]>> {
   const session = await authed();
   if (!session.ok) return fail(session.error);
@@ -352,7 +372,7 @@ export async function unsettleEntries(ids: string[]): Promise<ActionResult<Entry
 
   const { data, error } = await session.supabase
     .from("entries")
-    .update({ status: "pending", received_on: null })
+    .update({ status: "pending", received_on: null, settle_locked: true })
     .in("id", ids)
     .select();
 
@@ -435,6 +455,7 @@ export async function createStream(
   kind: Stream["kind"],
   colorSlot: number,
   settlementDays: number,
+  fiscalCategory: Stream["fiscal_category"] = "bnc",
 ): Promise<ActionResult<Stream>> {
   const session = await authed();
   if (!session.ok) return fail(session.error);
@@ -463,6 +484,11 @@ export async function createStream(
       color_slot: colorSlot,
       settlement_days: settlementDays,
       auto_settle: settlementDays === 0,
+      // Sans catégorie, la base pose « hors », que le moteur fiscal
+      // saute purement et simplement : le chiffre d'affaires de la
+      // nouvelle activité sortait de la comptabilité sans un mot.
+      fiscal_category: fiscalCategory,
+      fiscal_confirmed: false,
       position: count ?? 0,
     })
     .select()
@@ -485,8 +511,6 @@ export async function saveSettings(
     Pick<
       Settings,
       | "default_basis"
-      | "charge_rate_bps"
-      | "currency"
       | "activity_start"
       | "acre_enabled"
       | "versement_liberatoire"
@@ -494,6 +518,10 @@ export async function saveSettings(
       | "other_income_cents"
       | "tax_brackets"
       | "tax_brackets_year"
+      | "salary_abatement"
+      | "decote"
+      | "urssaf_period"
+      | "provision_bps"
     >
   >,
 ): Promise<ActionResult<Settings>> {
@@ -509,4 +537,49 @@ export async function saveSettings(
 
   if (error) return fail(error.message);
   return { ok: true, data: data as Settings };
+}
+
+/* ===================================================================
+   Déclarations URSSAF
+   =================================================================== */
+
+/**
+ * Mémorise une déclaration : ce qui a été déclaré, ce que l'URSSAF a
+ * appelé, ce qui a été payé. Une période par ligne — d'où l'upsert sur
+ * (user_id, period), qui rend le geste idempotent : cocher deux fois
+ * « déclarée » n'empile pas deux lignes.
+ */
+export async function saveDeclaration(patch: {
+  period: string;
+  periodicity: "monthly" | "quarterly";
+  declared_cents?: Record<string, number>;
+  called_cents?: number | null;
+  paid_cents?: number | null;
+  paid_on?: string | null;
+  notes?: string | null;
+}): Promise<ActionResult<Declaration>> {
+  const session = await authed();
+  if (!session.ok) return fail(session.error);
+  const { supabase, userId } = session;
+
+  const { data, error } = await supabase
+    .from("declarations")
+    .upsert({ user_id: userId, ...patch }, { onConflict: "user_id,period" })
+    .select()
+    .single();
+
+  if (error) return fail(error.message);
+  return { ok: true, data: data as Declaration };
+}
+
+export async function deleteDeclaration(period: string): Promise<ActionResult<string>> {
+  const session = await authed();
+  if (!session.ok) return fail(session.error);
+  const { error } = await session.supabase
+    .from("declarations")
+    .delete()
+    .eq("user_id", session.userId)
+    .eq("period", period);
+  if (error) return fail(error.message);
+  return { ok: true, data: period };
 }

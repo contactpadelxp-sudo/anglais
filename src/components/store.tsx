@@ -13,6 +13,7 @@ import {
 import type {
   Basis,
   Declaration,
+  PaymentMethod,
   Entry,
   EntryDraft,
   Goal,
@@ -216,9 +217,22 @@ export function useStore() {
   return ctx;
 }
 
-export function blankDraft(streamId: string | null): EntryDraft {
+/**
+ * Le mode de règlement le plus probable pour une activité. Le livre
+ * des recettes exige la mention, et « virement » pour tout le monde
+ * était faux pour la moitié des lignes : une vente Vinted est réglée
+ * par la plateforme, pas par virement direct.
+ */
+function reglementDe(stream: Stream | undefined): PaymentMethod {
+  if (!stream) return "virement";
+  return stream.kind === "resale" || stream.kind === "subscription"
+    ? "plateforme"
+    : "virement";
+}
+
+export function blankDraft(stream: Stream | undefined): EntryDraft {
   return {
-    stream_id: streamId,
+    stream_id: stream?.id ?? null,
     direction: "in",
     label: "",
     gross_cents: 0,
@@ -232,9 +246,7 @@ export function blankDraft(streamId: string | null): EntryDraft {
     status: "received",
     counterparty: null,
     notes: null,
-    // Le virement est le mode de règlement de la quasi-totalité des
-    // encaissements ici ; le livre des recettes exige la mention.
-    payment_method: "virement",
+    payment_method: reglementDe(stream),
     reference: null,
   };
 }
@@ -247,7 +259,14 @@ export function StoreProvider({
   children: React.ReactNode;
 }) {
   const [state, dispatch] = useReducer(reducer, snapshot);
-  const [basis, setBasisState] = useState<Basis>(snapshot.settings.default_basis);
+  /*
+   * La base de calcul vivait à DEUX endroits : un état local ici, et
+   * `settings.default_basis` en base. La bascule de l'en-tête ne
+   * touchait que le premier, celle des Réglages lisait le second : les
+   * deux commandes affichaient des valeurs différentes du même
+   * réglage. Elle n'a plus qu'une source.
+   */
+  const basis: Basis = state.settings.default_basis;
   const [month, setMonth] = useState<MonthKey>(currentMonth());
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [composer, setComposer] = useState<EntryDraft | null>(null);
@@ -509,10 +528,11 @@ export function StoreProvider({
 
   const setBasis = useCallback(
     (b: Basis) => {
-      setBasisState(b);
+      // Optimiste : l'écran suit le doigt, l'enregistrement suit après.
+      dispatch({ type: "settings:put", settings: { ...state.settings, default_basis: b } });
       void api.saveSettings({ default_basis: b });
     },
-    [],
+    [state.settings],
   );
 
   /* --- confirmation automatique des encaissements fiables ------------ */
@@ -541,11 +561,20 @@ export function StoreProvider({
 
   const openComposer = useCallback(
     (draft?: Partial<EntryDraft>) => {
-      const base = blankDraft(activeStreams[0]?.id ?? null);
+      /*
+       * L'activité proposée est la DERNIÈRE utilisée, pas la première
+       * de la liste : on saisit presque toujours plusieurs écritures de
+       * la même activité d'affilée, et repartir de la première obligeait
+       * à la rechoisir à chaque fois.
+       */
+      const derniere = state.entries.find((e) => e.stream_id)?.stream_id ?? null;
+      const defaut =
+        activeStreams.find((s) => s.id === derniere) ?? activeStreams[0];
+      const base = blankDraft(defaut);
       setComposer({ ...base, ...draft });
       setComposerKey((k) => k + 1);
     },
-    [activeStreams],
+    [activeStreams, state.entries],
   );
 
   const closeComposer = useCallback(() => setComposer(null), []);

@@ -79,7 +79,10 @@ export function DeclarationUrssaf() {
   const start = override && override.from === moisAffiche ? override.start : defaut;
   const setStart = (m: MonthKey) => setOverride({ start: m, from: moisAffiche });
 
-  const [appele, setAppele] = useState("");
+  // `null` = « je n'ai rien saisi », distinct de `""` = « j'ai tout
+  // effacé ». Confondre les deux empêchait de vider le champ : il se
+  // remplissait à nouveau tout seul avec la valeur enregistrée.
+  const [appele, setAppele] = useState<string | null>(null);
 
   const pas = kind === "monthly" ? 1 : 3;
   const mois = monthOf(today());
@@ -193,7 +196,17 @@ export function DeclarationUrssaf() {
           className="mt-1 flex flex-col gap-1.5 pt-3"
           style={{ borderTop: "2px solid var(--border-strong)" }}
         >
-          <Ligne label="Total déclaré" value={moneyArrondi(draft.caCents)} strong />
+          {/* La somme des lignes ARRONDIES, et non l'arrondi de la
+              somme : c'est ce qu'on tape ligne à ligne, donc c'est ce
+              que le formulaire totalisera. Les deux peuvent différer
+              d'un euro, et cet euro-là se remarque. */}
+          <Ligne
+            label="Total déclaré"
+            value={moneyArrondi(
+              draft.lines.reduce((a, l) => a + eurosArrondis(l.caCents), 0) * 100,
+            )}
+            strong
+          />
           <Ligne label="Cotisations attendues" value={money(draft.dueCents)} />
         </div>
       ) : null}
@@ -231,23 +244,32 @@ export function DeclarationUrssaf() {
                     inputMode="decimal"
                     placeholder={String(eurosArrondis(draft.dueCents))}
                     value={
-                      appele !== ""
-                        ? appele
-                        : declaree.called_cents != null
-                          ? String(declaree.called_cents / 100)
-                          : ""
+                      appele ??
+                      (declaree.called_cents != null
+                        ? String(declaree.called_cents / 100)
+                        : "")
                     }
                     onChange={(e) => setAppele(e.target.value)}
                     onBlur={() => {
-                      if (appele === "") return;
-                      const v = Number(appele.replace(",", ".").replace(/\s/g, ""));
+                      if (appele === null) return;
+                      const brut = appele.trim();
+                      if (brut === "") {
+                        void store.saveDeclaration({
+                          period: periodKey,
+                          periodicity: kind,
+                          called_cents: null,
+                        });
+                        setAppele(null);
+                        return;
+                      }
+                      const v = Number(brut.replace(",", ".").replace(/\s/g, ""));
                       if (!Number.isFinite(v)) return;
                       void store.saveDeclaration({
                         period: periodKey,
                         periodicity: kind,
                         called_cents: Math.round(v * 100),
                       });
-                      setAppele("");
+                      setAppele(null);
                     }}
                   />
                 </label>
@@ -328,7 +350,7 @@ function NavBtn({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-[var(--surface-2)]"
+      className="flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-[var(--surface-2)]"
       style={{ color: "var(--text-secondary)" }}
     >
       {children}

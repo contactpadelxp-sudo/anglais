@@ -53,6 +53,7 @@ export function Composer({ initial }: { initial: EntryDraft }) {
     ),
   );
   const [saving, setSaving] = useState(false);
+  const [confirmeSuppression, setConfirmeSuppression] = useState(false);
   const amountRef = useRef<HTMLInputElement>(null);
 
   const existing = draft?.id ? entries.find((e) => e.id === draft.id) : null;
@@ -183,16 +184,23 @@ export function Composer({ initial }: { initial: EntryDraft }) {
       footer={
         <>
           {existing ? (
+            /* Un seul geste effaçait une écriture, sans retour possible.
+               La confirmation tient dans le même bouton : le premier
+               appui demande, le second efface. */
             <Button
               variant="danger"
               size="sm"
               icon={<Icon.trash size={15} />}
               onClick={async () => {
+                if (!confirmeSuppression) {
+                  setConfirmeSuppression(true);
+                  return;
+                }
                 await removeEntry(existing);
                 closeComposer();
               }}
             >
-              Supprimer
+              {confirmeSuppression ? "Confirmer" : "Supprimer"}
             </Button>
           ) : null}
           <div className="flex-1" />
@@ -211,7 +219,18 @@ export function Composer({ initial }: { initial: EntryDraft }) {
         <Segmented
           label="Type d'écriture"
           value={draft.direction}
-          onChange={(v) => patch({ direction: v })}
+          onChange={(v) => {
+            /* Coût d'achat et frais n'ont de sens que sur un revenu :
+               leurs champs disparaissent en passant sur « Charge », mais
+               leurs valeurs restaient dans le brouillon et partaient en
+               base — une charge de 30 € portait encore 12 € de coût
+               d'achat invisible. */
+            if (v === "out") {
+              setCost("");
+              setFee("");
+            }
+            patch({ direction: v });
+          }}
           options={[
             { value: "in", label: "Revenu" },
             { value: "out", label: "Charge" },

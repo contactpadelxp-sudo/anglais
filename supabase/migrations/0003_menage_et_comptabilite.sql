@@ -96,17 +96,6 @@ alter table public.settings
   add constraint settings_urssaf_period_check
   check (urssaf_period in ('monthly', 'quarterly'));
 
--- Part du chiffre d'affaires à mettre de côté à chaque encaissement,
--- en points de base. 0 signifie que l'app la déduit des taux réels.
-alter table public.settings add column if not exists provision_bps integer;
-update public.settings set provision_bps = 0 where provision_bps is null;
-alter table public.settings alter column provision_bps set default 0;
-alter table public.settings alter column provision_bps set not null;
-alter table public.settings drop constraint if exists settings_provision_bps_check;
-alter table public.settings
-  add constraint settings_provision_bps_check
-  check (provision_bps between 0 and 10000);
-
 -- Abattement de 10 % des revenus de remplacement : taux, minimum et
 -- plafond, revalorisés chaque année comme le barème, donc stockés et
 -- jamais codés en dur. Décote : seuils, bases et taux, même raison.

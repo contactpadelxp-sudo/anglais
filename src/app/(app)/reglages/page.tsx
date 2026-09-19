@@ -23,7 +23,7 @@ const KINDS: { value: StreamKind; label: string; hint: string }[] = [
 
 export default function SettingsPage() {
   const store = useStore();
-  const { streams, settings, entries, updateSettings } = store;
+  const { streams, settings, entries } = store;
   const [editing, setEditing] = useState<Stream | null>(null);
   const [creating, setCreating] = useState(false);
 
@@ -132,10 +132,9 @@ export default function SettingsPage() {
           >
             <Segmented
               value={settings.default_basis}
-              onChange={(v) => {
-                store.setBasis(v);
-                void updateSettings({ default_basis: v });
-              }}
+              // Un seul appel : `setBasis` enregistre déjà le réglage.
+              // Les deux ensemble écrivaient la même valeur deux fois.
+              onChange={(v) => store.setBasis(v)}
               options={[
                 { value: "cash", label: "Encaissé" },
                 { value: "accrual", label: "Comptabilisé" },

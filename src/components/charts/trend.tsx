@@ -73,10 +73,49 @@ export function Trend({
   // que sur un nombre de mois fixé d'avance.
   const labelEvery = step > 0 ? Math.max(1, Math.ceil(42 / step)) : 1;
 
+  /*
+   * Les valeurs ne dépendent pas du survol : sur iPhone il n'y en a
+   * pas. Le mois lu est ÉCRIT au-dessus du tracé, et se choisit en
+   * touchant la courbe. À l'ouverture, c'est le dernier mois qui porte
+   * quelque chose — celui qu'on vient regarder.
+   */
+  const dernier = useMemo(() => {
+    for (let i = months.length - 1; i >= 0; i -= 1) {
+      if (series.some((s) => (s.values[i] ?? 0) !== 0)) return i;
+    }
+    return months.length - 1;
+  }, [months, series]);
+
+  const [choisi, setChoisi] = useState<number | null>(null);
+  const lu = Math.min(Math.max(choisi ?? dernier, 0), Math.max(0, months.length - 1));
+
   return (
     <div>
-      <div className="mb-3">
+      <div className="mb-3 flex flex-col gap-1.5">
         <Legend items={series.map((s) => ({ id: s.id, label: s.label, color: s.color }))} />
+        {months[lu] ? (
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-[12.5px] font-semibold">
+              {monthLabel(months[lu], "full")}
+            </span>
+            {series.map((s) => (
+              <span
+                key={s.id}
+                className="flex items-center gap-1.5 text-[11.5px]"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                <span
+                  aria-hidden
+                  className="h-2 w-2 rounded-full"
+                  style={{ background: s.color }}
+                />
+                <span className="tnum font-medium" style={{ color: "var(--text-primary)" }}>
+                  {money(s.values[lu] ?? 0)}
+                </span>
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
       <div ref={ref} className="relative" style={{ height }}>
         {width > 0 ? (
@@ -105,6 +144,12 @@ export function Trend({
               setIndex(null);
               setTip(null);
             }}
+            onPointerDown={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const raw = (e.clientX - rect.left - PAD.left) / (step || 1);
+              setChoisi(Math.max(0, Math.min(months.length - 1, Math.round(raw))));
+            }}
+            style={{ cursor: "pointer", touchAction: "pan-y" }}
           >
             {ticks.map((t) => (
               <g key={t}>

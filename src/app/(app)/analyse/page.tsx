@@ -153,7 +153,14 @@ export default function AnalysePage() {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile
-          label={`Total ${windowSize} mois`}
+          /* La fenêtre demandée n'est pas la fenêtre RENSEIGNÉE :
+             « Total 24 mois » sur huit mois d'historique promet seize
+             mois de données qui n'existent pas. */
+          label={
+            filledMonths.length < Number(windowSize)
+              ? `Total ${filledMonths.length} mois`
+              : `Total ${windowSize} mois`
+          }
           value={money(windowTotal)}
           hint={`${money(windowAverage)} par mois sur ${plural(
             filledMonths.length,
@@ -162,7 +169,10 @@ export default function AnalysePage() {
           )}`}
         />
         <StatTile
-          label={`Cumul ${year}`}
+          /* Le tableau de bord arrête son cumul au mois AFFICHÉ, celui-ci
+             va jusqu'à aujourd'hui : deux nombres différents sous le même
+             nom. Chacun dit désormais où il s'arrête. */
+          label={`Cumul ${year} à ce jour`}
           value={money(projection.earned)}
           hint={
             projection.monthsLeft > 0

@@ -533,7 +533,6 @@ export async function saveSettings(
       | "salary_abatement"
       | "decote"
       | "urssaf_period"
-      | "provision_bps"
     >
   >,
 ): Promise<ActionResult<Settings>> {

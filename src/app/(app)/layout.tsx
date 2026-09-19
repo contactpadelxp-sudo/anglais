@@ -21,9 +21,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           La base a répondu : {result.message}
         </p>
         <p className="text-[12.5px]" style={{ color: "var(--text-muted)" }}>
-          Si les tables n&apos;existent pas encore, applique la migration
-          <code className="mx-1">supabase/migrations/0001_init.sql</code>
-          dans le projet Supabase.
+          Si les tables n&apos;existent pas encore, applique les migrations du dossier
+          <code className="mx-1">supabase/migrations/</code>
+          dans le projet Supabase, dans l&apos;ordre de leur numéro : 0001, puis 0002, puis
+          0003. Une seule oubliée, et la lecture échoue ici.
         </p>
       </main>
     );

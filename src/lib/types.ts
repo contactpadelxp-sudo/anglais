@@ -120,12 +120,6 @@ export type Settings = {
   } | null;
   /** Périodicité de la déclaration URSSAF : pilote l'échéancier. */
   urssaf_period: UrssafPeriod;
-  /**
-   * Part à provisionner sur chaque encaissement, en points de base.
-   * 0 signifie « calcule-la depuis mes taux réels » — c'est le défaut,
-   * et le seul réglage qui ne se trompe pas tout seul.
-   */
-  provision_bps: number;
   updated_at: string;
 };
 

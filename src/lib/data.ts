@@ -22,7 +22,6 @@ const DEFAULT_SETTINGS = (userId: string): Settings => ({
   salary_abatement: null,
   decote: null,
   urssaf_period: "monthly",
-  provision_bps: 0,
   updated_at: new Date().toISOString(),
 });
 

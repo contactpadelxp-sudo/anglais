@@ -190,13 +190,17 @@ function Group({
               className="flex items-center gap-3 py-2"
               style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
             >
-              <input
-                type="checkbox"
-                checked={isChecked}
-                onChange={() => onToggle(entry.id)}
-                aria-label={`Sélectionner ${entry.label}`}
-                className="h-4 w-4 shrink-0 accent-[var(--series-1)]"
-              />
+              {/* La case fait 20 px, la zone qui la déclenche en fait 44 :
+                  c'est le doigt qui vise, pas le curseur. */}
+              <label className="-my-1.5 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center">
+                <input
+                  type="checkbox"
+                  checked={isChecked}
+                  onChange={() => onToggle(entry.id)}
+                  aria-label={`Sélectionner ${entry.label}`}
+                  className="h-5 w-5 accent-[var(--series-1)]"
+                />
+              </label>
               <span
                 aria-hidden
                 className="h-2 w-2 shrink-0 rounded-full"

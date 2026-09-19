@@ -175,8 +175,10 @@ export function FiscalCard() {
                     inputMode="decimal"
                     defaultValue={String(settings.tax_parts)}
                     onBlur={(e) => {
+                      // La base refuse au-delà de 20 parts : accepter 25
+                      // ici faisait échouer l'enregistrement sans rien dire.
                       const parts = Number(e.target.value.replace(",", "."));
-                      if (Number.isFinite(parts) && parts >= 1) {
+                      if (Number.isFinite(parts) && parts >= 1 && parts <= 20) {
                         void updateSettings({ tax_parts: parts });
                       }
                     }}
@@ -207,7 +209,8 @@ export function FiscalCard() {
                 <span className="text-[11.5px]" style={{ color: "var(--text-secondary)" }}>
                   Les tranches sont revalorisées chaque année, et celle applicable aux revenus de
                   l&apos;année en cours n&apos;est connue qu&apos;après coup. L&apos;estimation
-                  ignore par ailleurs la décote et les réductions d&apos;impôt : elle sert à
+                  tient compte de la décote, mais ignore les réductions et crédits
+                  d&apos;impôt : elle sert à
                   provisionner, pas à payer.
                 </span>
                 <BracketEditor />

@@ -26,6 +26,7 @@ import {
 import { money, moneyArrondi, percent } from "@/lib/format";
 import {
   dayLabel,
+  lastDayOf,
   monthLabel,
   monthsOfYear,
   yearOf,
@@ -499,7 +500,7 @@ export default function ComptabilitePage() {
           {detailReport.byCategory.map((row, i) => {
             const spec = CATEGORIES[row.category];
             const last = detailDernierMois;
-            const bps = cotisationBpsOn(row.category, `${last}-28`, acre);
+            const bps = cotisationBpsOn(row.category, lastDayOf(last), acre);
             return (
               <li
                 key={row.category}
@@ -584,7 +585,7 @@ export default function ComptabilitePage() {
               {detailReport.byCategory.map((row) => {
                 const spec = CATEGORIES[row.category];
                 const last = detailDernierMois;
-                const bps = cotisationBpsOn(row.category, `${last}-28`, acre);
+                const bps = cotisationBpsOn(row.category, lastDayOf(last), acre);
                 return (
                   <tr key={row.category} className="border-t" style={{ borderColor: "var(--border)" }}>
                     <td className="px-4 py-2.5 font-medium sm:px-5">{spec.short}</td>

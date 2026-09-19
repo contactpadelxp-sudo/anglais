@@ -280,15 +280,22 @@ export const DEFAULT_SALARY_ABATEMENT = {
  * L'abattement réellement appliqué à un revenu de remplacement : 10 %,
  * jamais moins que le minimum, jamais plus que le plafond, et jamais
  * plus que le revenu lui-même.
+ *
+ * Le minimum est ANNUEL, exactement comme le plancher de 305 € des
+ * activités. L'appliquer à une fenêtre d'un mois le ferait jouer douze
+ * fois dans l'année et gonflerait l'abattement d'autant : `withFloor`
+ * ne vaut donc vrai que sur une année entière.
  */
 export function salaryAbatementOn(
   amountCents: number,
   settings: FiscalSettings,
+  withFloor = true,
 ): number {
   if (amountCents <= 0) return 0;
   const a = settings.salaryAbatement ?? DEFAULT_SALARY_ABATEMENT;
   const computed = Math.round((amountCents * a.rateBps) / 10_000);
-  return Math.min(amountCents, Math.max(computed, Math.min(a.floorCents, amountCents)), a.ceilingCents);
+  const plancher = withFloor ? Math.min(a.floorCents, amountCents) : 0;
+  return Math.min(amountCents, Math.max(computed, plancher), a.ceilingCents);
 }
 
 /**
@@ -474,6 +481,18 @@ export function buildReport(
   // autant de fois qu'il y a de lignes.
   for (const row of totals.values()) {
     const spec = CATEGORIES[row.category];
+    /*
+     * L'allocation chômage a son propre abattement — 10 %, avec un
+     * minimum et un plafond — et il est bien appliqué au revenu
+     * imposable. Mais sa LIGNE du tableau affichait « — » en face de
+     * l'abattement et le montant brut en base imposable : la page
+     * contredisait son propre moteur.
+     */
+    if (row.category === "remplacement") {
+      row.abattementCents = salaryAbatementOn(row.caCents, settings, anneeComplete);
+      row.baseImposableCents = Math.max(0, row.caCents - row.abattementCents);
+      continue;
+    }
     if (spec.abattementBps > 0) {
       const computed = Math.round((row.caCents * spec.abattementBps) / 10_000);
       // Le plancher de 305 € est un minimum ANNUEL : l'appliquer à une
@@ -501,8 +520,10 @@ export function buildReport(
 
   // L'ARE se déclare en 1AP, dans les traitements et salaires : elle y
   // ouvre droit au même abattement de 10 %, avec son minimum et son
-  // plafond. L'ignorer surestimait l'impôt.
-  const areAbattementCents = salaryAbatementOn(areCents, settings);
+  // plafond. L'ignorer surestimait l'impôt. On relit la valeur posée
+  // sur la ligne plutôt que de la recalculer : un seul calcul, donc
+  // aucun risque que l'écran et le total divergent.
+  const areAbattementCents = totals.get("remplacement")?.abattementCents ?? 0;
   const areNetteCents = areCents - areAbattementCents;
 
   const revenuImposableCents =

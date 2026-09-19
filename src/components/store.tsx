@@ -344,7 +344,26 @@ export function StoreProvider({
       onOk: (data: T) => void,
       okMessage?: string,
     ): Promise<boolean> => {
-      const result = await fn();
+      /*
+       * Une action serveur qui n'atteint pas le serveur ne renvoie pas
+       * une erreur : elle LÈVE. Sans ce filet, l'exception remontait au
+       * formulaire, qui restait bloqué sur « … » sans un mot — le cas
+       * du métro, du tunnel, ou d'un avion. On la traduit en un échec
+       * ordinaire, avec une phrase qui dit quoi faire.
+       */
+      let result: api.ActionResult<T>;
+      try {
+        result = await fn();
+      } catch {
+        notify({
+          tone: "error",
+          message:
+            typeof navigator !== "undefined" && navigator.onLine === false
+              ? "Pas de connexion : rien n'a été enregistré. Réessaie une fois le réseau revenu."
+              : "Le serveur n'a pas répondu. Rien n'a été enregistré — réessaie.",
+        });
+        return false;
+      }
       if (!result.ok) {
         notify({ tone: "error", message: result.error });
         return false;

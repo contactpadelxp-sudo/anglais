@@ -632,24 +632,18 @@ export default function Dashboard() {
             hint="Montant moyen d'une rentrée"
             cell={1}
           />
-          {pending.total > 0 ? (
-            <Counter
-              label="En attente"
-              value={money(pending.total)}
-              tone={pending.overdueAmount > 0 ? "var(--warning)" : undefined}
-              hint={
-                pending.overdueAmount > 0
-                  ? `dont ${money(pending.overdueAmount)} en retard`
-                  : plural(pending.entries.length, "écriture", "écritures")
-              }
-              cell={2}
-              onClick={() =>
-                document
-                  .getElementById("attente")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-            />
-          ) : urssafDuMois.urssafCents > 0 ? (
+          {/* Ce qui reste après l'URSSAF est le second chiffre le plus
+              utile de l'écran, et il disparaissait dès qu'une écriture,
+              n'importe laquelle, attendait son versement : le compteur
+              « En attente » lui prenait sa place. Or ce total est déjà
+              écrit en toutes lettres dans le panneau « En attente »,
+              deux cartes plus bas. Il cède donc la case.
+
+              La base de calcul compte : l'URSSAF ne connaît que les
+              encaissements. En lecture « comptabilisé », retrancher des
+              cotisations encaissées d'un net comptabilisé mélangerait
+              deux mesures — on montre alors autre chose. */}
+          {basis === "cash" && urssafDuMois.urssafCents > 0 ? (
             <Counter
               label="Après cotisations"
               value={money(afterCharges)}

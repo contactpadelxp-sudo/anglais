@@ -33,10 +33,18 @@ import {
    vient pas ici pour explorer, on vient pour recopier trois nombres.
    =================================================================== */
 
-/** La période close la plus récente : celle qui est à déclarer. */
+/**
+ * La période close la plus récente : celle qui est à déclarer.
+ *
+ * On recule d'une PÉRIODE, pas d'un mois. Reculer d'un mois marchait
+ * par hasard en mensuel et jamais en trimestriel : en septembre, le
+ * mois d'août appartient au trimestre juillet-septembre, qui n'est pas
+ * terminé — la carte s'ouvrait sur « période en cours » et ne montrait
+ * jamais ce qu'il y avait à déclarer.
+ */
 function periodeADeclarer(kind: UrssafPeriodKind): MonthKey {
-  const moisPrecedent = shiftMonth(monthOf(today()), -1);
-  return periodMonths(moisPrecedent, kind)[0];
+  const courante = periodMonths(monthOf(today()), kind)[0];
+  return periodMonths(shiftMonth(courante, kind === "monthly" ? -1 : -3), kind)[0];
 }
 
 export function DeclarationUrssaf() {

@@ -271,9 +271,21 @@ export async function saveEntry(draft: EntryDraft): Promise<ActionResult<Entry>>
     cost_cents: Math.round(draft.cost_cents),
     occurred_on: draft.occurred_on,
     expected_on: draft.expected_on,
-    // La contrainte en base refuse un état « encaissé » sans date, et
-    // une date sans l'état. On aligne les deux ici.
-    received_on: draft.status === "received" ? draft.received_on : null,
+    /*
+     * La contrainte en base refuse un état « encaissé » sans date, et
+     * une date sans l'état. On aligne les deux ici.
+     *
+     * Le repli n'est pas décoratif : annuler une écriture efface sa
+     * date d'encaissement, et la désannuler la renvoyait « encaissée »
+     * sans date — la contrainte refusait la ligne, et le bouton
+     * échouait à chaque fois, sans autre explication qu'un message de
+     * Postgres. Une écriture encaissée sans date retombe donc sur sa
+     * date prévue, à défaut sur celle de la vente.
+     */
+    received_on:
+      draft.status === "received"
+        ? draft.received_on || draft.expected_on || draft.occurred_on
+        : null,
     status: draft.status,
     counterparty: draft.counterparty,
     notes: draft.notes,

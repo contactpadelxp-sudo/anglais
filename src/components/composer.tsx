@@ -71,9 +71,15 @@ export function Composer({ initial }: { initial: EntryDraft }) {
   const isIncome = draft.direction === "in";
   const settled = draft.status === "received";
 
-  /** Une date d'encaissement choisie implique que l'argent est arrivé. */
+  /**
+   * Une date d'encaissement choisie implique que l'argent est arrivé.
+   *
+   * Un champ de date vidé renvoie la chaîne vide, pas `null` : elle
+   * partait telle quelle en base et Postgres refusait la ligne. Une
+   * date effacée veut dire « je ne sais pas encore », donc en attente.
+   */
   function setReceivedOn(day: string | null) {
-    if (day === null) {
+    if (day === null || day === "") {
       patch({
         status: "pending",
         received_on: null,
@@ -86,6 +92,7 @@ export function Composer({ initial }: { initial: EntryDraft }) {
 
   /** Changer la date de vente recale la date d'encaissement prévue. */
   function setOccurredOn(day: string) {
+    if (!day) return;
     if (settled) patch({ occurred_on: day });
     else patch({ occurred_on: day, expected_on: addDays(day, stream?.settlement_days ?? 0) });
   }
@@ -99,14 +106,21 @@ export function Composer({ initial }: { initial: EntryDraft }) {
       return;
     }
     setSaving(true);
-    const ok = await saveEntry({
-      ...draft,
-      gross_cents: gross,
-      cost_cents: parseMoney(cost),
-      fee_cents: parseMoney(fee),
-      label: draft.label.trim() || (stream?.name ?? "Revenu"),
-    });
-    setSaving(false);
+    // `finally` et non une ligne après l'attente : si l'enregistrement
+    // échoue d'une façon imprévue, le bouton doit redevenir cliquable.
+    // Il restait sur « … », et le formulaire avec lui.
+    let ok = false;
+    try {
+      ok = await saveEntry({
+        ...draft,
+        gross_cents: gross,
+        cost_cents: parseMoney(cost),
+        fee_cents: parseMoney(fee),
+        label: draft.label.trim() || (stream?.name ?? "Revenu"),
+      });
+    } finally {
+      setSaving(false);
+    }
     if (!ok) return;
     if (andAnother) {
       // On garde l'activité et la date, on vide le montant : la saisie
@@ -135,6 +149,10 @@ export function Composer({ initial }: { initial: EntryDraft }) {
    * ensemble. Si elles ont été séparées à la main, on n'y touche pas.
    */
   function setQuickDay(day: string) {
+    if (!day) {
+      setReceivedOn(null);
+      return;
+    }
     const liees = draft!.occurred_on === draft!.received_on;
     if (liees) patch({ occurred_on: day, received_on: day, expected_on: day, status: "received" });
     else setReceivedOn(day);
@@ -300,9 +318,10 @@ export function Composer({ initial }: { initial: EntryDraft }) {
             <input
               type="date"
               value={(settled ? draft.received_on : draft.expected_on) ?? today()}
-              onChange={(e) =>
-                settled ? setReceivedOn(e.target.value) : patch({ expected_on: e.target.value })
-              }
+              onChange={(e) => {
+                if (settled) setQuickDay(e.target.value);
+                else if (e.target.value) patch({ expected_on: e.target.value });
+              }}
               className="min-w-0 max-w-full px-3 py-1.5 text-[12.5px] outline-none"
               style={inputStyle}
             />

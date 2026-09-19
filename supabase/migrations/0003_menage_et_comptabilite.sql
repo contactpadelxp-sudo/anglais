@@ -49,20 +49,35 @@ alter table public.settings drop column if exists fiscal_year_start;
 -- justificative et le MODE DE RÈGLEMENT. Les deux derniers manquaient,
 -- donc l'export n'était pas opposable.
 -- ---------------------------------------------------------------------
+--
+-- Chaque colonne est posée seule, et ses règles sont réaffirmées
+-- ensuite par leurs propres instructions. Raison : « add column if not
+-- exists ... check (...) » saute le sous-ordre ENTIER quand la colonne
+-- existe déjà. La contrainte, le not null et le default partent avec,
+-- la migration renvoie un succès, et rien ne signale que le garde-fou
+-- n'est pas en place.
+--
+alter table public.entries add column if not exists payment_method text;
+alter table public.entries drop constraint if exists entries_payment_method_check;
 alter table public.entries
-  add column if not exists payment_method text
-    check (payment_method is null or payment_method in (
-      'virement', 'carte', 'especes', 'cheque', 'plateforme', 'autre'
-    )),
-  -- Numéro de facture, de virement, de bordereau : ce qui permet de
-  -- retrouver la pièce. Libre, parce que les plateformes numérotent
-  -- chacune à leur façon.
-  add column if not exists reference text,
-  -- Remettre une écriture « en attente » était défait au chargement
-  -- suivant : sa date prévue restait dans le passé et la confirmation
-  -- automatique la rattrapait. Le geste est manuel, donc il se
-  -- mémorise ; il se lève dès qu'on rouvre l'écriture.
-  add column if not exists settle_locked boolean not null default false;
+  add constraint entries_payment_method_check
+  check (payment_method is null or payment_method in (
+    'virement', 'carte', 'especes', 'cheque', 'plateforme', 'autre'
+  ));
+
+-- Numéro de facture, de virement, de bordereau : ce qui permet de
+-- retrouver la pièce. Libre, parce que les plateformes numérotent
+-- chacune à leur façon.
+alter table public.entries add column if not exists reference text;
+
+-- Remettre une écriture « en attente » était défait au chargement
+-- suivant : sa date prévue restait dans le passé et la confirmation
+-- automatique la rattrapait. Le geste est manuel, donc il se mémorise,
+-- et il se lève dès qu'on rouvre l'écriture.
+alter table public.entries add column if not exists settle_locked boolean;
+update public.entries set settle_locked = false where settle_locked is null;
+alter table public.entries alter column settle_locked set default false;
+alter table public.entries alter column settle_locked set not null;
 
 -- ---------------------------------------------------------------------
 -- 4. Les déclarations URSSAF
@@ -71,20 +86,32 @@ alter table public.entries
 -- payé. Elle ne pouvait donc ni rappeler une échéance, ni signaler un
 -- écart entre l'appel de l'URSSAF et son propre calcul.
 -- ---------------------------------------------------------------------
+-- Périodicité choisie à l'inscription, et irréversible dans l'année.
+alter table public.settings add column if not exists urssaf_period text;
+update public.settings set urssaf_period = 'monthly' where urssaf_period is null;
+alter table public.settings alter column urssaf_period set default 'monthly';
+alter table public.settings alter column urssaf_period set not null;
+alter table public.settings drop constraint if exists settings_urssaf_period_check;
 alter table public.settings
-  -- Périodicité choisie à l'inscription, et irréversible dans l'année.
-  add column if not exists urssaf_period text not null default 'monthly'
-    check (urssaf_period in ('monthly', 'quarterly')),
-  -- Part du chiffre d'affaires à mettre de côté à chaque encaissement,
-  -- en points de base. 0 = l'app la déduit elle-même des taux réels.
-  add column if not exists provision_bps integer not null default 0
-    check (provision_bps between 0 and 10000),
-  -- Abattement de 10 % des revenus de remplacement : taux, minimum et
-  -- plafond, revalorisés chaque année comme le barème — donc stockés,
-  -- jamais codés en dur.
-  add column if not exists salary_abatement jsonb,
-  -- Décote : seuils, bases et taux, revalorisés chaque année.
-  add column if not exists decote jsonb;
+  add constraint settings_urssaf_period_check
+  check (urssaf_period in ('monthly', 'quarterly'));
+
+-- Part du chiffre d'affaires à mettre de côté à chaque encaissement,
+-- en points de base. 0 signifie que l'app la déduit des taux réels.
+alter table public.settings add column if not exists provision_bps integer;
+update public.settings set provision_bps = 0 where provision_bps is null;
+alter table public.settings alter column provision_bps set default 0;
+alter table public.settings alter column provision_bps set not null;
+alter table public.settings drop constraint if exists settings_provision_bps_check;
+alter table public.settings
+  add constraint settings_provision_bps_check
+  check (provision_bps between 0 and 10000);
+
+-- Abattement de 10 % des revenus de remplacement : taux, minimum et
+-- plafond, revalorisés chaque année comme le barème, donc stockés et
+-- jamais codés en dur. Décote : seuils, bases et taux, même raison.
+alter table public.settings add column if not exists salary_abatement jsonb;
+alter table public.settings add column if not exists decote jsonb;
 
 alter table public.settings drop column if exists charge_rate_bps;
 
@@ -107,10 +134,14 @@ create table if not exists public.declarations (
   unique (user_id, period)
 );
 
+-- Activée tout de suite après la création, sans rien entre les deux :
+-- l'éditeur SQL de Supabase inspecte le texte soumis et, s'il croit
+-- voir une table créée sans RLS, il REECRIT le script pour y ajouter
+-- lui-même des instructions.
+alter table public.declarations enable row level security;
+
 create index if not exists declarations_user_period_idx
   on public.declarations (user_id, period desc);
-
-alter table public.declarations enable row level security;
 
 drop policy if exists declarations_owner on public.declarations;
 create policy declarations_owner on public.declarations
@@ -130,15 +161,10 @@ create trigger declarations_touch_updated_at
 -- Un montant négatif passait en base et retranchait du chiffre
 -- d'affaires déclaré à l'URSSAF, sans que rien ne le signale. Une
 -- charge se saisit avec direction = 'out', jamais avec un moins.
-do $$
-begin
-  if not exists (select 1 from pg_constraint where conname = 'entries_amounts_positive') then
-    alter table public.entries
-      add constraint entries_amounts_positive
-      check (gross_cents >= 0 and fee_cents >= 0 and cost_cents >= 0);
-  end if;
-end
-$$;
+alter table public.entries drop constraint if exists entries_amounts_positive;
+alter table public.entries
+  add constraint entries_amounts_positive
+  check (gross_cents >= 0 and fee_cents >= 0 and cost_cents >= 0);
 
 -- `settings.updated_at` restait figée à la date du premier insert : le
 -- trigger n'était posé que sur `entries`.

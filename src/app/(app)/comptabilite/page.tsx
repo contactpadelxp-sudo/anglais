@@ -75,6 +75,9 @@ export default function ComptabilitePage() {
     [scope, report, entries, streams, fiscal, year],
   );
 
+  /** L'année affichée est-elle encore en cours ? */
+  const anneeEnCours = year === currentMonth().slice(0, 4);
+
   const moisEcoules = useMemo(() => {
     const courant = currentMonth();
     if (year < courant.slice(0, 4)) return 12;
@@ -286,13 +289,20 @@ export default function ComptabilitePage() {
           />
         ) : (
           <StatTile
-            label="Impôt estimé"
+            label={anneeEnCours ? "Impôt à date" : "Impôt estimé"}
             value={money(report.impotCents ?? 0)}
             tone={report.impotCents === 0 ? "good" : "neutral"}
+            /* Le barème s'applique à une ANNÉE. Sur l'année en cours,
+               les mois qui restent ne sont pas encaissés : le chiffre
+               n'est pas l'impôt de l'année, c'est celui qu'on devrait
+               si l'année s'arrêtait aujourd'hui. Le dire évite de
+               provisionner sur un montant qui ne fera que monter. */
             hint={
-              report.impotCents === 0
-                ? "Sous la première tranche, décote comprise"
-                : `Barème ${fiscal.bracketsYear}`
+              anneeEnCours
+                ? `Si l'année s'arrêtait aujourd'hui. Barème ${fiscal.bracketsYear}`
+                : report.impotCents === 0
+                  ? "Sous la première tranche, décote comprise"
+                  : `Barème ${fiscal.bracketsYear}`
             }
           />
         )}
@@ -364,15 +374,23 @@ export default function ComptabilitePage() {
             <div className="grid grid-cols-2 gap-3">
               <Figure label="Perçue sur la période" value={money(report.areCents)} />
               <Figure label="Cotisations URSSAF dues" value={money(0)} tone="good" />
+              <Figure
+                label="Abattement de 10 %"
+                value={`− ${money(report.areAbattementCents)}`}
+              />
+              <Figure
+                label="Ce qui entre au barème"
+                value={money(report.areCents - report.areAbattementCents)}
+              />
             </div>
             <p className="max-w-[72ch] text-[12.5px]" style={{ color: "var(--text-secondary)" }}>
               Elle n&apos;entre pas dans le chiffre d&apos;affaires et ne supporte aucune
               cotisation URSSAF — sur ce point tu avais raison. En revanche elle est{" "}
-              <strong>intégralement imposable</strong>{" "}: elle se déclare en case 1AP de la 2042,
-              avec les revenus de remplacement, jamais avec le chiffre d&apos;affaires. La
-              CSG-CRDS que France Travail retient déjà à la source est une autre chose que
-              l&apos;impôt. Elle est donc comptée ici dans le revenu imposable, et exclue de
-              l&apos;assiette des cotisations.
+              <strong>imposable</strong>{" "}: elle se déclare en case 1AP de la 2042, avec les
+              revenus de remplacement, jamais avec le chiffre d&apos;affaires. Elle y ouvre
+              droit au <strong>même abattement de 10 %</strong>{" "}que les salaires, avec un
+              minimum et un plafond — c&apos;est lui qui est retiré ci-dessus. La CSG-CRDS que
+              France Travail retient déjà à la source est une autre chose que l&apos;impôt.
             </p>
             <p
               className="max-w-[72ch] rounded-[var(--radius-sm)] px-3 py-2.5 text-[12px]"
@@ -455,9 +473,17 @@ export default function ComptabilitePage() {
                   ) : (
                     <Line label="Cotisations" value="aucune" />
                   )}
-                  {spec.abattementBps > 0 ? (
+                  {/* L'allocation chômage a un abattement de 10 % que
+                      `spec.abattementBps` ne porte pas : il vit dans les
+                      réglages, avec son minimum et son plafond. On lit
+                      donc la ligne, pas la catégorie. */}
+                  {row.abattementCents > 0 ? (
                     <Line
-                      label={`Abattement ${percent(spec.abattementBps / 10_000)}`}
+                      label={
+                        spec.abattementBps > 0
+                          ? `Abattement ${percent(spec.abattementBps / 10_000)}`
+                          : "Abattement 10 %"
+                      }
                       value={`− ${money(row.abattementCents)}`}
                     />
                   ) : null}
@@ -466,19 +492,32 @@ export default function ComptabilitePage() {
               </li>
             );
           })}
+          {/* Le total est la somme de la colonne, allocation comprise :
+              il affichait le chiffre d'affaires hors allocation, si bien
+              que les lignes visibles ne s'additionnaient pas à leur
+              propre total. Le chiffre à déclarer a sa ligne, dessous. */}
           <li
-            className="flex items-baseline justify-between gap-2 px-4 py-3"
+            className="flex flex-col gap-1 px-4 py-3"
             style={{ borderTop: "2px solid var(--border-strong)" }}
           >
-            <span className="text-[13px] font-semibold">Total</span>
-            <span className="flex flex-col items-end">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[13px] font-semibold">Total encaissé</span>
               <span className="tnum text-[14px] font-semibold">
-                {money(report.caActivitesCents)}
+                {money(report.caTotalCents)}
               </span>
-              <span className="tnum text-[11.5px]" style={{ color: "var(--text-muted)" }}>
-                {money(report.urssafCents)}{" "}d&apos;URSSAF
+            </div>
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
+                dont chiffre d&apos;affaires
               </span>
-            </span>
+              <span className="tnum text-[12.5px]">{money(report.caActivitesCents)}</span>
+            </div>
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
+                dû à l&apos;URSSAF
+              </span>
+              <span className="tnum text-[12.5px]">{money(report.urssafCents)}</span>
+            </div>
           </li>
         </ul>
 
@@ -514,7 +553,7 @@ export default function ComptabilitePage() {
                       {spec.cotise ? money(row.cfpCents) : "—"}
                     </td>
                     <td className="tnum px-3 py-2.5 text-right" style={{ color: "var(--text-muted)" }}>
-                      {spec.abattementBps > 0 ? money(row.abattementCents) : "—"}
+                      {row.abattementCents > 0 ? money(row.abattementCents) : "—"}
                     </td>
                     <td className="tnum px-4 py-2.5 text-right font-semibold sm:px-5">
                       {money(row.baseImposableCents)}
@@ -525,12 +564,13 @@ export default function ComptabilitePage() {
             </tbody>
             <tfoot>
               <tr className="border-t-2" style={{ borderColor: "var(--border-strong)" }}>
-                <td className="px-4 py-2.5 font-semibold sm:px-5">Total</td>
-                {/* Le CA au sens de l'URSSAF : l'allocation chômage n'en
-                    fait pas partie, et c'est ce total qu'on recopie sur
-                    la déclaration. La tuile du haut dit le même. */}
+                <td className="px-4 py-2.5 font-semibold sm:px-5">Total encaissé</td>
+                {/* La somme de SA colonne, allocation comprise : le pied
+                    affichait le chiffre d'affaires hors allocation, et la
+                    colonne ne s'additionnait donc pas à l'œil. Le chiffre
+                    à déclarer est sur la ligne suivante, nommé. */}
                 <td className="tnum px-3 py-2.5 text-right font-semibold">
-                  {money(report.caActivitesCents)}
+                  {money(report.caTotalCents)}
                 </td>
                 <td />
                 <td className="tnum px-3 py-2.5 text-right font-semibold">{money(report.cotisationsCents)}</td>
@@ -544,6 +584,16 @@ export default function ComptabilitePage() {
                   {money(
                     report.byCategory.reduce((a, r) => a + r.baseImposableCents, 0),
                   )}
+                </td>
+              </tr>
+              <tr style={{ color: "var(--text-secondary)" }}>
+                <td className="px-4 py-2 sm:px-5">dont chiffre d&apos;affaires</td>
+                <td className="tnum px-3 py-2 text-right font-medium">
+                  {money(report.caActivitesCents)}
+                </td>
+                <td colSpan={5} className="px-3 py-2 text-[11.5px]">
+                  l&apos;allocation chômage n&apos;est pas du chiffre d&apos;affaires : c&apos;est
+                  ce montant-là qui se déclare à l&apos;URSSAF
                 </td>
               </tr>
             </tfoot>

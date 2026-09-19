@@ -526,8 +526,16 @@ export function buildReport(
   const areAbattementCents = totals.get("remplacement")?.abattementCents ?? 0;
   const areNetteCents = areCents - areAbattementCents;
 
+  /*
+   * Les autres revenus du foyer sont un montant ANNUEL. Les ajouter à
+   * une fenêtre d'un mois faisait porter au mois de septembre la
+   * totalité des revenus de l'année : la base imposable d'un mois
+   * devenait celle d'une année.
+   */
+  const autresRevenusCents = anneeComplete ? settings.otherIncomeCents : 0;
+
   const revenuImposableCents =
-    baseActivitesCents + areNetteCents + settings.otherIncomeCents;
+    baseActivitesCents + areNetteCents + autresRevenusCents;
 
   /*
    * Le versement libératoire ne libère QUE le chiffre d'affaires de la
@@ -536,7 +544,7 @@ export function buildReport(
    * l'option est cochée effaçait un impôt réellement dû.
    */
   const assietteBareme = settings.versementLiberatoire
-    ? areNetteCents + settings.otherIncomeCents
+    ? areNetteCents + autresRevenusCents
     : revenuImposableCents;
 
   let impotCents: number | null;
@@ -1233,4 +1241,26 @@ export function horsComptabilite(
     count += 1;
   }
   return { cents, count };
+}
+
+/**
+ * Le taux moyen d'imposition de l'année : l'impôt estimé rapporté au
+ * revenu imposable.
+ *
+ * Il sert à PROVISIONNER, pas à déclarer. L'impôt sur le revenu est
+ * progressif et annuel : il n'existe pas d'« impôt du mois de
+ * septembre ». Mais l'argent, lui, part quand même en fin d'année, et
+ * appeler « net » ce dont on n'a pas retiré l'impôt fait croire à une
+ * somme disponible qui ne l'est pas. Appliquer le taux moyen au mois
+ * est ce que ferait n'importe quel comptable : la bonne réponse à
+ * « combien je mets de côté », à défaut d'être la bonne réponse à
+ * « combien je dois ».
+ *
+ * Renvoie null quand il n'y a rien à provisionner — sous versement
+ * libératoire, ou tant que l'estimation annuelle est nulle.
+ */
+export function tauxMoyenImpositionBps(annuel: FiscalReport): number | null {
+  if (annuel.impotCents === null || annuel.impotCents <= 0) return null;
+  if (annuel.revenuImposableCents <= 0) return null;
+  return Math.round((annuel.impotCents / annuel.revenuImposableCents) * 10_000);
 }

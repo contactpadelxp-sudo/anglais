@@ -48,6 +48,17 @@ export function Waterfall({ steps, height = 260 }: { steps: WaterfallStep[]; hei
   const plotW = Math.max(0, width - PAD.left - PAD.right);
   const plotH = height - PAD.top - PAD.bottom;
   const band = bars.length ? plotW / bars.length : 0;
+
+  /*
+   * Les étiquettes sous les barres ne s'enroulent pas : à cinq barres
+   * sur un écran de 390 px, « Tout encaissé » et « Cotisations » se
+   * chevauchaient. On rétrécit plutôt que de laisser deux mots se
+   * marcher dessus — 9 px reste lisible, deux mots collés ne le sont
+   * pas. En dessous, l'étiquette est coupée net.
+   */
+  const labelSize = band >= 72 ? 10.5 : band >= 58 ? 9.5 : 9;
+  const maxChars = Math.max(4, Math.floor(band / (labelSize * 0.52)));
+  const court = (t: string) => (t.length <= maxChars ? t : `${t.slice(0, maxChars - 1)}…`);
   const barW = Math.min(MAX_BAR, band * 0.52);
   const y = (v: number) => PAD.top + plotH - (v / max) * plotH;
 
@@ -142,10 +153,10 @@ export function Waterfall({ steps, height = 260 }: { steps: WaterfallStep[]; hei
                     x={cx}
                     y={height - 22}
                     textAnchor="middle"
-                    fontSize={10.5}
+                    fontSize={labelSize}
                     fill="var(--text-secondary)"
                   >
-                    {b.step.label}
+                    {court(b.step.label)}
                   </text>
 
                   {!b.step.total && depart > 0 ? (

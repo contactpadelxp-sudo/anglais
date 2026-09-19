@@ -17,6 +17,7 @@ import {
   cfeStatus,
   cotisationBpsOn,
   horsComptabilite,
+  tauxMoyenImpositionBps,
   liberatoireComparison,
   monthlyBreakdown,
   taxReturnBoxes,
@@ -126,6 +127,22 @@ export default function ComptabilitePage() {
     () => monthlyBreakdown(entries, streams, fiscal, moisAnnee),
     [entries, streams, fiscal, moisAnnee],
   );
+
+  /*
+   * L'impôt sur le revenu ne se paie qu'une fois l'année close, et il
+   * est progressif : il n'existe pas d'« impôt du mois de septembre ».
+   * Mais il part quand même, et appeler « net » ce dont on ne l'a pas
+   * retiré fait croire à une somme disponible qui ne l'est pas. On
+   * provisionne donc le mois au TAUX MOYEN de l'année — ce que ferait
+   * n'importe quel comptable.
+   */
+  const tauxMoyenBps = useMemo(() => tauxMoyenImpositionBps(reportAnnuel), [reportAnnuel]);
+  const impotProvisionneCents =
+    tauxMoyenBps === null
+      ? 0
+      : Math.round((report.revenuImposableCents * tauxMoyenBps) / 10_000);
+  const resteCents =
+    report.caTotalCents - report.urssafCents - impotProvisionneCents;
 
   /** Ce que la fin de l'ACRE coûtera, en euros et sur un mois réel. */
   const marche = useMemo(() => acreStep(monthly, fiscal), [monthly, fiscal]);
@@ -632,7 +649,7 @@ export default function ComptabilitePage() {
 
       {/* ---- Ce qui reste vraiment -------------------------------------- */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card title={`De l'encaissé au net · ${monthLabel(month, "full")}`}>
+        <Card title={`Ce qu'il te reste · ${monthLabel(month, "full")}`}>
           <Waterfall
             steps={[
               {
@@ -640,33 +657,49 @@ export default function ComptabilitePage() {
                 // L'allocation est incluse ici alors qu'elle est exclue de
                 // la tuile « chiffre d'affaires » : deux totaux différents
                 // à l'écran doivent porter deux noms différents.
-                label: "Tout encaissé",
+                label: "Encaissé",
                 deltaCents: report.caTotalCents,
                 total: true,
               },
               { id: "cot", label: "Cotisations", deltaCents: -report.cotisationsCents },
               { id: "cfp", label: "Formation", deltaCents: -report.cfpCents },
-              ...(report.impotCents && report.impotCents > 0
-                ? [{ id: "ir", label: "Impôt", deltaCents: -report.impotCents }]
-                : []),
               ...(report.liberatoireCents > 0
                 ? [{ id: "vl", label: "Libératoire", deltaCents: -report.liberatoireCents }]
                 : []),
+              // L'impôt provisionné, au taux moyen de l'année. La barre
+              // n'apparaît que s'il y a quelque chose à provisionner :
+              // sous la première tranche, elle n'aurait rien à montrer.
+              ...(impotProvisionneCents > 0
+                ? [{ id: "ir", label: "Impôt", deltaCents: -impotProvisionneCents }]
+                : []),
               {
-                id: "net",
-                label: "Net",
-                deltaCents: report.netApresTouteChargeCents,
+                id: "reste",
+                label: "Reste",
+                deltaCents: resteCents,
                 total: true,
               },
             ]}
           />
           <p className="mt-3 max-w-[72ch] text-[11.5px]" style={{ color: "var(--text-muted)" }}>
-            Calculé sur l&apos;ensemble encaissé du mois, allocation comprise. L&apos;impôt
-            n&apos;y figure pas : il est annuel, et se lit dans la tuile en haut de page. Sur
-            {" "}{year}, il reste <strong>{money(reportAnnuel.netApresTouteChargeCents)}</strong>
-            {" "}une fois tout retiré. Le coût d&apos;achat des articles revendus n&apos;est
-            jamais déduit : en micro-entreprise, c&apos;est l&apos;abattement forfaitaire qui en
-            tient lieu.
+            Calculé sur l&apos;ensemble encaissé du mois, allocation comprise.{" "}
+            {tauxMoyenBps !== null ? (
+              <>
+                L&apos;impôt sur le revenu ne se paie qu&apos;après la clôture de
+                l&apos;année : ce qui est retiré ici est une <strong>provision</strong>, le
+                mois passé au taux moyen de {percent(tauxMoyenBps / 10_000, 1)} — pas un
+                montant dû. Sur {year}, il resterait{" "}
+                <strong>{money(reportAnnuel.netApresTouteChargeCents)}</strong> une fois tout
+                retiré.
+              </>
+            ) : (
+              <>
+                Rien n&apos;est retiré au titre de l&apos;impôt sur le revenu : au rythme de{" "}
+                {year}, l&apos;estimation annuelle est nulle. Le jour où elle ne le sera plus,
+                une barre de provision apparaîtra ici.
+              </>
+            )}{" "}
+            Le coût d&apos;achat des articles revendus n&apos;est jamais déduit : en
+            micro-entreprise, c&apos;est l&apos;abattement forfaitaire qui en tient lieu.
           </p>
         </Card>
 

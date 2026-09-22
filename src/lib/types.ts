@@ -11,21 +11,6 @@ export type EntryStatus = "pending" | "received" | "cancelled";
  */
 export type Basis = "cash" | "accrual";
 
-/**
- * Mode de règlement. Le livre des recettes doit le porter ligne à
- * ligne ; sans lui, l'export n'est pas opposable.
- */
-export type PaymentMethod =
-  | "virement"
-  | "carte"
-  | "especes"
-  | "cheque"
-  | "plateforme"
-  | "autre";
-
-/** Périodicité de la déclaration URSSAF. */
-export type UrssafPeriod = "monthly" | "quarterly";
-
 export type Stream = {
   id: string;
   user_id: string;
@@ -38,10 +23,6 @@ export type Stream = {
   settlement_days: number;
   /** Confirmer l'encaissement tout seul à la date prévue. */
   auto_settle: boolean;
-  /** Catégorie fiscale et sociale, qui pilote taux et abattement. */
-  fiscal_category: string;
-  /** La catégorie a-t-elle été confirmée sur les documents officiels ? */
-  fiscal_confirmed: boolean;
   position: number;
   archived: boolean;
   created_at: string;
@@ -65,10 +46,6 @@ export type Entry = {
   status: EntryStatus;
   counterparty: string | null;
   notes: string | null;
-  /** Mode de règlement — mention obligatoire du livre des recettes. */
-  payment_method: PaymentMethod | null;
-  /** Référence de la pièce justificative — mention obligatoire. */
-  reference: string | null;
   /** Mise en attente à la main : la confirmation automatique la saute. */
   settle_locked: boolean;
   /** Réservée à la charge utile d'un import (Vinted). */
@@ -89,53 +66,6 @@ export type Goal = {
 export type Settings = {
   user_id: string;
   default_basis: Basis;
-  /** Début d'activité — détermine la période couverte par l'ACRE. */
-  activity_start: string | null;
-  acre_enabled: boolean;
-  versement_liberatoire: boolean;
-  /** Parts du foyer fiscal. */
-  tax_parts: number;
-  /** Autres revenus imposables du foyer, en centimes. */
-  other_income_cents: number;
-  /** Barème de l'impôt, modifiable : les tranches changent chaque année. */
-  tax_brackets: { upToCents: number | null; rateBps: number }[] | null;
-  tax_brackets_year: string | null;
-  /**
-   * Abattement de 10 % des revenus de remplacement : taux, minimum et
-   * plafond. Stocké plutôt que codé en dur, comme le barème — ces trois
-   * valeurs sont revalorisées chaque année.
-   */
-  salary_abatement: {
-    rateBps: number;
-    floorCents: number;
-    ceilingCents: number;
-  } | null;
-  /** Décote : seuils, bases et taux, revalorisés chaque année. */
-  decote: {
-    singleThresholdCents: number;
-    coupleThresholdCents: number;
-    singleBaseCents: number;
-    coupleBaseCents: number;
-    rateBps: number;
-  } | null;
-  /** Périodicité de la déclaration URSSAF : pilote l'échéancier. */
-  urssaf_period: UrssafPeriod;
-  updated_at: string;
-};
-
-/** Une déclaration URSSAF, telle qu'elle a été faite et payée. */
-export type Declaration = {
-  id: string;
-  user_id: string;
-  /** Premier jour de la période déclarée. */
-  period: string;
-  periodicity: UrssafPeriod;
-  declared_cents: Record<string, number>;
-  called_cents: number | null;
-  paid_cents: number | null;
-  paid_on: string | null;
-  notes: string | null;
-  created_at: string;
   updated_at: string;
 };
 
@@ -143,7 +73,6 @@ export type Snapshot = {
   streams: Stream[];
   entries: Entry[];
   goals: Goal[];
-  declarations: Declaration[];
   settings: Settings;
 };
 
@@ -162,7 +91,5 @@ export type EntryDraft = {
   status: EntryStatus;
   counterparty: string | null;
   notes: string | null;
-  payment_method: PaymentMethod | null;
-  reference: string | null;
   meta?: Record<string, unknown>;
 };

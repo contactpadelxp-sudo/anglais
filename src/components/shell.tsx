@@ -14,8 +14,8 @@ import { signOut } from "@/lib/actions";
 const NAV: { href: string; label: string; icon: IconName; short?: string }[] = [
   { href: "/", label: "Tableau de bord", icon: "home", short: "Tableau" },
   { href: "/revenus", label: "Revenus", icon: "list" },
-  { href: "/comptabilite", label: "Comptabilité", icon: "wallet", short: "Compta" },
   { href: "/analyse", label: "Analyse", icon: "chart" },
+  { href: "/historique", label: "Historique", icon: "clock", short: "Histo" },
   { href: "/activites", label: "Activités", icon: "layers" },
   { href: "/reglages", label: "Réglages", icon: "settings" },
 ];

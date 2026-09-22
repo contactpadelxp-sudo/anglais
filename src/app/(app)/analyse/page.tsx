@@ -6,12 +6,20 @@ import { Card, Segmented, StatTile } from "@/components/ui/kit";
 import { Trend } from "@/components/charts/trend";
 import { StackedMonths } from "@/components/charts/stacked-months";
 import { RankedBars } from "@/components/charts/small";
-import { basisComparison, bucketFor, yearProjection } from "@/lib/analytics";
-import { money, percent, plural } from "@/lib/format";
+import {
+  basisComparison,
+  bucketFor,
+  momentum,
+  movingAverage,
+  revenueMix,
+  streamColor,
+  streamTrends,
+  yearProjection,
+} from "@/lib/analytics";
+import { money, percent, plural, signedPercent } from "@/lib/format";
 import {
   monthLabel,
   monthRange,
-  monthsOfYear,
   yearOf,
   currentMonth,
   monthsBetween,
@@ -29,20 +37,55 @@ export default function AnalysePage() {
   const { entries, activeStreams, buckets, month, setMonth } = store;
   const [windowSize, setWindowSize] = useState<"6" | "12" | "24">("12");
 
+  /** Le premier mois qui porte quelque chose. Rien avant n'existe. */
+  const premierMois = useMemo(() => {
+    let plusAncien: MonthKey | null = null;
+    for (const b of buckets.values()) {
+      if (b.count === 0) continue;
+      if (plusAncien === null || b.month < plusAncien) plusAncien = b.month;
+    }
+    return plusAncien;
+  }, [buckets]);
+
   /**
    * La fenêtre est ancrée sur le mois courant, mais s'étire jusqu'au
    * mois cadré s'il est plus ancien : choisir mars dans l'en-tête et
    * lire une fenêtre qui commence en juin ne montrerait pas le mois
    * qu'on vient de désigner.
+   *
+   * Elle est surtout COUPÉE au premier mois qui porte quelque chose.
+   * Demander douze mois avec cinq mois d'histoire ajoutait sept mois à
+   * zéro devant : la courbe partait à plat, et « la première moitié de
+   * la fenêtre » — celle à laquelle on compare la seconde — était vide,
+   * si bien que chaque activité était déclarée « nouvelle ».
    */
   const months = useMemo(() => {
     const now = currentMonth();
     const asked = Number(windowSize);
     const span = monthsBetween(month, now) + 1;
-    return monthRange(now, Math.max(asked, Math.min(span, 60)));
-  }, [windowSize, month]);
+    const plage = monthRange(now, Math.max(asked, Math.min(span, 60)));
+    return premierMois ? plage.filter((m) => m >= premierMois) : plage;
+  }, [windowSize, month, premierMois]);
 
   const window = useMemo(() => months.map((m) => bucketFor(buckets, m)), [months, buckets]);
+
+  /** Le rythme récent contre celui d'avant : la question du moyen terme. */
+  const rythme = useMemo(() => momentum(buckets, 3), [buckets]);
+
+  /** La part du revenu qui tombe sans rien avoir à revendre. */
+  const mix = useMemo(() => revenueMix(window, activeStreams), [window, activeStreams]);
+
+  /** Où va chaque activité, et pas seulement combien elle a rapporté. */
+  const trajectoires = useMemo(
+    () => streamTrends(window, activeStreams),
+    [window, activeStreams],
+  );
+
+  /** La courbe des mois, lissée sur trois mois. */
+  const lissage = useMemo(
+    () => movingAverage(window.map((b) => b.net), 3, true),
+    [window],
+  );
 
   /* --- Encaissé vs comptabilisé : le décalage, chiffré --------------- */
   const gaps = useMemo(() => basisComparison(entries, months), [entries, months]);
@@ -58,30 +101,6 @@ export default function AnalysePage() {
   /* --- Année ---------------------------------------------------------- */
   const year = yearOf(month);
   const projection = useMemo(() => yearProjection(buckets, year), [buckets, year]);
-
-  /*
-   * Le cumul de l'année. Il n'était tracé que pour être COMPARÉ à
-   * l'année précédente — laquelle, avant l'immatriculation, ne
-   * contient rien : la courbe de référence était une ligne plate à
-   * zéro, qui occupait la moitié du cadre et n'apprenait rien. La
-   * comparaison n'apparaît donc que si l'année d'avant a réellement
-   * porté quelque chose.
-   */
-  const cumulative = useMemo(() => {
-    const build = (y: number) => {
-      let running = 0;
-      return monthsOfYear(y).map((m) => {
-        running += bucketFor(buckets, m).net;
-        return running;
-      });
-    };
-    const previous = build(year - 1);
-    return {
-      current: build(year),
-      previous,
-      aUnPasse: previous[previous.length - 1] !== 0,
-    };
-  }, [buckets, year]);
 
   /* --- Classement des mois -------------------------------------------- */
   const bestMonths = useMemo(
@@ -180,13 +199,27 @@ export default function AnalysePage() {
               : "Année complète"
           }
         />
+        {/* Le rythme récent contre celui d'avant : c'est la seule tuile
+            qui dit un SENS, pas un niveau. Les trois autres disent où
+            l'on est ; celle-ci dit où l'on va. */}
         <StatTile
-          label={`Projection fin ${year}`}
-          value={money(projection.projected)}
+          label="Rythme"
+          value={rythme ? money(rythme.recentCents) : "—"}
+          tone={
+            !rythme || rythme.change.ratio === null
+              ? "neutral"
+              : rythme.change.ratio > 0.05
+                ? "good"
+                : rythme.change.ratio < -0.05
+                  ? "warning"
+                  : "neutral"
+          }
           hint={
-            projection.runRate > 0
-              ? `au rythme de ${money(projection.runRate)} / mois`
-              : "Pas encore de rythme mesurable"
+            !rythme
+              ? "Deux mois terminés suffiront"
+              : rythme.change.ratio === null
+                ? `Moyenne des ${rythme.months} derniers mois terminés`
+                : `${signedPercent(rythme.change.ratio)} contre les ${rythme.months} mois d'avant`
           }
         />
         <StatTile
@@ -200,6 +233,155 @@ export default function AnalysePage() {
           }
         />
       </div>
+
+      {/* ---- Le rythme, lissé ----------------------------------------- */}
+      <Card title="Le rythme, mois après mois">
+        <Trend
+          months={months}
+          series={[
+            {
+              id: "net",
+              label: "Chaque mois",
+              color: "var(--series-1)",
+              values: window.map((b) => b.net),
+            },
+            {
+              id: "lisse",
+              label: "Moyenne 3 mois",
+              color: "var(--series-6)",
+              values: lissage,
+            },
+          ]}
+          height={230}
+        />
+        <p className="mt-3 max-w-[72ch] text-[12.5px]" style={{ color: "var(--text-secondary)" }}>
+          {rythme ? (
+            <>
+              Les {rythme.months} derniers mois terminés rapportent{" "}
+              <strong>{money(rythme.recentCents)}</strong> par mois en moyenne, contre{" "}
+              {money(rythme.previousCents)} sur les {rythme.months}{" "}
+              mois d&apos;avant
+              {rythme.change.ratio !== null ? (
+                <>
+                  {" "}
+                  — <strong>{signedPercent(rythme.change.ratio)}</strong>
+                </>
+              ) : null}
+              .{" "}
+            </>
+          ) : null}
+          La courbe lissée écrase les à-coups : au début de la fenêtre elle porte sur moins de
+          trois mois, faute de recul.
+        </p>
+      </Card>
+
+      {/* ---- Où va chaque activité ------------------------------------- */}
+      {trajectoires.length > 0 ? (
+        <Card title="Où va chaque activité">
+          <ul className="flex flex-col">
+            {trajectoires.map((t, i) => (
+              <li
+                key={t.stream.id}
+                className="flex flex-col gap-1.5 py-3"
+                style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
+              >
+                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                  <span className="flex items-center gap-2 text-[13.5px] font-medium">
+                    <span
+                      aria-hidden
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ background: streamColor(t.stream.color_slot) }}
+                    />
+                    {t.stream.name}
+                    {t.recurring ? (
+                      <span
+                        className="rounded-full px-1.5 py-0.5 text-[10.5px] font-medium"
+                        style={{ background: "var(--surface-2)", color: "var(--text-muted)" }}
+                      >
+                        récurrent
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="tnum text-[13.5px] font-semibold">{money(t.totalCents)}</span>
+                </div>
+                <div
+                  className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-[11.5px]"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  <span>{percent(t.share)} de la période</span>
+                  <span>
+                    {money(t.earlyCents)} → <span className="font-medium">{money(t.lateCents)}</span>{" "}
+                    par mois
+                  </span>
+                  <span
+                    className="font-medium"
+                    style={{
+                      color:
+                        t.change.ratio === null
+                          ? "var(--text-muted)"
+                          : t.change.ratio > 0.05
+                            ? "var(--good)"
+                            : t.change.ratio < -0.05
+                              ? "var(--critical)"
+                              : "var(--text-muted)",
+                    }}
+                  >
+                    {t.change.ratio === null
+                      ? t.earlyCents === 0
+                        ? "nouvelle"
+                        : "—"
+                      : signedPercent(t.change.ratio)}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 max-w-[72ch] text-[11.5px]" style={{ color: "var(--text-muted)" }}>
+            La seconde moitié de la fenêtre comparée à la première, en moyenne par mois. Un
+            total seul ne dit pas si une activité monte ou s&apos;éteint — et c&apos;est
+            précisément ce qu&apos;on veut savoir quand on en mène plusieurs de front.
+          </p>
+        </Card>
+      ) : null}
+
+      {/* ---- Ce qui tombe tout seul ------------------------------------ */}
+      {mix.recurringShare !== null ? (
+        <Card title="Récurrent contre ponctuel">
+          <div className="grid grid-cols-2 gap-3 pb-3">
+            <div>
+              <p className="text-[11.5px]" style={{ color: "var(--text-secondary)" }}>
+                Récurrent
+              </p>
+              <p className="tnum mt-0.5 text-[18px] font-semibold">
+                {money(mix.recurringCents)}
+              </p>
+            </div>
+            <div>
+              <p className="text-[11.5px]" style={{ color: "var(--text-secondary)" }}>
+                Ponctuel
+              </p>
+              <p className="tnum mt-0.5 text-[18px] font-semibold">{money(mix.oneOffCents)}</p>
+            </div>
+          </div>
+          <div
+            className="flex h-3 w-full overflow-hidden rounded-full"
+            style={{ background: "var(--surface-2)" }}
+          >
+            <div
+              style={{
+                width: `${Math.max(0, Math.min(100, mix.recurringShare * 100))}%`,
+                background: "var(--series-5)",
+              }}
+            />
+            <div className="flex-1" style={{ background: "var(--series-2)" }} />
+          </div>
+          <p className="mt-3 max-w-[72ch] text-[12.5px]" style={{ color: "var(--text-secondary)" }}>
+            <strong>{percent(mix.recurringShare)}</strong>{" "}
+            de tes revenus tombent sans que tu aies à revendre ou à refacturer quoi que ce soit — abonnements et allocations. Le
+            reste se regagne chaque mois. C&apos;est la seule part qui se projette sans pari.
+          </p>
+        </Card>
+      ) : null}
 
       {/* ---- Le décalage vente / encaissement -------------------------
           Tant que chaque montant est saisi comme déjà encaissé, les deux
@@ -263,41 +445,6 @@ export default function AnalysePage() {
       )}
 
       {/* ---- Cumul annuel --------------------------------------------- */}
-      <Card
-        title={
-          cumulative.aUnPasse ? `Cumul ${year} face à ${year - 1}` : `Cumul ${year}`
-        }
-      >
-        <Trend
-          months={monthsOfYear(year)}
-          series={[
-            {
-              id: "cur",
-              label: `${year}`,
-              color: "var(--series-1)",
-              values: cumulative.current,
-            },
-            ...(cumulative.aUnPasse
-              ? [
-                  {
-                    id: "prev",
-                    label: `${year - 1}`,
-                    color: "var(--series-5)",
-                    values: cumulative.previous,
-                  },
-                ]
-              : []),
-          ]}
-          height={220}
-        />
-        {!cumulative.aUnPasse ? (
-          <p className="mt-3 max-w-[72ch] text-[12.5px]" style={{ color: "var(--text-muted)" }}>
-            Pas d&apos;année précédente à comparer : l&apos;activité a commencé en {year}. La
-            comparaison apparaîtra d&apos;elle-même l&apos;an prochain.
-          </p>
-        ) : null}
-      </Card>
-
       {/* ---- Empilé + contributions ------------------------------------ */}
       <Card title={`Par activité — ${windowSize} mois`}>
         <StackedMonths

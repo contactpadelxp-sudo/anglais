@@ -6,11 +6,9 @@ import { Button, Card, Field, Input, Segmented, Select, Sheet } from "@/componen
 import { Icon, StreamIcon } from "@/components/ui/icons";
 import { InstallHint } from "@/components/install-hint";
 import { PasswordCard } from "@/components/password-card";
-import { FiscalCard } from "@/components/fiscal-card";
 import { delayChecks } from "@/lib/analytics";
 import { money, plural } from "@/lib/format";
 import { today } from "@/lib/dates";
-import { CATEGORIES, CATEGORY_ORDER, type FiscalCategory } from "@/lib/fiscal";
 import type { Stream, StreamKind } from "@/lib/types";
 
 const KINDS: { value: StreamKind; label: string; hint: string }[] = [
@@ -77,7 +75,6 @@ export default function SettingsPage() {
         <ul className="pb-2">
           {streams.map((stream) => {
             const used = entries.filter((e) => e.stream_id === stream.id).length;
-            const cat = CATEGORIES[(stream.fiscal_category as FiscalCategory) ?? "hors"];
             return (
               <li key={stream.id}>
                 <button
@@ -102,13 +99,7 @@ export default function SettingsPage() {
                       ) : null}
                     </p>
                     <p className="text-[11.5px]" style={{ color: "var(--text-muted)" }}>
-                      {/* Le délai OBSERVÉ était répété ici alors que la carte
-                          « Délais mesurés » juste au-dessus le dit déjà, avec le
-                          bouton qui le corrige. À sa place, la catégorie fiscale :
-                          c'est elle qui pilote tous les calculs, et elle
-                          n'apparaissait nulle part dans cette liste. */}
-                      {cat?.short ?? "Hors"}
-                      {stream.fiscal_confirmed ? "" : " (à confirmer)"} ·{" "}
+                      {KINDS.find((k) => k.value === stream.kind)?.label} ·{" "}
                       {stream.settlement_days === 0
                         ? "encaissement immédiat"
                         : `${stream.settlement_days} j de délai`}{" "}
@@ -145,7 +136,6 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      <FiscalCard />
       <PasswordCard />
       <ExportCard />
       <InstallHint />
@@ -170,8 +160,8 @@ export default function SettingsPage() {
         <CreateSheet
           onClose={() => setCreating(false)}
           usedSlots={streams.map((s) => s.color_slot)}
-          onCreate={(name, kind, slot, days, categorie) => {
-            void store.addStream(name, kind, slot, days, categorie);
+          onCreate={(name, kind, slot, days) => {
+            void store.addStream(name, kind, slot, days);
             setCreating(false);
           }}
         />
@@ -186,18 +176,6 @@ export default function SettingsPage() {
 
 function ExportCard() {
   const { entries, streamById } = useStore();
-
-  /*
-   * Le livre des recettes est celui de L'ENTREPRISE. L'allocation
-   * chômage n'y a pas sa place : ce n'est pas du chiffre d'affaires,
-   * elle ne supporte aucune cotisation, et la faire figurer sur le
-   * livre gonflerait le CA face à un contrôleur. Même raison pour les
-   * activités rangées « hors comptabilité ».
-   */
-  const estRecette = (streamId: string | null) => {
-    const cat = streamById[streamId ?? ""]?.fiscal_category as FiscalCategory | undefined;
-    return Boolean(cat && CATEGORIES[cat]?.cotise);
-  };
 
   const annees = useMemo(() => {
     const set = new Set<string>([today().slice(0, 4)]);
@@ -223,138 +201,20 @@ function ExportCard() {
     return `\ufeff${[line(header), ...rows.map(line)].join("\n")}`;
   }
 
-  const reglement: Record<string, string> = {
-    virement: "Virement",
-    carte: "Carte",
-    especes: "Espèces",
-    cheque: "Chèque",
-    plateforme: "Plateforme",
-    autre: "Autre",
-  };
+  const duChoix = useMemo(
+    () =>
+      entries
+        .filter((e) => (e.received_on ?? e.occurred_on).slice(0, 4) === annee)
+        // Chronologique : un export qui change d'ordre à chaque
+        // modification ne se compare pas d'une version à l'autre.
+        .sort((a, b) =>
+          (a.received_on ?? a.occurred_on).localeCompare(b.received_on ?? b.occurred_on),
+        ),
+    [entries, annee],
+  );
 
-  /*
-   * Le livre des recettes. Sa forme n'est pas libre : chronologique,
-   * une ligne par encaissement, portant la date, la référence de la
-   * pièce, l'origine, le montant et le MODE DE RÈGLEMENT. Sont donc
-   * exclues les charges (elles ne sont pas des recettes), les
-   * écritures annulées, et tout ce qui n'est pas encore encaissé — la
-   * comptabilité du micro-entrepreneur est tenue sur les
-   * encaissements, pas sur les promesses.
-   */
-  function livreDesRecettes() {
-    const rows = entries
-      .filter(
-        (e) =>
-          e.direction === "in" &&
-          e.status === "received" &&
-          e.received_on &&
-          e.received_on.slice(0, 4) === annee &&
-          estRecette(e.stream_id),
-      )
-      .sort((a, b) => (a.received_on ?? "").localeCompare(b.received_on ?? ""))
-      .map((e, i) => [
-        i + 1,
-        e.received_on ?? "",
-        e.reference ?? "",
-        e.counterparty ?? streamById[e.stream_id ?? ""]?.name ?? "",
-        e.label,
-        streamById[e.stream_id ?? ""]?.name ?? "",
-        (e.gross_cents / 100).toFixed(2),
-        e.payment_method ? reglement[e.payment_method] : "",
-      ]);
-
-    download(
-      `livre-des-recettes-${annee}.csv`,
-      toCsv(
-        [
-          "numero",
-          "date_encaissement",
-          "reference_piece",
-          "origine",
-          "libelle",
-          "activite",
-          "montant_encaisse",
-          "mode_de_reglement",
-        ],
-        rows,
-      ),
-      "text/csv;charset=utf-8",
-    );
-  }
-
-  /*
-   * Le registre des achats, obligatoire dès qu'il y a de l'achat-revente.
-   * Deux sources : les charges saisies, et le coût d'achat porté par
-   * une vente — un article revendu a bien été acheté, même si la
-   * dépense n'a pas eu sa propre écriture.
-   */
-  function registreDesAchats() {
-    const charges = entries
-      .filter(
-        (e) =>
-          e.direction === "out" &&
-          e.status !== "cancelled" &&
-          (e.received_on ?? e.occurred_on).slice(0, 4) === annee,
-      )
-      .map((e) => ({
-        date: e.received_on ?? e.occurred_on,
-        reference: e.reference ?? "",
-        fournisseur: e.counterparty ?? "",
-        libelle: e.label,
-        cents: e.gross_cents,
-        mode: e.payment_method ? reglement[e.payment_method] : "",
-      }));
-
-    const coutsDeVente = entries
-      .filter(
-        (e) =>
-          e.direction === "in" &&
-          e.status !== "cancelled" &&
-          e.cost_cents > 0 &&
-          (e.received_on ?? e.occurred_on).slice(0, 4) === annee,
-      )
-      .map((e) => ({
-        date: e.occurred_on,
-        reference: e.reference ?? "",
-        fournisseur: "",
-        libelle: `Coût d'achat — ${e.label}`,
-        cents: e.cost_cents,
-        mode: "",
-      }));
-
-    const rows = [...charges, ...coutsDeVente]
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .map((r, i) => [
-        i + 1,
-        r.date,
-        r.reference,
-        r.fournisseur,
-        r.libelle,
-        (r.cents / 100).toFixed(2),
-        r.mode,
-      ]);
-
-    download(
-      `registre-des-achats-${annee}.csv`,
-      toCsv(
-        [
-          "numero",
-          "date",
-          "reference_piece",
-          "fournisseur",
-          "libelle",
-          "montant",
-          "mode_de_reglement",
-        ],
-        rows,
-      ),
-      "text/csv;charset=utf-8",
-    );
-  }
-
-  /** Toutes les écritures, telles qu'elles sont stockées. */
-  function toutesLesEcritures() {
-    const rows = entries.map((e) => [
+  function csv() {
+    const rows = duChoix.map((e) => [
       e.occurred_on,
       e.received_on ?? "",
       streamById[e.stream_id ?? ""]?.name ?? "",
@@ -366,11 +226,10 @@ function ExportCard() {
       ((e.gross_cents - e.fee_cents - e.cost_cents) / 100).toFixed(2),
       e.status,
       e.counterparty ?? "",
-      e.reference ?? "",
-      e.payment_method ?? "",
+      e.notes ?? "",
     ]);
     download(
-      `ecritures-${today()}.csv`,
+      `revenus-${annee}.csv`,
       toCsv(
         [
           "date_vente",
@@ -384,8 +243,7 @@ function ExportCard() {
           "net",
           "statut",
           "contrepartie",
-          "reference",
-          "mode_de_reglement",
+          "note",
         ],
         rows,
       ),
@@ -394,29 +252,15 @@ function ExportCard() {
   }
 
   /*
-   * Le total annoncé comptait les charges COMME des recettes (leur
-   * `gross_cents` s'ajoutait) et incluait les écritures annulées. Il
-   * disait donc un chiffre qui n'existe nulle part ailleurs dans
-   * l'app. C'est le chiffre d'affaires encaissé de l'année, ni plus ni
-   * moins — le même que celui de la page Comptabilité.
+   * Le total est celui des REVENUS encaissés : ni les charges, qui
+   * sortent, ni les écritures annulées, qui ne comptent plus, ni les
+   * ventes en attente, qui ne sont pas encore arrivées.
    */
-  const recettes = useMemo(
-    () =>
-      entries.filter(
-        (e) =>
-          e.direction === "in" &&
-          e.status === "received" &&
-          e.received_on &&
-          e.received_on.slice(0, 4) === annee &&
-          estRecette(e.stream_id),
-      ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [entries, annee, streamById],
+  const encaisse = useMemo(
+    () => duChoix.filter((e) => e.direction === "in" && e.status === "received"),
+    [duChoix],
   );
-  const total = recettes.reduce((s, e) => s + e.gross_cents, 0);
-
-  /** Les lignes qui ne portent pas encore leurs mentions obligatoires. */
-  const incompletes = recettes.filter((e) => !e.payment_method).length;
+  const total = encaisse.reduce((s, e) => s + e.gross_cents - e.fee_cents, 0);
 
   return (
     <Card
@@ -434,31 +278,15 @@ function ExportCard() {
       }
     >
       <p className="text-[12.5px]" style={{ color: "var(--text-secondary)" }}>
-        {plural(recettes.length, "recette encaissée", "recettes encaissées")} en {annee}, soit{" "}
+        {plural(encaisse.length, "revenu encaissé", "revenus encaissés")} en {annee}, soit{" "}
         {money(total)}{" "}
-        de chiffre d&apos;affaires. L&apos;allocation chômage en est exclue : elle n&apos;est pas
-        une recette de l&apos;entreprise.
+        net de frais. L&apos;export reprend toutes les écritures de l&apos;année, charges et
+        écritures en attente comprises.
       </p>
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <Button size="sm" icon={<Icon.download size={14} />} onClick={livreDesRecettes}>
-          Livre des recettes
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          icon={<Icon.download size={14} />}
-          onClick={registreDesAchats}
-        >
-          Registre des achats
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          icon={<Icon.download size={14} />}
-          onClick={toutesLesEcritures}
-        >
-          Toutes les écritures
+        <Button size="sm" icon={<Icon.download size={14} />} onClick={csv}>
+          CSV de {annee}
         </Button>
         <Button
           size="sm"
@@ -467,35 +295,23 @@ function ExportCard() {
           onClick={() =>
             download(
               `sauvegarde-${today()}.json`,
-              JSON.stringify(entries, null, 2),
+              JSON.stringify(
+                [...entries].sort((a, b) => a.occurred_on.localeCompare(b.occurred_on)),
+                null,
+                2,
+              ),
               "application/json",
             )
           }
         >
-          Sauvegarde JSON
+          Sauvegarde complète
         </Button>
       </div>
 
-      {incompletes > 0 ? (
-        <p
-          className="mt-3 max-w-[72ch] rounded-[var(--radius-sm)] px-3 py-2.5 text-[12px]"
-          style={{
-            background: "color-mix(in oklab, var(--warning) 12%, var(--surface-2))",
-            color: "var(--text-secondary)",
-          }}
-        >
-          {plural(incompletes, "recette n'a", "recettes n'ont")} pas de mode de règlement. Le
-          livre des recettes doit le porter ligne à ligne : sans lui, il n&apos;est pas
-          opposable en cas de contrôle. Il s&apos;ajoute en rouvrant l&apos;écriture, sous
-          « Plus de détails ».
-        </p>
-      ) : null}
-
       <p className="mt-3 max-w-[72ch] text-[11.5px]" style={{ color: "var(--text-muted)" }}>
-        Le livre des recettes est la seule obligation comptable du régime micro : chronologique,
-        une ligne par encaissement, avec sa référence et son mode de règlement. Le registre des
-        achats s&apos;y ajoute dès qu&apos;il y a de l&apos;achat-revente. Les deux se conservent
-        six ans.
+        Tes données t&apos;appartiennent et doivent pouvoir sortir. Le CSV s&apos;ouvre dans
+        n&apos;importe quel tableur ; la sauvegarde JSON garde tout, dans la forme exacte où
+        l&apos;app le stocke.
       </p>
     </Card>
   );
@@ -523,11 +339,6 @@ function StreamSheet({
   const [slot, setSlot] = useState(stream.color_slot);
   const [days, setDays] = useState(String(stream.settlement_days));
   const [auto, setAuto] = useState(stream.auto_settle);
-  const [categorie, setCategorie] = useState<FiscalCategory>(
-    ((stream.fiscal_category as FiscalCategory) in CATEGORIES
-      ? (stream.fiscal_category as FiscalCategory)
-      : "hors") as FiscalCategory,
-  );
   const [archived, setArchived] = useState(stream.archived);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -584,12 +395,6 @@ function StreamSheet({
                     color_slot: slot,
                     settlement_days: Math.max(0, Math.min(365, Number(days) || 0)),
                     auto_settle: auto,
-                    fiscal_category: categorie,
-                    // Choisir la catégorie à la main VAUT confirmation :
-                    // le bandeau « à confirmer » de la page Comptabilité
-                    // n'a plus de raison d'être après ce geste.
-                    fiscal_confirmed:
-                      categorie === stream.fiscal_category ? stream.fiscal_confirmed : true,
                     archived,
                   })
                 }
@@ -611,19 +416,6 @@ function StreamSheet({
             {KINDS.map((k) => (
               <option key={k.value} value={k.value}>
                 {k.label}
-              </option>
-            ))}
-          </Select>
-        </Field>
-
-        <Field label="Catégorie fiscale" hint={CATEGORIES[categorie].note}>
-          <Select
-            value={categorie}
-            onChange={(e) => setCategorie(e.target.value as FiscalCategory)}
-          >
-            {CATEGORY_ORDER.map((c) => (
-              <option key={c} value={c}>
-                {CATEGORIES[c].label}
               </option>
             ))}
           </Select>
@@ -693,13 +485,7 @@ function CreateSheet({
   usedSlots,
 }: {
   onClose: () => void;
-  onCreate: (
-    name: string,
-    kind: StreamKind,
-    slot: number,
-    days: number,
-    categorie: FiscalCategory,
-  ) => void;
+  onCreate: (name: string, kind: StreamKind, slot: number, days: number) => void;
   usedSlots: number[];
 }) {
   const firstFree = [1, 2, 3, 4, 5, 6, 7, 8].find((s) => !usedSlots.includes(s)) ?? 1;
@@ -707,10 +493,6 @@ function CreateSheet({
   const [kind, setKind] = useState<StreamKind>("other");
   const [slot, setSlot] = useState(firstFree);
   const [days, setDays] = useState("0");
-  // Une activité créée sans catégorie naissait « hors comptabilité » et
-  // disparaissait des calculs sans un mot. Le choix est donc posé ici,
-  // à la création, avec un défaut qui cotise.
-  const [categorie, setCategorie] = useState<FiscalCategory>("bnc");
 
   return (
     <Sheet
@@ -723,7 +505,7 @@ function CreateSheet({
           <Button
             variant="primary"
             disabled={!name.trim()}
-            onClick={() => onCreate(name.trim(), kind, slot, Number(days) || 0, categorie)}
+            onClick={() => onCreate(name.trim(), kind, slot, Number(days) || 0)}
           >
             Créer
           </Button>
@@ -748,19 +530,7 @@ function CreateSheet({
             ))}
           </Select>
         </Field>
-        <Field label="Catégorie fiscale" hint={CATEGORIES[categorie].note}>
-          <Select
-            value={categorie}
-            onChange={(e) => setCategorie(e.target.value as FiscalCategory)}
-          >
-            {CATEGORY_ORDER.map((c) => (
-              <option key={c} value={c}>
-                {CATEGORIES[c].label}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <ColorPicker slot={slot} onChange={setSlot} />
+<ColorPicker slot={slot} onChange={setSlot} />
         <Field label="Délai d'encaissement" hint="En jours. Zéro si l'argent arrive le jour même.">
           <Input
             inputMode="numeric"

@@ -4,23 +4,9 @@ import { useMemo, useRef, useState } from "react";
 import { useStore } from "./store";
 import { Button, Field, Input, Segmented, Sheet, inputStyle } from "./ui/kit";
 import { Icon } from "./ui/icons";
-import { centsToInput, money, parseMoney, percent } from "@/lib/format";
+import { centsToInput, money, parseMoney } from "@/lib/format";
 import { addDays, dayLabelShort, today } from "@/lib/dates";
-import { CATEGORIES, provisionOn, type FiscalCategory } from "@/lib/fiscal";
-import type { EntryDraft, PaymentMethod } from "@/lib/types";
-
-/**
- * Modes de règlement. Le livre des recettes doit porter celui de
- * chaque ligne : sans lui, l'export n'est pas opposable en contrôle.
- */
-const REGLEMENTS: { value: PaymentMethod; label: string }[] = [
-  { value: "virement", label: "Virement" },
-  { value: "plateforme", label: "Plateforme" },
-  { value: "carte", label: "Carte" },
-  { value: "especes", label: "Espèces" },
-  { value: "cheque", label: "Chèque" },
-  { value: "autre", label: "Autre" },
-];
+import type { EntryDraft } from "@/lib/types";
 
 /**
  * Saisie d'un encaissement.
@@ -48,7 +34,6 @@ export function Composer({ initial }: { initial: EntryDraft }) {
         initial.fee_cents ||
         initial.counterparty ||
         initial.notes ||
-        initial.reference ||
         initial.occurred_on !== initial.received_on,
     ),
   );
@@ -159,22 +144,6 @@ export function Composer({ initial }: { initial: EntryDraft }) {
     else setReceivedOn(day);
   }
 
-  /**
-   * Ce qu'il faudra reverser sur cet encaissement, au taux réellement
-   * dû ce jour-là. C'est la seule question qui se pose au moment où
-   * l'argent arrive, et elle n'avait pas de réponse dans l'app.
-   */
-  const provision =
-    isIncome && stream
-      ? provisionOn(
-          (stream.fiscal_category as FiscalCategory) in CATEGORIES
-            ? (stream.fiscal_category as FiscalCategory)
-            : "hors",
-          draft.received_on ?? draft.expected_on ?? today(),
-          parseMoney(amount),
-          store.fiscal,
-        )
-      : { bps: 0, cents: 0 };
 
   return (
     <Sheet
@@ -408,42 +377,6 @@ export function Composer({ initial }: { initial: EntryDraft }) {
               />
             </Field>
 
-            <Field
-              label="Mode de règlement"
-              hint="Mention obligatoire du livre des recettes."
-            >
-              <div className="flex flex-wrap gap-1.5">
-                {REGLEMENTS.map((r) => {
-                  const active = draft.payment_method === r.value;
-                  return (
-                    <button
-                      key={r.value}
-                      type="button"
-                      onClick={() => patch({ payment_method: active ? null : r.value })}
-                      className="rounded-full px-3 py-1.5 text-[12.5px] font-medium transition-colors"
-                      style={{
-                        background: active ? "var(--text-primary)" : "var(--surface-2)",
-                        color: active ? "var(--surface-1)" : "var(--text-secondary)",
-                      }}
-                    >
-                      {r.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </Field>
-
-            <Field
-              label="Référence de la pièce"
-              hint="Numéro de facture, de virement, de bordereau — ce qui permet de la retrouver."
-            >
-              <Input
-                value={draft.reference ?? ""}
-                onChange={(e) => patch({ reference: e.target.value || null })}
-                placeholder="Facultatif"
-              />
-            </Field>
-
             <Field label="Client / contrepartie">
               <Input
                 value={draft.counterparty ?? ""}
@@ -473,20 +406,6 @@ export function Composer({ initial }: { initial: EntryDraft }) {
           >
             <span style={{ color: "var(--text-secondary)" }}>Net réellement gagné</span>
             <span className="tnum font-semibold">{money(net)}</span>
-          </div>
-        ) : null}
-
-        {/* Ce qu'il faut garder de côté : la question du moment. */}
-        {provision.cents > 0 ? (
-          <div
-            className="flex items-center justify-between gap-3 rounded-[var(--radius-sm)] px-3 py-2.5 text-[12.5px]"
-            style={{ background: "color-mix(in oklab, var(--warning) 12%, var(--surface-2))" }}
-          >
-            <span style={{ color: "var(--text-secondary)" }}>
-              À garder de côté ·{" "}
-              <span className="tnum">{percent(provision.bps / 10_000, 2)}</span>
-            </span>
-            <span className="tnum font-semibold">{money(provision.cents)}</span>
           </div>
         ) : null}
 

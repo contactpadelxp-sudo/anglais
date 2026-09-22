@@ -8,6 +8,7 @@ import {
   daysInMonth,
   monthOf,
   monthRange,
+  monthsBetween,
   shiftMonth,
   today,
 } from "./dates";
@@ -772,4 +773,406 @@ export function coveredMonths(entries: Entry[]): MonthKey[] {
     if (e.received_on) set.add(monthOf(e.received_on));
   }
   return [...set].sort();
+}
+
+/* ===================================================================
+   Les trois horizons
+
+   L'app ne tient plus de comptabilité : elle suit des revenus et
+   cherche à en dire quelque chose. Trois échelles, trois questions :
+
+     court terme  — où en est le mois en cours ?
+     moyen terme  — quel est le rythme, et de quoi est-il fait ?
+     long terme   — où va-t-on, depuis quand, et à quelle vitesse ?
+
+   Tout ce qui suit sert l'une de ces trois questions, et refuse de
+   répondre quand il n'y a pas de quoi.
+   =================================================================== */
+
+/** Les mois TERMINÉS, du plus ancien au plus récent. */
+function completedMonths(
+  buckets: Map<MonthKey, MonthBucket>,
+  ref: DayKey = today(),
+): MonthBucket[] {
+  const courant = monthOf(ref);
+  return [...buckets.values()]
+    .filter((b) => b.month < courant)
+    .sort((a, b) => a.month.localeCompare(b.month));
+}
+
+/* --- Moyen terme : le rythme, et son sens ------------------------- */
+
+export type Momentum = {
+  /** Moyenne des `months` derniers mois terminés. */
+  recentCents: number;
+  /** Moyenne des `months` mois d'avant. */
+  previousCents: number;
+  change: Delta;
+  /** Mois réellement comparés de chaque côté. */
+  months: number;
+  from: MonthKey;
+  to: MonthKey;
+};
+
+/**
+ * Le rythme récent contre le rythme d'avant.
+ *
+ * Deux précautions. Le mois EN COURS est écarté : vu au tiers, il
+ * ferait passer toute croissance pour un effondrement. Et les deux
+ * côtés comparent le même nombre de mois, sans quoi l'écart mesure la
+ * longueur des fenêtres plutôt que la progression.
+ */
+export function momentum(
+  buckets: Map<MonthKey, MonthBucket>,
+  window = 3,
+  ref: DayKey = today(),
+): Momentum | null {
+  const done = completedMonths(buckets, ref);
+  if (done.length < 2) return null;
+
+  const n = Math.min(window, Math.floor(done.length / 2));
+  if (n < 1) return null;
+
+  const recent = done.slice(-n);
+  const previous = done.slice(-2 * n, -n);
+  const moyenne = (list: MonthBucket[]) =>
+    list.length ? Math.round(list.reduce((s, b) => s + b.net, 0) / list.length) : 0;
+
+  const recentCents = moyenne(recent);
+  const previousCents = moyenne(previous);
+
+  return {
+    recentCents,
+    previousCents,
+    change: delta(recentCents, previousCents),
+    months: n,
+    from: recent[0].month,
+    to: recent[recent.length - 1].month,
+  };
+}
+
+/**
+ * Moyenne mobile, pour lire une série bruitée sans se laisser
+ * entraîner par un mois exceptionnel.
+ */
+export function movingAverage(values: number[], window = 3, partial = false): number[] {
+  return values.map((_, i) => {
+    const debut = Math.max(0, i + 1 - window);
+    // Sans `partial`, les premiers points n'ont pas assez d'histoire
+    // derrière eux : on les laisse suivre la valeur brute plutôt que
+    // d'inventer une moyenne sur une fenêtre plus courte que les
+    // suivantes, qui ferait croire à un démarrage en pente douce.
+    if (!partial && i + 1 < window) return values[i];
+    const tranche = values.slice(debut, i + 1);
+    return Math.round(tranche.reduce((s, v) => s + v, 0) / tranche.length);
+  });
+}
+
+/* --- De quoi le revenu est-il fait ? ------------------------------ */
+
+/**
+ * Un revenu récurrent tombe sans qu'on ait rien à revendre ni à
+ * refacturer : abonnements et allocations. Le reste se regagne chaque
+ * mois. La part récurrente est la seule qui se projette sans pari.
+ */
+export function isRecurring(stream: Stream | undefined): boolean {
+  return stream?.kind === "subscription" || stream?.kind === "benefit";
+}
+
+export type RevenueMix = {
+  recurringCents: number;
+  oneOffCents: number;
+  totalCents: number;
+  /** Part récurrente, ou null quand il n'y a rien à partager. */
+  recurringShare: number | null;
+};
+
+export function revenueMix(buckets: MonthBucket[], streams: Stream[]): RevenueMix {
+  const index = indexStreams(streams);
+  let recurringCents = 0;
+  let oneOffCents = 0;
+
+  for (const bucket of buckets) {
+    for (const [id, totals] of Object.entries(bucket.byStream)) {
+      if (isRecurring(index[id])) recurringCents += totals.net;
+      else oneOffCents += totals.net;
+    }
+  }
+
+  const totalCents = recurringCents + oneOffCents;
+  return {
+    recurringCents,
+    oneOffCents,
+    totalCents,
+    recurringShare: totalCents > 0 ? recurringCents / totalCents : null,
+  };
+}
+
+/* --- Chaque activité prise à part --------------------------------- */
+
+export type StreamTrend = {
+  stream: Stream;
+  totalCents: number;
+  /** Part de l'activité dans la fenêtre. */
+  share: number;
+  /** Moyenne mensuelle sur la première moitié de la fenêtre. */
+  earlyCents: number;
+  /** Moyenne mensuelle sur la seconde moitié. */
+  lateCents: number;
+  change: Delta;
+  /** Mois de la fenêtre où l'activité a rapporté quelque chose. */
+  activeMonths: number;
+  recurring: boolean;
+};
+
+/**
+ * La trajectoire de chaque activité : la seconde moitié de la fenêtre
+ * contre la première. Un total seul ne dit pas si une activité monte
+ * ou s'éteint, et c'est précisément ce qu'on veut savoir quand on en
+ * mène quatre de front.
+ */
+export function streamTrends(window: MonthBucket[], streams: Stream[]): StreamTrend[] {
+  if (window.length === 0) return [];
+
+  const coupe = Math.floor(window.length / 2);
+  const early = window.slice(0, coupe);
+  const late = window.slice(coupe);
+  const total = window.reduce((s, b) => s + b.net, 0);
+
+  const moyenne = (list: MonthBucket[], id: string) =>
+    list.length
+      ? Math.round(list.reduce((s, b) => s + (b.byStream[id]?.net ?? 0), 0) / list.length)
+      : 0;
+
+  return streams
+    .map((stream) => {
+      const totalCents = window.reduce((s, b) => s + (b.byStream[stream.id]?.net ?? 0), 0);
+      const earlyCents = moyenne(early, stream.id);
+      const lateCents = moyenne(late, stream.id);
+      return {
+        stream,
+        totalCents,
+        share: total > 0 ? totalCents / total : 0,
+        earlyCents,
+        lateCents,
+        change: delta(lateCents, earlyCents),
+        activeMonths: window.filter((b) => (b.byStream[stream.id]?.net ?? 0) > 0).length,
+        recurring: isRecurring(stream),
+      };
+    })
+    .filter((t) => t.totalCents !== 0)
+    .sort((a, b) => b.totalCents - a.totalCents);
+}
+
+/* --- Long terme : l'année, et tout ce qui précède ----------------- */
+
+export type YearSummary = {
+  year: number;
+  months: MonthBucket[];
+  totalCents: number;
+  /** Mois qui ont rapporté quelque chose — pas les douze du calendrier. */
+  filledMonths: number;
+  /** Moyenne sur les mois renseignés. */
+  averageCents: number;
+  bestMonth: MonthBucket | null;
+  byStream: Record<string, number>;
+  /** L'année est-elle terminée ? Sinon ses totaux continueront de monter. */
+  complete: boolean;
+};
+
+export function yearSummaries(
+  buckets: Map<MonthKey, MonthBucket>,
+  ref: DayKey = today(),
+): YearSummary[] {
+  const annees = new Map<number, MonthBucket[]>();
+  for (const bucket of buckets.values()) {
+    if (bucket.count === 0) continue;
+    const y = Number(bucket.month.slice(0, 4));
+    annees.set(y, [...(annees.get(y) ?? []), bucket]);
+  }
+
+  const anneeCourante = Number(ref.slice(0, 4));
+
+  return [...annees.entries()]
+    .map(([year, list]) => {
+      const months = [...list].sort((a, b) => a.month.localeCompare(b.month));
+      const filled = months.filter((b) => b.net !== 0);
+      const totalCents = months.reduce((s, b) => s + b.net, 0);
+      const byStream: Record<string, number> = {};
+      for (const b of months) {
+        for (const [id, t] of Object.entries(b.byStream)) {
+          byStream[id] = (byStream[id] ?? 0) + t.net;
+        }
+      }
+      return {
+        year,
+        months,
+        totalCents,
+        filledMonths: filled.length,
+        averageCents: filled.length ? Math.round(totalCents / filled.length) : 0,
+        bestMonth: filled.length
+          ? filled.reduce((a, b) => (b.net > a.net ? b : a), filled[0])
+          : null,
+        byStream,
+        complete: year < anneeCourante,
+      };
+    })
+    .sort((a, b) => b.year - a.year);
+}
+
+export type Lifetime = {
+  firstMonth: MonthKey;
+  lastMonth: MonthKey;
+  /** Mois écoulés depuis le premier, mois en cours compris. */
+  spanMonths: number;
+  /** Mois qui ont rapporté quelque chose. */
+  filledMonths: number;
+  totalCents: number;
+  averageCents: number;
+  bestMonth: MonthBucket | null;
+  /** Mois consécutifs avec du revenu, en comptant à rebours. */
+  streak: number;
+  /** Le rythme des douze derniers mois. */
+  annualCents: number;
+  /** Mois réellement couverts par ce rythme : moins de 12, c'est une extrapolation. */
+  annualMonths: number;
+};
+
+/**
+ * Ce que l'app sait depuis le premier jour.
+ *
+ * `annualCents` mérite un mot : avec douze mois d'histoire, c'est leur
+ * somme, et c'est un fait. Avec moins, c'est la moyenne des mois
+ * TERMINÉS ramenée à douze — une extrapolation, et `annualMonths` dit
+ * sur combien de mois elle repose pour qu'on puisse en douter.
+ */
+export function lifetime(
+  buckets: Map<MonthKey, MonthBucket>,
+  ref: DayKey = today(),
+): Lifetime | null {
+  const tous = [...buckets.values()]
+    .filter((b) => b.count > 0)
+    .sort((a, b) => a.month.localeCompare(b.month));
+  if (tous.length === 0) return null;
+
+  const firstMonth = tous[0].month;
+  const lastMonth = tous[tous.length - 1].month;
+  const filled = tous.filter((b) => b.net !== 0);
+  const totalCents = tous.reduce((s, b) => s + b.net, 0);
+
+  // Série en cours : on remonte depuis le dernier mois TERMINÉ, parce
+  // qu'un mois à peine commencé interromprait la série sans raison.
+  const done = completedMonths(buckets, ref);
+  let streak = 0;
+  for (let i = done.length - 1; i >= 0; i -= 1) {
+    if (done[i].net <= 0) break;
+    streak += 1;
+  }
+
+  const douze = done.slice(-12);
+  const annualCents =
+    douze.length >= 12
+      ? douze.reduce((s, b) => s + b.net, 0)
+      : douze.length > 0
+        ? Math.round((douze.reduce((s, b) => s + b.net, 0) / douze.length) * 12)
+        : 0;
+
+  return {
+    firstMonth,
+    lastMonth,
+    spanMonths: monthsBetween(firstMonth, monthOf(ref)) + 1,
+    filledMonths: filled.length,
+    totalCents,
+    averageCents: filled.length ? Math.round(totalCents / filled.length) : 0,
+    bestMonth: filled.length
+      ? filled.reduce((a, b) => (b.net > a.net ? b : a), filled[0])
+      : null,
+    streak,
+    annualCents,
+    annualMonths: douze.length,
+  };
+}
+
+/** Paliers mensuels, en centimes. Choisis larges : on ne fête pas 50 €. */
+const PALIERS = [
+  50_000, 100_000, 200_000, 300_000, 500_000, 750_000,
+  1_000_000, 1_500_000, 2_000_000, 3_000_000, 5_000_000,
+];
+
+export type Milestone = {
+  cents: number;
+  month: MonthKey;
+  /** Le montant du mois qui a franchi le palier. */
+  reachedCents: number;
+};
+
+/**
+ * Le premier mois qui a dépassé chaque palier. Sur cinq mois
+ * d'historique c'est le seul « long terme » qui existe vraiment : une
+ * suite de premières fois, qu'aucune moyenne ne raconte.
+ */
+export function milestones(buckets: Map<MonthKey, MonthBucket>): Milestone[] {
+  const tries = [...buckets.values()]
+    .filter((b) => b.net > 0)
+    .sort((a, b) => a.month.localeCompare(b.month));
+
+  return PALIERS.map((cents) => {
+    const premier = tries.find((b) => b.net >= cents);
+    return premier ? { cents, month: premier.month, reachedCents: premier.net } : null;
+  }).filter((m): m is Milestone => m !== null);
+}
+
+/* --- Court terme : le mois en cours, à date ----------------------- */
+
+export type SameDayComparison = {
+  /** Jour du mois auquel on compare. */
+  day: number;
+  currentCents: number;
+  previousCents: number;
+  previousMonth: MonthKey;
+  change: Delta;
+};
+
+/**
+ * Le mois en cours contre le précédent, AU MÊME JOUR.
+ *
+ * Comparer un 22 septembre à un août entier n'apprend rien : le mois
+ * en cours perd toujours. On coupe donc le mois de référence au même
+ * quantième, et l'écart redevient une information.
+ */
+export function sameDayLastMonth(
+  entries: Entry[],
+  basis: Basis,
+  ref: DayKey = today(),
+): SameDayComparison | null {
+  const month = monthOf(ref);
+  const previousMonth = shiftMonth(month, -1);
+  const day = Number(ref.slice(8, 10));
+
+  let currentCents = 0;
+  let previousCents = 0;
+  let vu = false;
+
+  for (const e of entries) {
+    const d = dateOf(e, basis);
+    if (!d) continue;
+    const quantieme = Number(d.slice(8, 10));
+    if (d.slice(0, 7) === month) {
+      currentCents += e.direction === "out" ? -e.gross_cents : marginOf(e);
+    } else if (d.slice(0, 7) === previousMonth) {
+      vu = true;
+      if (quantieme <= day) {
+        previousCents += e.direction === "out" ? -e.gross_cents : marginOf(e);
+      }
+    }
+  }
+
+  if (!vu) return null;
+  return {
+    day,
+    currentCents,
+    previousCents,
+    previousMonth,
+    change: delta(currentCents, previousCents),
+  };
 }

@@ -12,8 +12,6 @@ import {
 } from "react";
 import type {
   Basis,
-  Declaration,
-  PaymentMethod,
   Entry,
   EntryDraft,
   Goal,
@@ -40,13 +38,6 @@ import {
 import { type MonthKey, currentMonth, monthOf, today } from "@/lib/dates";
 import { money, percent } from "@/lib/format";
 import * as api from "@/lib/actions";
-import {
-  DEFAULT_BRACKETS,
-  DEFAULT_BRACKETS_YEAR,
-  DEFAULT_SALARY_ABATEMENT,
-  DEFAULT_DECOTE,
-  type FiscalSettings,
-} from "@/lib/fiscal";
 
 /* ===================================================================
    État
@@ -56,7 +47,6 @@ type State = {
   streams: Stream[];
   entries: Entry[];
   goals: Goal[];
-  declarations: Declaration[];
   settings: Settings;
 };
 
@@ -69,8 +59,6 @@ type Action =
   | { type: "stream:put"; stream: Stream }
   | { type: "stream:remove"; id: string }
   | { type: "settings:put"; settings: Settings }
-  | { type: "declaration:put"; declaration: Declaration }
-  | { type: "declaration:remove"; period: string }
   | { type: "reset"; snapshot: Snapshot };
 
 function reducer(state: State, action: Action): State {
@@ -113,20 +101,6 @@ function reducer(state: State, action: Action): State {
       };
     case "settings:put":
       return { ...state, settings: action.settings };
-    case "declaration:put": {
-      const rest = state.declarations.filter((d) => d.period !== action.declaration.period);
-      return {
-        ...state,
-        declarations: [action.declaration, ...rest].sort((a, b) =>
-          b.period.localeCompare(a.period),
-        ),
-      };
-    }
-    case "declaration:remove":
-      return {
-        ...state,
-        declarations: state.declarations.filter((d) => d.period !== action.period),
-      };
     case "reset":
       return { ...action.snapshot };
   }
@@ -154,9 +128,6 @@ type Store = {
   streamById: Record<string, Stream | undefined>;
   entries: Entry[];
   goals: Goal[];
-  /** Les déclarations URSSAF déjà faites, la plus récente d'abord. */
-  declarations: Declaration[];
-  declarationByPeriod: Record<string, Declaration | undefined>;
   settings: Settings;
 
   // réglages de lecture
@@ -173,8 +144,6 @@ type Store = {
   pending: PendingReport;
   insights: ReturnType<typeof buildInsights>;
   goal: ReturnType<typeof goalProgress>;
-  /** Les réglages fiscaux, dans la forme attendue par le moteur de calcul. */
-  fiscal: FiscalSettings;
   /**
    * Vrai dès qu'au moins une écriture a été encaissée un autre mois que
    * celui de la vente, ou attend encore son versement. Tant que c'est
@@ -194,8 +163,6 @@ type Store = {
   addStream: (...args: Parameters<typeof api.createStream>) => Promise<void>;
   removeStream: (id: string) => Promise<void>;
   updateSettings: (patch: Parameters<typeof api.saveSettings>[0]) => Promise<void>;
-  saveDeclaration: (patch: Parameters<typeof api.saveDeclaration>[0]) => Promise<void>;
-  removeDeclaration: (period: string) => Promise<void>;
 
   // interface
   busy: boolean;
@@ -217,19 +184,6 @@ export function useStore() {
   return ctx;
 }
 
-/**
- * Le mode de règlement le plus probable pour une activité. Le livre
- * des recettes exige la mention, et « virement » pour tout le monde
- * était faux pour la moitié des lignes : une vente Vinted est réglée
- * par la plateforme, pas par virement direct.
- */
-function reglementDe(stream: Stream | undefined): PaymentMethod {
-  if (!stream) return "virement";
-  return stream.kind === "resale" || stream.kind === "subscription"
-    ? "plateforme"
-    : "virement";
-}
-
 export function blankDraft(stream: Stream | undefined): EntryDraft {
   return {
     stream_id: stream?.id ?? null,
@@ -246,8 +200,6 @@ export function blankDraft(stream: Stream | undefined): EntryDraft {
     status: "received",
     counterparty: null,
     notes: null,
-    payment_method: reglementDe(stream),
-    reference: null,
   };
 }
 
@@ -299,29 +251,7 @@ export function StoreProvider({
   );
   const availableMonths = useMemo(() => coveredMonths(state.entries), [state.entries]);
 
-  const declarationByPeriod = useMemo(() => {
-    const out: Record<string, Declaration | undefined> = {};
-    for (const d of state.declarations) out[d.period] = d;
-    return out;
-  }, [state.declarations]);
 
-  const fiscal = useMemo<FiscalSettings>(
-    () => ({
-      activityStart: state.settings.activity_start,
-      acreEnabled: state.settings.acre_enabled,
-      versementLiberatoire: state.settings.versement_liberatoire,
-      taxParts: Number(state.settings.tax_parts) || 1,
-      otherIncomeCents: state.settings.other_income_cents ?? 0,
-      brackets:
-        state.settings.tax_brackets && state.settings.tax_brackets.length > 0
-          ? state.settings.tax_brackets
-          : DEFAULT_BRACKETS,
-      bracketsYear: state.settings.tax_brackets_year ?? DEFAULT_BRACKETS_YEAR,
-      salaryAbatement: state.settings.salary_abatement ?? DEFAULT_SALARY_ABATEMENT,
-      decote: state.settings.decote ?? DEFAULT_DECOTE,
-    }),
-    [state.settings],
-  );
 
   const hasTimingGap = useMemo(
     () =>
@@ -494,28 +424,6 @@ export function StoreProvider({
     [run],
   );
 
-  const saveDeclaration = useCallback(
-    async (patch: Parameters<typeof api.saveDeclaration>[0]) => {
-      await run(
-        () => api.saveDeclaration(patch),
-        (declaration) => dispatch({ type: "declaration:put", declaration }),
-        "Déclaration enregistrée.",
-      );
-    },
-    [run],
-  );
-
-  const removeDeclaration = useCallback(
-    async (period: string) => {
-      await run(
-        () => api.deleteDeclaration(period),
-        () => dispatch({ type: "declaration:remove", period }),
-        "Déclaration effacée.",
-      );
-    },
-    [run],
-  );
-
   const updateSettings = useCallback(
     async (patch: Parameters<typeof api.saveSettings>[0]) => {
       await run(
@@ -585,8 +493,6 @@ export function StoreProvider({
     streamById,
     entries: state.entries,
     goals: state.goals,
-    declarations: state.declarations,
-    declarationByPeriod,
     settings: state.settings,
     basis,
     setBasis,
@@ -599,7 +505,6 @@ export function StoreProvider({
     pending,
     insights,
     goal,
-    fiscal,
     hasTimingGap,
     saveEntry,
     removeEntry,
@@ -610,8 +515,6 @@ export function StoreProvider({
     addStream,
     removeStream,
     updateSettings,
-    saveDeclaration,
-    removeDeclaration,
     busy,
     toasts,
     notify,

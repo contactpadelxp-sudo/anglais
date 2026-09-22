@@ -23,6 +23,30 @@ Le sélecteur de base n'apparaît dans l'en-tête **que lorsqu'il change
 quelque chose** : tant que chaque montant est saisi comme déjà encaissé, les
 deux lectures se confondent et le réglage resterait décoratif.
 
+## Trois horizons
+
+L'application ne tient pas de comptabilité — elle suit des revenus et
+cherche à en dire quelque chose. Trois écrans, trois questions, et chacun
+refuse de répondre à la place des autres.
+
+| Écran | Horizon | La question |
+|---|---|---|
+| **Tableau de bord** | le mois en cours | où en suis-je, à cette date ? |
+| **Analyse** | les douze mois glissants | quel est le rythme, et de quoi est-il fait ? |
+| **Historique** | depuis le début | où va-t-on, depuis quand, à quelle vitesse ? |
+
+Ce découpage a une conséquence tenue partout : **on ne montre que ce que la
+durée permet**. La comparaison d'une année à l'autre n'apparaît qu'avec deux
+années à mettre côte à côte ; un « rythme annuel » calculé sur quatre mois
+est annoncé comme une extrapolation, et dit sur combien de mois il repose ;
+le mois en cours se compare au précédent **au même quantième**, jamais à un
+mois entier.
+
+La fenêtre d'analyse est coupée au premier mois qui porte quelque chose.
+Demander douze mois avec cinq mois d'histoire ajoutait sept mois à zéro
+devant : la courbe partait à plat, et la moitié de fenêtre à laquelle on
+compare était vide.
+
 ## Saisie
 
 Le mode de saisie courant est le **journal d'encaissements** : à chaque fois

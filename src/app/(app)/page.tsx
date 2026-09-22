@@ -26,8 +26,7 @@ import {
   shiftMonth,
   type MonthKey,
 } from "@/lib/dates";
-import { projectMonth, dateOf } from "@/lib/analytics";
-import { buildReport } from "@/lib/fiscal";
+import { projectMonth, dateOf, sameDayLastMonth } from "@/lib/analytics";
 
 export default function Dashboard() {
   const store = useStore();
@@ -173,21 +172,34 @@ export default function Dashboard() {
     return { days, filled: days.filter((v) => v > 0).length };
   }, [bucket.entries, basis, month]);
 
+
   /**
-   * Ce que ce mois doit vraiment à l'URSSAF, calculé par le moteur
-   * fiscal sur les taux de chaque catégorie et l'ACRE — plus par un
-   * pourcentage saisi à la main dans les réglages, qui s'appliquait
-   * indistinctement à tout, allocation chômage comprise, et qui
-   * contredisait la page Comptabilité sur le même écran.
+   * Le mois en cours contre le précédent — AU MÊME JOUR.
    *
-   * Un mois est exactement la maille d'une déclaration URSSAF : le
-   * taux s'y applique sans approximation.
+   * Comparer un 22 septembre à un août entier n'apprend rien : le mois
+   * en cours perd toujours, et la pastille annonçait une chute qui
+   * n'était que du calendrier. Sur un mois passé, en revanche, les deux
+   * mois sont complets et la comparaison directe est la bonne.
    */
-  const urssafDuMois = useMemo(
-    () => buildReport(store.entries, store.streams, store.fiscal, [month]),
-    [store.entries, store.streams, store.fiscal, month],
+  const memeJour = useMemo(
+    () => (month === currentMonth() ? sameDayLastMonth(store.entries, basis) : null),
+    [month, store.entries, basis],
   );
-  const afterCharges = bucket.net - urssafDuMois.urssafCents;
+
+  const comparaison = useMemo(() => {
+    if (memeJour) {
+      if (memeJour.change.ratio === null) return null;
+      return {
+        ratio: memeJour.change.ratio,
+        label: `vs ${monthLabel(memeJour.previousMonth)} au ${memeJour.day}`,
+      };
+    }
+    if (overview.vsPrevious.ratio === null) return null;
+    return {
+      ratio: overview.vsPrevious.ratio,
+      label: `vs ${monthLabel(previousMonth)}`,
+    };
+  }, [memeJour, overview.vsPrevious.ratio, previousMonth]);
 
   /**
    * Les compteurs portent sur le mois AFFICHÉ, donc leurs moyennes
@@ -276,11 +288,11 @@ export default function Dashboard() {
                   cases du calendrier sont cliquables, y compris celles
                   à venir, et « −100 % vs août » sur un octobre vide est
                   un chiffre qui n'a pas de sens. */}
-              {bucket.count > 0 && overview.vsPrevious.ratio !== null ? (
+              {bucket.count > 0 && comparaison !== null ? (
                 <span>
                   <Delta
-                    ratio={overview.vsPrevious.ratio}
-                    label={`vs ${monthLabel(previousMonth)}`}
+                    ratio={comparaison.ratio}
+                    label={comparaison.label}
                     variant="pill"
                   />
                 </span>
@@ -632,32 +644,12 @@ export default function Dashboard() {
             hint="Montant moyen d'une rentrée"
             cell={1}
           />
-          {/* Ce qui reste après l'URSSAF est le second chiffre le plus
-              utile de l'écran, et il disparaissait dès qu'une écriture,
-              n'importe laquelle, attendait son versement : le compteur
-              « En attente » lui prenait sa place. Or ce total est déjà
-              écrit en toutes lettres dans le panneau « En attente »,
-              deux cartes plus bas. Il cède donc la case.
-
-              La base de calcul compte : l'URSSAF ne connaît que les
-              encaissements. En lecture « comptabilisé », retrancher des
-              cotisations encaissées d'un net comptabilisé mélangerait
-              deux mesures — on montre alors autre chose. */}
-          {basis === "cash" && urssafDuMois.urssafCents > 0 ? (
-            <Counter
-              label="Après cotisations"
-              value={money(afterCharges)}
-              hint={`${money(urssafDuMois.urssafCents)} d'URSSAF sur ce mois`}
-              cell={2}
-            />
-          ) : (
-            <Counter
-              label="Moyenne 3 mois"
-              value={money(average3)}
-              hint="Les trois derniers mois actifs"
-              cell={2}
-            />
-          )}
+          <Counter
+            label="Moyenne 3 mois"
+            value={money(average3)}
+            hint="Les trois derniers mois actifs"
+            cell={2}
+          />
           <Counter
             label={`Cumul ${year}`}
             value={money(overview.ytd)}
